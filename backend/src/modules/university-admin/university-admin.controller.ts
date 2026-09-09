@@ -211,7 +211,7 @@ export const getDepartmentById = async (
           select: {
             programmes: true,
             lecturers: true,
-            students: true,
+            Student: true,
             units: true,
           },
         },

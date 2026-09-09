@@ -591,7 +591,7 @@ export class LicenseService {
         where: { id: license.universityId },
         data: {
           licenseRevoked: true,
-          accessBlockedAt: new Date(),
+          accessRevokedAt: new Date(),
         },
       });
     }
@@ -663,7 +663,7 @@ export class LicenseService {
         where: { id: license.universityId },
         data: {
           licenseRevoked: false,
-          accessBlockedAt: null,
+          accessRevokedAt: null,
         },
       });
     }

@@ -101,7 +101,7 @@ export async function checkLicenseExpiry() {
         where: { id: license.universityId! },
         data: {
           licenseRevoked: true,
-          accessBlockedAt: now,
+          accessRevokedAt: now,
         },
       });
 

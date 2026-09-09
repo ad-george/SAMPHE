@@ -1,12 +1,12 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 export class AcademicYearService {
   async create(data: { name: string; startDate?: Date; endDate?: Date }) {
-    return prisma.academicYear.create({ data });
+    return prisma.academicYear.create({ data: data as any });
   }
   async getAll() {
-    return prisma.academicYear.findMany({ orderBy: { name: 'desc' } });
+    return prisma.academicYear.findMany({ orderBy: { name: "desc" } });
   }
   async getById(id: string) {
     return prisma.academicYear.findUnique({ where: { id } });

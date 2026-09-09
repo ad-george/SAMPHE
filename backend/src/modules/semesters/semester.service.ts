@@ -1,12 +1,12 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 export class SemesterService {
   async create(data: { name: string; startDate?: Date; endDate?: Date }) {
-    return prisma.semester.create({ data });
+    return prisma.semester.create({ data: data as any });
   }
   async getAll() {
-    return prisma.semester.findMany({ orderBy: { name: 'asc' } });
+    return prisma.semester.findMany({ orderBy: { name: "asc" } });
   }
   async getById(id: string) {
     return prisma.semester.findUnique({ where: { id } });

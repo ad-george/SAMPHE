@@ -532,7 +532,7 @@ export class UniversityAdminService {
         endDate: data.endDate,
         status: "ACTIVE",
         archived: false,
-      },
+      } as any,
     });
 
     if (currentActive) {

@@ -44,6 +44,7 @@ model University {
   billingEvents BillingEvent[]
   units         Unit[]
   admins        UniversityAdmin[]
+   licenseRevoked     Boolean @default(false)
 }
 
 model BillingEvent {
@@ -247,40 +248,32 @@ model PlatformAdmin {
 }
 
 model AttendanceSession {
-  id           String             @id @default(uuid())
-  sessionDate  DateTime           @default(now())
-  lecturerId   String
-  lecturer     Lecturer           @relation(fields: [lecturerId], references: [id])
-  unitId       String
-  unit         Unit               @relation(fields: [unitId], references: [id])
-  records      AttendanceRecord[]
-  archived     Boolean            @default(false)
-  duration     Int                @default(15)
-  universityId String
-  university   University         @relation(fields: [universityId], references: [id])
-  departmentId String
-  radius       Int                @default(75)
-  gpsLocation  String? // "lat,lng"
-  token        String             @unique @default(uuid())
-  totalStudents Int? 
-  status       String             @default("ACTIVE") // ACTIVE | COMPLETED | CANCELLED
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
+  id                  String             @id @default(uuid())
+  sessionDate         DateTime           @default(now())
+  lecturerId          String
+  lecturer            Lecturer           @relation(fields: [lecturerId], references: [id])
+  unitId              String
+  unit                Unit               @relation(fields: [unitId], references: [id])
+  records             AttendanceRecord[]
+  archived            Boolean            @default(false)
+  duration            Int                @default(15) 
+  endTime             DateTime?          // Keeps track of when session expires
+  universityId        String
+  university          University         @relation(fields: [universityId], references: [id])
+  departmentId        String
+  radius              Int                @default(75) 
+  lecturerLatitude    Float?             // Needed for distance verification
+  lecturerLongitude   Float?             // Needed for distance verification
+  lecturerGpsAccuracy Float?             
+  gpsLocation         String?            
+  token               String             @unique @default(uuid()) 
+  totalStudents       Int? 
+  status              String             @default("ACTIVE") 
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
 }
 
-model AttendanceRecord {
-  id                  String   @id @default(uuid())
-  sessionId           String
-  session             AttendanceSession @relation(fields: [sessionId], references: [id])
-  studentId           String
-  student             Student  @relation(fields: [studentId], references: [id])
-  status              String   // PRESENT, ABSENT, OUTSIDE_RADIUS
-  browserFingerprint  String?  
-  googleAccountId     String?  
-  distance            Float?
-  createdAt           DateTime @default(now())
-  corrections         AttendanceCorrection[]
-}
+
 
 model AttendanceCorrection {
   id             String           @id @default(uuid())
@@ -292,6 +285,20 @@ model AttendanceCorrection {
   previousStatus String
   newStatus      String
   correctedAt    DateTime         @default(now())
+}
+
+model AttendanceRecord {
+  id                  String   @id @default(uuid())
+  sessionId           String
+  session             AttendanceSession @relation(fields: [sessionId], references: [id])
+  studentId           String
+  student             Student  @relation(fields: [studentId], references: [id])
+  status              String   // PRESENT, ABSENT, OUTSIDE_RADIUS
+  browserFingerprint  String?
+  googleAccountId     String?
+  distance            Float?
+  createdAt           DateTime @default(now())
+  corrections         AttendanceCorrection[]
 }
 
 model AuditLog {
@@ -313,6 +320,7 @@ model AcademicYear {
   name        String   // e.g., "2025/2026"
   startDate   DateTime?
   endDate     DateTime?
+  universityId String  
   status      String   @default("INACTIVE") // ACTIVE | INACTIVE
   archived    Boolean  @default(false)
   archivedAt  DateTime?
