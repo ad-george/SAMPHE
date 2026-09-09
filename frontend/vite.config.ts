@@ -13,10 +13,14 @@ export default defineConfig({
     allowedHosts: true,
     proxy: {
       "/api": {
-        target: "http://10.10.182.127:5000",
+        target: "https://suamp-api.onrender.com",
         changeOrigin: true,
-        secure: false,
+        secure: true,
       },
     },
+  },
+  build: {
+    outDir: "dist",
+    sourcemap: false,
   },
 });
