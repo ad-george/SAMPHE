@@ -1,0 +1,401 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model University {
+  id                    String  @id @default(uuid())
+  name                  String
+  logo                  String?
+  category              String  @default("UNIVERSITY")
+  address               String?
+  phone                 String?
+  email                 String?
+  website               String?
+  integrationWebhookUrl String?
+  integrationApiKey     String?
+  sisIntegrationUrl     String?
+  status                String  @default("ACTIVE")
+
+  suspendedAt     DateTime?
+  accessRevokedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  faculties     Faculty[]
+  departments   Department[]
+  programmes    Programme[]
+  reportSettings        Json? 
+  students      Student[]
+  lecturers     Lecturer[]
+  hods          Hod[]
+  sessions      AttendanceSession[]
+  licenseType   String?
+  auditLogs     AuditLog[]
+  licenses      License[]
+  integrationMode   String   @default("STANDALONE") // STANDALONE | INTEGRATED
+  integrationConfig Json?    // { endpoint, apiKey, syncData, syncSchedule }
+  lastSyncAt        DateTime?
+  billingEvents BillingEvent[]
+  units         Unit[]
+  admins        UniversityAdmin[]
+}
+
+model BillingEvent {
+  id           String     @id @default(uuid())
+  licenseId    String
+  license      License    @relation(fields: [licenseId], references: [id])
+  universityId String
+  university   University @relation(fields: [universityId], references: [id])
+  eventType    String // RENEWAL, UPGRADE, ACTIVATION
+  amount       Float
+  currency     String     @default("USD")
+  description  String
+  status       String     @default("COMPLETED") // COMPLETED, PENDING, FAILED
+  createdAt    DateTime   @default(now())
+}
+
+model Faculty {
+  id           String       @id @default(uuid())
+  name         String
+  universityId String
+  university   University   @relation(fields: [universityId], references: [id])
+  departments  Department[]
+  deanId       String?      @unique
+  dean         Lecturer?    @relation(fields: [deanId], references: [id])
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model Department {
+  id           String           @id @default(uuid())
+  name         String
+  facultyId    String
+  faculty      Faculty          @relation(fields: [facultyId], references: [id])
+  universityId String
+  university   University       @relation(fields: [universityId], references: [id])
+  programmes   Programme[]
+  lecturers    Lecturer[]
+  issues       TechnicalIssue[]
+  hods         Hod[]
+  units        Unit[]
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  Student      Student[]
+}
+
+model Programme {
+  id           String     @id @default(uuid())
+  name         String
+  code         String?
+  duration     Int
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id])
+  universityId String
+  university   University @relation(fields: [universityId], references: [id])
+  students     Student[]
+  units        Unit[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model StudyYear {
+  id           String     @id @default(uuid())
+  name         String
+  description  String?
+  students     Student[]
+  units        Unit[]
+  universityId String?
+  createdAt    DateTime   @default(now())
+  Semester     Semester[]
+}
+
+model Semester {
+  id           String    @id @default(uuid())
+  name         String
+  studyYearId  String
+  studyYear    StudyYear @relation(fields: [studyYearId], references: [id])
+  startDate    DateTime?
+  endDate      DateTime?
+  students     Student[]
+  universityId String
+  units        Unit[]
+  createdAt    DateTime  @default(now())
+}
+
+model Unit {
+  id           String     @id @default(uuid())
+  name         String
+  code         String
+  programId    String
+  program      Programme  @relation(fields: [programId], references: [id])
+  studyYearId  String
+  studyYear    StudyYear  @relation(fields: [studyYearId], references: [id])
+  semesterId   String
+  semester     Semester   @relation(fields: [semesterId], references: [id])
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id])
+  universityId String
+  createdAt    DateTime   @default(now())
+
+  sessions               AttendanceSession[]
+  lecturers              Lecturer[]               @relation("LecturerUnits")
+  students               Student[]                @relation("StudentUnits")
+  University             University               @relation(fields: [universityId], references: [id])
+  LecturerUnitAssignment LecturerUnitAssignment[]
+}
+
+model LecturerUnitAssignment {
+  id         String   @id @default(uuid())
+  lecturerId String
+  lecturer   Lecturer @relation(fields: [lecturerId], references: [id])
+  unitId     String
+  unit       Unit     @relation(fields: [unitId], references: [id])
+  assignedAt DateTime @default(now())
+}
+
+model Student {
+  id            String     @id @default(uuid())
+  regNo         String     @unique
+  fullName      String
+  phone         String?
+  email         String?
+  programId     String
+  password      String
+  program       Programme  @relation(fields: [programId], references: [id])
+  studyYearId   String
+  studyYear     StudyYear  @relation(fields: [studyYearId], references: [id])
+  semesterId    String
+  admissionYear String
+  semester      Semester   @relation(fields: [semesterId], references: [id])
+  departmentId  String
+  department    Department @relation(fields: [departmentId], references: [id])
+  universityId  String
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt 
+  archived      Boolean    @default(false)
+  archivedAt    DateTime?
+  archiveUntil  DateTime?
+
+  records         AttendanceRecord[]
+  registeredUnits Unit[]             @relation("StudentUnits")
+  University      University         @relation(fields: [universityId], references: [id])
+}
+
+model Lecturer {
+  id           String                   @id @default(uuid())
+  staffNumber  String                   @unique
+  fullName     String
+  email        String                   @unique
+  phone        String?
+  password     String
+  departmentId String
+  department   Department               @relation(fields: [departmentId], references: [id])
+  universityId String
+  university   University               @relation(fields: [universityId], references: [id])
+  assignments  LecturerUnitAssignment[]
+  corrections  AttendanceCorrection[]
+  status       String                   @default("ACTIVE")
+  sessions     AttendanceSession[]
+  units        Unit[]                   @relation("LecturerUnits")
+  lastLogin    DateTime?
+  deanOfFaculty  Faculty? 
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+}
+
+model Hod {
+  id           String     @id @default(uuid())
+  staffNumber  String     // Removed global @unique
+  fullName     String
+  email        String     @unique // Removed global @unique
+  phone        String?
+  password     String?    // Changed to optional to support future University SSO integration
+  status       String     @default("ACTIVE") // ACTIVE, INACTIVE, SUSPENDED
+  lastLogin    DateTime?
+  
+  // Relations
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id])
+  universityId String
+  university   University @relation(fields: [universityId], references: [id])
+  
+  // System Metadata
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Multi-Tenant Uniqueness Rules
+  @@unique([universityId, staffNumber]) // Staff numbers only need to be unique inside the same university
+  @@unique([universityId, email])       // Emails only need to be unique inside the same university
+}
+
+
+model PlatformAdmin {
+  id        String    @id @default(uuid())
+  fullName  String
+  email     String    @unique
+  password  String
+  role      String    @default("SUPER_ADMIN")
+  lastLogin DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model AttendanceSession {
+  id           String             @id @default(uuid())
+  sessionDate  DateTime           @default(now())
+  lecturerId   String
+  lecturer     Lecturer           @relation(fields: [lecturerId], references: [id])
+  unitId       String
+  unit         Unit               @relation(fields: [unitId], references: [id])
+  records      AttendanceRecord[]
+  archived     Boolean            @default(false)
+  duration     Int                @default(15)
+  universityId String
+  university   University         @relation(fields: [universityId], references: [id])
+  departmentId String
+  radius       Int                @default(75)
+  gpsLocation  String? // "lat,lng"
+  token        String             @unique @default(uuid())
+  totalStudents Int? 
+  status       String             @default("ACTIVE") // ACTIVE | COMPLETED | CANCELLED
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+}
+
+model AttendanceRecord {
+  id                  String   @id @default(uuid())
+  sessionId           String
+  session             AttendanceSession @relation(fields: [sessionId], references: [id])
+  studentId           String
+  student             Student  @relation(fields: [studentId], references: [id])
+  status              String   // PRESENT, ABSENT, OUTSIDE_RADIUS
+  browserFingerprint  String?  
+  googleAccountId     String?  
+  distance            Float?
+  createdAt           DateTime @default(now())
+  corrections         AttendanceCorrection[]
+}
+
+model AttendanceCorrection {
+  id             String           @id @default(uuid())
+  recordId       String
+  record         AttendanceRecord @relation(fields: [recordId], references: [id])
+  lecturerId     String
+  lecturer       Lecturer         @relation(fields: [lecturerId], references: [id])
+  reason         String
+  previousStatus String
+  newStatus      String
+  correctedAt    DateTime         @default(now())
+}
+
+model AuditLog {
+  id           String      @id @default(uuid())
+  userType     String
+  userId       String?
+  activity     String
+  description  String
+  ipAddress    String?
+  device       String?
+  browser      String?
+  timestamp    DateTime    @default(now())
+  universityId String?
+  university   University? @relation(fields: [universityId], references: [id])
+}
+
+model AcademicYear {
+  id          String   @id @default(uuid())
+  name        String   // e.g., "2025/2026"
+  startDate   DateTime?
+  endDate     DateTime?
+  status      String   @default("INACTIVE") // ACTIVE | INACTIVE
+  archived    Boolean  @default(false)
+  archivedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model License {
+  id                String         @id @default(uuid())
+  code              String         @unique
+  universityId      String?
+  university        University?    @relation(fields: [universityId], references: [id])
+  type              String         @default("SUBSCRIPTION") // SUBSCRIPTION, PERPETUAL, TRIAL
+  status            String         @default("UNUSED") // UNUSED, ACTIVE, EXPIRED, REVOKED, SUSPENDED
+  previousStatus    String?
+  usedBy            String?
+  startDate         DateTime?
+  expiryDate        DateTime?
+  isTrial           Boolean        @default(false)
+  trialEndsAt       DateTime?      // When trial expires
+  revokedAt         DateTime?
+  gracePeriodEndsAt DateTime?      // e.g., 14 days after revocation
+  accessBlocked     Boolean        @default(false)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  billingHistory    BillingEvent[]
+}
+
+
+model UniversityAdmin {
+  id           String     @id @default(uuid())
+  staffNumber  String?    @unique
+  fullName     String
+  email        String     @unique
+  phone        String?
+  password     String
+  avatar       String?
+  category     String     @default("UNIVERSITY") // UNIVERSITY, POLYTECHNIC, COLLEGE, TVET, INSTITUTE
+  licenseType  String     @default("SUBSCRIPTION") // SUBSCRIPTION, PERPETUAL, TRIAL
+  role         String     @default("UNIVERSITY_ADMIN")
+  universityId String
+  university   University @relation(fields: [universityId], references: [id])
+  status       String     @default("ACTIVE")
+  lastLogin    DateTime?
+  licenseRevoked  Boolean  @default(false)
+  accessBlockedAt DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Notification {
+  id           String   @id @default(uuid())
+  userType     String
+  userId       String
+  universityId String?
+  category     String   @default("GENERAL")
+  title        String
+  message      String
+  isRead       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+}
+
+model TechnicalIssue {
+  id           String      @id @default(uuid())
+  universityId String
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+  title        String
+  description  String
+  severity     String      @default("MEDIUM")
+  status       String      @default("OPEN")
+  reportedBy   String?
+  createdAt    DateTime    @default(now())
+  resolvedAt   DateTime?
+}
+
+model IntegrationSetting {
+  id           String    @id @default(uuid())
+  universityId String    @unique
+  type         String
+  config       String?
+  isActive     Boolean   @default(false)
+  lastSync     DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}

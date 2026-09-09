@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "node16",
+    "lib": ["ES2020"],
+    "outDir": "./dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node16",
+    "rootDir": "./", // 👈 1. Temporarily, SHOULD BE CHANGED TO "rootDir": "./src", AFTER DEVELOPMENT
+    "types": ["node"],
+    "typeRoots": ["./node_modules/@types", "./src/types"]
+  },
+  "include": [
+    "src/**/*",
+    "prisma/**/*.ts" // 👈 Temporarily, SHOULD BE REMOVED AFTER DEVELOPMENTs
+  ],
+
+  "exclude": ["node_modules", "dist"]
+}

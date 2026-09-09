@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "UniversityAdmin" ADD COLUMN     "category" TEXT NOT NULL DEFAULT 'UNIVERSITY',
+ADD COLUMN     "licenseType" TEXT NOT NULL DEFAULT 'SUBSCRIPTION';
