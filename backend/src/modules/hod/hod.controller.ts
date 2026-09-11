@@ -794,10 +794,27 @@ export const getAnalytics = async (
   next: NextFunction,
 ) => {
   try {
-    const hod = await getHodContext(req);
-    const data = await service.getAnalytics(hod.departmentId);
+    console.log("🔍 getAnalytics called for HOD:", req.user!.id);
+    const hod = await service.getMe(req.user!.id);
+    if (!hod) throw new Error("HOD not found");
+    console.log(
+      "🔍 HOD department:",
+      hod.departmentId,
+      "University:",
+      hod.universityId,
+    );
+
+    const data = await service.getAnalytics(req.user!.id);
+    // console.log("🔍 getAnalytics result keys:", Object.keys(data));
+    // console.log("🔍 departmentRate:", data.departmentRate);
+    // console.log("🔍 programStats length:", data.programStats?.length);
+    // console.log("🔍 lecturerStats length:", data.lecturerStats?.length);
+    // console.log("🔍 unitStats length:", data.unitStats?.length);
+
     res.json({ success: true, data });
   } catch (e: any) {
+    console.error("❌ getAnalytics error:", e.message);
+    console.error("❌ Full error:", e);
     next({ statusCode: 400, message: e.message });
   }
 };

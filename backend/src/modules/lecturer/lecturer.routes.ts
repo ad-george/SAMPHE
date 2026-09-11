@@ -22,6 +22,7 @@ import {
   getArchived,
   searchStudentByName,
   exportAttendanceReport,
+  getSessionsAnalytics,
 } from "./lecturer.controller";
 import { authenticate } from "../../middleware/auth.middleware";
 import { authorize } from "../../middleware/role.middleware";
@@ -79,6 +80,14 @@ router.patch(
   authorize("LECTURER"),
   archiveSession,
 );
+
+router.get(
+  "/analytics/sessions",
+  authenticate,
+  authorize("LECTURER"),
+  getSessionsAnalytics,
+);
+
 router.patch(
   "/sessions/:id/unarchive",
   authenticate,

@@ -8,6 +8,7 @@ import express from "express";
 import path from "path";
 import { LicenseService } from "./modules/licensing/license.service";
 import { cleanupExpiredAttendanceLinks } from "./jobs/cleanup-expired-links";
+import { expireOldSessions } from "./jobs/expire-sessions";
 
 const licenseService = new LicenseService();
 const prisma = new PrismaClient();
@@ -98,5 +99,11 @@ httpServer.listen(PORT, () => {
 // Clean up old sessions at startup
 cleanupExpiredAttendanceLinks();
 
-// Clean up old sessions daily at midnight
+// Run expiry check at startup
+expireOldSessions();
+
+// Clean up old sessions daily
 setInterval(cleanupExpiredAttendanceLinks, 24 * 60 * 60 * 1000);
+
+// Check for expired sessions every 60 seconds
+setInterval(expireOldSessions, 60 * 1000);

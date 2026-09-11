@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 
 export const cleanupExpiredAttendanceLinks = async () => {
   const fiveYearsAgo = new Date();
-  fiveYearsAgo.setFullYear(fiveYearsAgo.getFullYear() - 5);
+  fiveYearsAgo.setFullYear(fiveYearsAgo.getFullYear() - 5); // 5 years ago
 
   // Get count of sessions to delete
   const sessionsToDelete = await prisma.attendanceSession.findMany({

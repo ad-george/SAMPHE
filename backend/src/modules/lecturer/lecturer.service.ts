@@ -63,11 +63,14 @@ export class LecturerService {
     // Get all sessions with totalStudents
     const allSessions = await prisma.attendanceSession.findMany({
       where: { lecturerId },
+      orderBy: { createdAt: "desc" },
       include: {
         records: true,
         unit: {
           include: {
             semester: true,
+            program: true,
+            studyYear: true,
           },
         },
       },
@@ -79,17 +82,8 @@ export class LecturerService {
     );
 
     // Active session
-    const activeSession = await prisma.attendanceSession.findFirst({
-      where: { lecturerId, status: "ACTIVE" },
-      include: {
-        records: true,
-        unit: {
-          include: {
-            semester: true,
-          },
-        },
-      },
-    });
+    // Active session (with expiry check)
+    const activeSession = await this.getActiveSession(lecturerId);
 
     // Calculate avg attendance using totalStudents
     let totalEnrolled = 0;
@@ -114,6 +108,8 @@ export class LecturerService {
           id: s.id,
           date: s.createdAt,
           unit: s.unit?.name || "Unknown",
+          program: s.unit?.program?.name || "",
+          studyYear: s.unit?.studyYear?.name || "",
           present,
           total,
           rate: total > 0 ? Math.round((present / total) * 100) : 0,
@@ -320,7 +316,7 @@ export class LecturerService {
 
   // --- Public Check-In ---
   async getSessionByToken(token: string) {
-    return prisma.attendanceSession.findUnique({
+    const session = await prisma.attendanceSession.findUnique({
       where: { token },
       include: {
         unit: {
@@ -348,6 +344,26 @@ export class LecturerService {
         records: { include: { student: true } },
       },
     });
+
+    // ❌ Session doesn't exist → return null
+    if (!session) {
+      return null;
+    }
+
+    // ❌ Session not active → return null
+    if (session.status !== "ACTIVE") {
+      return null;
+    }
+
+    // ❌ Session expired → return null
+    const elapsed = Math.floor(
+      (Date.now() - new Date(session.createdAt).getTime()) / 60000,
+    );
+    if (elapsed > session.duration) {
+      return null;
+    }
+
+    return session;
   }
 
   async markAttendance(token: string, data: any, req?: any) {
@@ -480,7 +496,6 @@ export class LecturerService {
         );
       }
     }
-
     // ============================================================
     // 7. VALIDATE GPS
     // ============================================================
@@ -495,6 +510,14 @@ export class LecturerService {
       throw new Error("Lecturer's GPS location is not set for this session");
     }
 
+    // ✅ Reject weak GPS signal (tolerance scales with radius)
+    const accuracyTolerance = Math.max(200, session.radius);
+    if (data.studentAccuracy && data.studentAccuracy > accuracyTolerance) {
+      throw new Error(
+        `GPS accuracy too low (±${Math.round(data.studentAccuracy)}m). Move to an open area and try again.`,
+      );
+    }
+
     const [sLat, sLng] = session.gpsLocation.split(",").map(Number);
     const distance = haversineDistance(
       sLat,
@@ -503,31 +526,14 @@ export class LecturerService {
       data.studentLng,
     );
 
-    // Check GPS accuracy (optional but recommended)
-    if (data.studentAccuracy && data.studentAccuracy > 50) {
-      console.warn(
-        `⚠️ Low GPS accuracy: ${data.studentAccuracy}m for student ${student.regNo}`,
+    // ✅ Enforce distance — must be within session radius
+    if (distance > session.radius) {
+      throw new Error(
+        `You are ${Math.round(distance)}m away from the class. You must be within ${session.radius}m to mark attendance.`,
       );
     }
 
-    const isWithinRadius = distance <= session.radius;
-    const status = isWithinRadius ? "PRESENT" : "OUTSIDE_RADIUS";
-
-    // ============================================================
-    // 8. CREATE ATTENDANCE RECORD
-    // ============================================================
-
-    const record = await prisma.attendanceRecord.create({
-      data: {
-        sessionId: session.id,
-        studentId: student.id,
-        status: status,
-        distance: distance,
-        browserFingerprint: fingerprint,
-        googleAccountId: data.googleAccountId || null,
-      },
-      include: { student: true, session: { include: { unit: true } } },
-    });
+    const status = "PRESENT";
 
     // ============================================================
     // 9. CREATE AUDIT LOG
@@ -552,17 +558,28 @@ export class LecturerService {
     }
 
     // ============================================================
-    // 10. RETURN RESPONSE
+    // 10. CREATE ATTENDANCE RECORD
     // ============================================================
+
+    const record = await prisma.attendanceRecord.create({
+      data: {
+        sessionId: session.id,
+        studentId: student.id,
+        status,
+        distance: Math.round(distance),
+        browserFingerprint: fingerprint,
+        googleAccountId: data.googleAccountId || null,
+      },
+    });
+
+    console.log("🔍 Attendance record created:", record.id);
 
     return {
       ...record,
       distance: Math.round(distance),
-      isWithinRadius,
-      status,
-      message: isWithinRadius
-        ? "Attendance recorded successfully!"
-        : "You checked in but you are outside the permitted radius.",
+      isWithinRadius: true,
+      status: "PRESENT",
+      message: "Attendance recorded successfully!",
     };
   }
 
@@ -598,13 +615,25 @@ export class LecturerService {
   }
 
   async getSession(sessionId: string) {
-    return prisma.attendanceSession.findUnique({
+    const session = await prisma.attendanceSession.findUnique({
       where: { id: sessionId },
       include: {
         unit: true,
         records: { include: { student: { include: { program: true } } } },
       },
     });
+
+    // ❌ Session doesn't exist → return null
+    if (!session) {
+      return null;
+    }
+
+    // ❌ Session is not ACTIVE → return null
+    if (session.status !== "ACTIVE") {
+      return null;
+    }
+
+    return session;
   }
 
   async getActiveSession(lecturerId: string) {
@@ -891,6 +920,7 @@ export class LecturerService {
             students: true,
             semester: true,
             studyYear: true,
+            program: true,
           },
         },
         records: true,
@@ -1012,7 +1042,256 @@ export class LecturerService {
           )
         : null;
 
-    return { weekly: weeks, monthly: [], byUnit, avgRate, best, worst };
+    // ✅ Attendance by Program (grouped by Program + Year + Semester)
+    const programMap = new Map();
+
+    sessions.forEach((s: any) => {
+      const programName = s.unit?.program?.name || "Unknown";
+      const studyYear = s.unit?.studyYear?.name || "";
+      const semester = s.unit?.semester?.name || "";
+
+      // Convert "Year 2" → "Y2", "Semester 1" → "S1"
+      const yearNum = studyYear.match(/\d+/)?.[0] || "";
+      const semNum = semester.match(/\d+/)?.[0] || "";
+      const yearSem = yearNum && semNum ? ` Y${yearNum}S${semNum}` : "";
+
+      const key = `${programName}${yearSem}`;
+
+      const present = s.records.filter(
+        (r: any) => r.status === "PRESENT",
+      ).length;
+      const enrolled = s.totalStudents || 0;
+
+      const existing = programMap.get(key) || {
+        name: key,
+        present: 0,
+        enrolled: 0,
+      };
+      existing.present += present;
+      existing.enrolled += enrolled;
+      programMap.set(key, existing);
+    });
+
+    const byProgram = Array.from(programMap.values()).map((p: any) => ({
+      name: p.name,
+      rate:
+        p.enrolled > 0 ? ((p.present / p.enrolled) * 100).toFixed(1) : "0.0",
+    }));
+
+    return {
+      weekly: weeks,
+      monthly: [],
+      byUnit,
+      byProgram,
+      avgRate,
+      best,
+      worst,
+    };
+  }
+
+  // --- Sessions Analytics ---
+  async getSessionsAnalytics(lecturerId: string) {
+    // Get lecturer's university
+    const lecturer = await prisma.lecturer.findUnique({
+      where: { id: lecturerId },
+      select: { universityId: true },
+    });
+    if (!lecturer) throw new Error("Lecturer not found");
+
+    // ✅ Get current semester from database
+    const currentSemester = await prisma.semester.findFirst({
+      where: {
+        universityId: lecturer.universityId,
+        startDate: { lte: new Date() },
+        endDate: { gte: new Date() },
+      },
+      orderBy: { startDate: "desc" },
+    });
+
+    const activeYear = await prisma.academicYear.findFirst({
+      where: { status: "ACTIVE", archived: false },
+    });
+
+    const semesterStart = currentSemester?.startDate
+      ? new Date(currentSemester.startDate)
+      : activeYear?.startDate
+        ? new Date(activeYear.startDate)
+        : new Date();
+    const semesterEnd = currentSemester?.endDate
+      ? new Date(currentSemester.endDate)
+      : activeYear?.endDate
+        ? new Date(activeYear.endDate)
+        : new Date();
+
+    const totalWeeksInSemester = Math.min(
+      16,
+      Math.ceil(
+        (semesterEnd.getTime() - semesterStart.getTime()) /
+          (1000 * 60 * 60 * 24 * 7),
+      ),
+    );
+
+    // Get all sessions with full unit details
+    const sessions = await prisma.attendanceSession.findMany({
+      where: { lecturerId },
+      include: {
+        unit: {
+          include: {
+            program: true,
+            studyYear: true,
+            semester: true,
+          },
+        },
+        records: true,
+      },
+      orderBy: { createdAt: "asc" },
+    });
+
+    if (sessions.length === 0) {
+      return {
+        weekly: [],
+        byUnit: [],
+        byProgram: [],
+        avgRate: "0.0",
+        best: null,
+        worst: null,
+        totalUnits: 0,
+      };
+    }
+
+    // ============================================================
+    // WEEKLY TREND = Sessions Held / Expected × 100
+    // ============================================================
+    const totalUnits = new Set(sessions.map((s) => s.unitId)).size;
+    const sessionsExpectedPerWeek = totalUnits; // Each unit expected once per week
+
+    const now = new Date();
+    const weeks: any[] = [];
+
+    const totalWeeks = Math.min(
+      16,
+      Math.ceil(
+        (new Date(semesterEnd).getTime() - new Date(semesterStart).getTime()) /
+          (1000 * 60 * 60 * 24 * 7),
+      ),
+    );
+
+    for (let i = 0; i < totalWeeks; i++) {
+      const weekStart = new Date(
+        new Date(semesterStart).getTime() + i * 7 * 24 * 60 * 60 * 1000,
+      );
+      const weekEnd = new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+      if (weekStart > now) {
+        weeks.push({ week: `Wk ${i + 1}`, rate: 0 });
+        continue;
+      }
+
+      const weekSessions = sessions.filter((s) => {
+        const date = new Date(s.createdAt);
+        return date >= weekStart && date < weekEnd;
+      });
+
+      const held = weekSessions.length;
+      const rate =
+        sessionsExpectedPerWeek > 0
+          ? Math.min(100, Math.round((held / sessionsExpectedPerWeek) * 100))
+          : 0;
+
+      weeks.push({ week: `Wk ${i + 1}`, rate });
+    }
+
+    // ============================================================
+    // BY UNIT = Sessions Held / Expected × 100
+    // ============================================================
+    const unitMap = new Map();
+    sessions.forEach((s) => {
+      const existing = unitMap.get(s.unitId) || {
+        name: s.unit?.name || "Unknown",
+        held: 0,
+      };
+      existing.held += 1;
+      unitMap.set(s.unitId, existing);
+    });
+
+    const byUnit = Array.from(unitMap.values()).map((u: any) => ({
+      name: u.name,
+      rate:
+        totalWeeksInSemester > 0
+          ? Math.min(
+              100,
+              ((u.held / totalWeeksInSemester) * 100).toFixed(1) as any,
+            )
+          : 0,
+    }));
+
+    // ============================================================
+    // BY PROGRAM = Sessions Held / Expected × 100
+    // ============================================================
+    const programMap = new Map();
+    sessions.forEach((s) => {
+      const programName = s.unit?.program?.name || "Unknown";
+      const studyYear = s.unit?.studyYear?.name || "";
+      const semester = s.unit?.semester?.name || "";
+
+      const yearNum = studyYear.match(/\d+/)?.[0] || "";
+      const semNum = semester.match(/\d+/)?.[0] || "";
+      const yearSem = yearNum && semNum ? ` Y${yearNum}S${semNum}` : "";
+      const key = `${programName}${yearSem}`;
+
+      const existing = programMap.get(key) || {
+        name: key,
+        held: 0,
+        units: new Set(),
+      };
+      existing.held += 1;
+      existing.units.add(s.unitId);
+      programMap.set(key, existing);
+    });
+
+    const byProgram = Array.from(programMap.values()).map((p: any) => {
+      const expected = p.units.size * totalWeeksInSemester;
+      return {
+        name: p.name,
+        rate:
+          expected > 0
+            ? Math.min(100, ((p.held / expected) * 100).toFixed(1) as any)
+            : 0,
+      };
+    });
+
+    // ============================================================
+    // OVERALL + BEST + WORST
+    // ============================================================
+    const totalHeld = sessions.length;
+    const totalExpected = totalUnits * totalWeeksInSemester;
+    const avgRate =
+      totalExpected > 0
+        ? Math.min(100, (totalHeld / totalExpected) * 100).toFixed(1)
+        : "0.0";
+
+    const best =
+      byUnit.length > 0
+        ? byUnit.reduce((a: any, b: any) =>
+            parseFloat(a.rate) > parseFloat(b.rate) ? a : b,
+          )
+        : null;
+    const worst =
+      byUnit.length > 0
+        ? byUnit.reduce((a: any, b: any) =>
+            parseFloat(a.rate) < parseFloat(b.rate) ? a : b,
+          )
+        : null;
+
+    return {
+      weekly: weeks,
+      byUnit,
+      byProgram,
+      avgRate,
+      best,
+      worst,
+      totalUnits,
+    };
   }
 
   // --- Export Attendance Report ---

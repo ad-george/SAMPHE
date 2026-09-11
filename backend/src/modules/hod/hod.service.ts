@@ -1209,13 +1209,46 @@ export class HodService {
     if (!hod) throw new Error("HOD not found");
     const deptId = hod.departmentId;
 
+    // ✅ Get active academic year (used for fallback only)
     const activeYear = await prisma.academicYear.findFirst({
       where: { status: "ACTIVE", archived: false },
     });
 
+    // ✅ Get CURRENT SEMESTER from database (set by University Admin)
+    const currentSemester = await prisma.semester.findFirst({
+      where: {
+        universityId: hod.universityId,
+        startDate: { lte: new Date() },
+        endDate: { gte: new Date() },
+      },
+      orderBy: { startDate: "desc" },
+    });
+
+    // ✅ Use semester dates, fallback to academic year
+    const semesterStart = currentSemester?.startDate
+      ? new Date(currentSemester.startDate)
+      : activeYear?.startDate
+        ? new Date(activeYear.startDate)
+        : new Date();
+    const semesterEnd = currentSemester?.endDate
+      ? new Date(currentSemester.endDate)
+      : activeYear?.endDate
+        ? new Date(activeYear.endDate)
+        : new Date();
+
+    const totalWeeksInSemester = Math.min(
+      16,
+      Math.ceil(
+        (semesterEnd.getTime() - semesterStart.getTime()) /
+          (1000 * 60 * 60 * 24 * 7),
+      ),
+    );
+
     let weeksElapsed = 1;
-    if (activeYear?.startDate) {
-      const start = new Date(activeYear.startDate);
+    if (currentSemester?.startDate || activeYear?.startDate) {
+      const start = currentSemester?.startDate
+        ? new Date(currentSemester.startDate)
+        : new Date(activeYear!.startDate!);
       const now = new Date();
       const diffTime = now.getTime() - start.getTime();
       weeksElapsed = Math.max(
@@ -1225,6 +1258,7 @@ export class HodService {
     }
 
     const [
+      programmeCount,
       lecturerCount,
       studentCount,
       unitCount,
@@ -1235,6 +1269,7 @@ export class HodService {
       programs,
       units,
     ] = await Promise.all([
+      prisma.programme.count({ where: { departmentId: deptId } }),
       prisma.lecturer.count({ where: { departmentId: deptId } }),
       prisma.student.count({ where: { departmentId: deptId } }),
       prisma.unit.count({ where: { departmentId: deptId } }),
@@ -1261,14 +1296,15 @@ export class HodService {
       }),
       prisma.programme.findMany({
         where: { departmentId: deptId },
-        include: {
-          students: { include: { records: { select: { status: true } } } },
-        },
+        select: { id: true, name: true },
       }),
-      prisma.unit.findMany({ where: { departmentId: deptId } }),
+      prisma.unit.findMany({
+        where: { departmentId: deptId },
+        select: { id: true, programId: true },
+      }),
     ]);
 
-    const totalClassesExpected = units.length * weeksElapsed;
+    const totalClassesExpected = units.length * totalWeeksInSemester;
     const totalAttended = allSessionsCount;
     const totalMissed = Math.max(0, totalClassesExpected - totalAttended);
 
@@ -1290,38 +1326,32 @@ export class HodService {
             : 0,
       });
     }
-
-    const programStats = programs
-      .map((p) => {
-        const recs = p.students.flatMap((s) => s.records);
-        const present = recs.filter((r) => r.status === "PRESENT").length;
-        return {
-          name: p.name,
-          rate:
-            recs.length > 0
-              ? ((present / recs.length) * 100).toFixed(1)
-              : "0.0",
-        };
-      })
-      .filter((p) => parseFloat(p.rate) > 0);
-
-    // Get current semester based on today's date
-    const currentSemester = await prisma.semester.findFirst({
-      where: {
-        universityId: hod.universityId,
-        startDate: { lte: new Date() },
-        endDate: { gte: new Date() },
-      },
-      orderBy: { startDate: "desc" },
-    });
-
-    let semesterStart = currentSemester?.startDate || activeYear?.startDate;
-    let semesterEnd = currentSemester?.endDate || activeYear?.endDate;
-
     // Get all sessions for the department
     const allSessions = await prisma.attendanceSession.findMany({
       where: { lecturer: { departmentId: deptId } },
       include: { records: true },
+    });
+
+    // ✅ Attendance by Program = Sessions Held / Sessions Expected × 100
+    // Sessions Expected = Units in Program × Total Weeks in Semester
+    const programStats = programs.map((p) => {
+      const programUnits = units.filter((u) => u.programId === p.id);
+      const sessionsExpected = programUnits.length * totalWeeksInSemester;
+
+      const programSessions = allSessions.filter((s) =>
+        programUnits.some((u) => u.id === s.unitId),
+      );
+      const sessionsHeld = programSessions.length;
+
+      const rate =
+        sessionsExpected > 0
+          ? ((sessionsHeld / sessionsExpected) * 100).toFixed(1)
+          : "0.0";
+
+      return {
+        name: p.name,
+        rate,
+      };
     });
 
     // Calculate weekly trend
@@ -1409,33 +1439,39 @@ export class HodService {
       .sort((a, b) => parseFloat(a.rate) - parseFloat(b.rate))
       .slice(0, 6);
 
-    const programRates = programs.map((p) => {
-      const recs = p.students.flatMap((s) => s.records);
-      const present = recs.filter((r) => r.status === "PRESENT").length;
-      return recs.length > 0 ? (present / recs.length) * 100 : 0;
-    });
+    // ✅ Avg Attendance = Sessions Held / Sessions Expected × 100
     const avgAttendance =
-      programRates.length > 0
-        ? (
-            programRates.reduce((a, b) => a + b, 0) / programRates.length
-          ).toFixed(1)
+      totalClassesExpected > 0
+        ? ((totalAttended / totalClassesExpected) * 100).toFixed(1)
         : "0.0";
 
-    const totalPresent = allRecords.filter(
-      (r) => r.status === "PRESENT",
-    ).length;
+    // ✅ Avg Student Attendance = Average of per-session (Present / Expected) × 100
+    let sessionRateSum = 0;
+    let sessionCountWithData = 0;
+
+    allSessions.forEach((s: any) => {
+      const expected = s.totalStudents || 0;
+      const present = s.records.filter(
+        (r: any) => r.status === "PRESENT",
+      ).length;
+      if (expected > 0) {
+        sessionRateSum += (present / expected) * 100;
+        sessionCountWithData++;
+      }
+    });
+
     const avgStudentAttendance =
-      allRecords.length > 0
-        ? ((totalPresent / allRecords.length) * 100).toFixed(1)
+      sessionCountWithData > 0
+        ? (sessionRateSum / sessionCountWithData).toFixed(1)
         : "0.0";
 
     return {
       stats: {
+        programs: programmeCount,
         lecturers: lecturerCount,
         students: studentCount,
         units: unitCount,
         monthClasses: monthSessionsCount,
-        monthOverall: monthlyTrend[monthlyTrend.length - 1]?.rate || 0,
       },
       monthlyTrend,
       programStats,
@@ -1453,114 +1489,175 @@ export class HodService {
   }
 
   // --- Analytics ---
-  async getAnalytics(deptId: string) {
-    const [
-      departmentRate,
-      programStats,
-      lecturerStats,
-      unitStats,
-      lowAttendees,
-    ] = await Promise.all([
-      this.getDepartmentRate(deptId),
-      this.getProgramComparison(deptId),
-      this.getLecturerComparison(deptId),
-      this.getUnitStats(deptId),
-      this.getLowAttendees(deptId),
-    ]);
+  // --- Analytics ---
+  async getAnalytics(hodId: string) {
+    const hod = await prisma.hod.findUnique({ where: { id: hodId } });
+    if (!hod) throw new Error("HOD not found");
+    const deptId = hod.departmentId;
 
-    return {
-      departmentRate,
-      programStats,
-      lecturerStats,
-      unitStats,
-      lowAttendees,
-    };
-  }
-
-  private async getDepartmentRate(deptId: string) {
-    const records = await prisma.attendanceRecord.findMany({
-      where: { session: { lecturer: { departmentId: deptId } } },
-      select: { status: true },
+    // ✅ Get current semester from database
+    const currentSemester = await prisma.semester.findFirst({
+      where: {
+        universityId: hod.universityId,
+        startDate: { lte: new Date() },
+        endDate: { gte: new Date() },
+      },
+      orderBy: { startDate: "desc" },
     });
-    const present = records.filter((r) => r.status === "PRESENT").length;
-    return records.length > 0
-      ? ((present / records.length) * 100).toFixed(1)
-      : "0.0";
-  }
 
-  private async getProgramComparison(deptId: string) {
-    const programs = await prisma.programme.findMany({
-      where: { departmentId: deptId },
-      include: { students: { include: { records: true } } },
+    const activeYear = await prisma.academicYear.findFirst({
+      where: { status: "ACTIVE", archived: false },
     });
-    return programs.map((p) => {
-      const allRecords = p.students.flatMap((s) => s.records);
-      const present = allRecords.filter((r) => r.status === "PRESENT").length;
+
+    const semesterStart = currentSemester?.startDate
+      ? new Date(currentSemester.startDate)
+      : activeYear?.startDate
+        ? new Date(activeYear.startDate)
+        : new Date();
+    const semesterEnd = currentSemester?.endDate
+      ? new Date(currentSemester.endDate)
+      : activeYear?.endDate
+        ? new Date(activeYear.endDate)
+        : new Date();
+
+    const totalWeeksInSemester = Math.min(
+      16,
+      Math.ceil(
+        (semesterEnd.getTime() - semesterStart.getTime()) /
+          (1000 * 60 * 60 * 24 * 7),
+      ),
+    );
+
+    // ✅ Fetch all units, lecturers, programs, and sessions for the department
+    const [units, lecturers, programs, allSessions, students] =
+      await Promise.all([
+        prisma.unit.findMany({
+          where: { departmentId: deptId },
+          select: { id: true, programId: true },
+        }),
+        prisma.lecturer.findMany({
+          where: { departmentId: deptId },
+          select: { id: true, fullName: true },
+        }),
+        prisma.programme.findMany({
+          where: { departmentId: deptId },
+          select: { id: true, name: true },
+        }),
+        prisma.attendanceSession.findMany({
+          where: { lecturer: { departmentId: deptId } },
+          select: { id: true, unitId: true, lecturerId: true },
+        }),
+        prisma.student.findMany({
+          where: { departmentId: deptId },
+          include: { records: true, program: true },
+        }),
+      ]);
+
+    // ============================================================
+    // 1. DEPARTMENT ATTENDANCE RATE = Sessions Held / Expected × 100
+    // ============================================================
+    const totalSessionsExpected = units.length * totalWeeksInSemester;
+    const totalSessionsHeld = allSessions.length;
+    const departmentRate =
+      totalSessionsExpected > 0
+        ? ((totalSessionsHeld / totalSessionsExpected) * 100).toFixed(1)
+        : "0.0";
+
+    // ============================================================
+    // 2. PROGRAM COMPARISON = Sessions Held / Expected × 100 per program
+    // ============================================================
+    const programStats = programs.map((p) => {
+      const programUnits = units.filter((u) => u.programId === p.id);
+      const sessionsExpected = programUnits.length * totalWeeksInSemester;
+      const programSessions = allSessions.filter((s) =>
+        programUnits.some((u) => u.id === s.unitId),
+      );
+      const sessionsHeld = programSessions.length;
+
       const rate =
-        allRecords.length > 0
-          ? ((present / allRecords.length) * 100).toFixed(1)
+        sessionsExpected > 0
+          ? ((sessionsHeld / sessionsExpected) * 100).toFixed(1)
           : "0.0";
+
       return {
         programId: p.id,
         programName: p.name,
-        studentCount: p.students.length,
+        studentCount: students.filter((s) => s.program?.name === p.name).length,
         rate,
+        sessionsHeld,
+        sessionsExpected,
       };
     });
-  }
 
-  private async getLecturerComparison(deptId: string) {
-    const lecturers = await prisma.lecturer.findMany({
-      where: { departmentId: deptId },
-      include: { sessions: { include: { records: true } } },
-    });
-    return lecturers
+    // ============================================================
+    // 3. LECTURER PERFORMANCE = Sessions Held / Expected × 100
+    // ============================================================
+    const lecturerStats = lecturers
       .map((l) => {
-        const allRecords = l.sessions.flatMap((s) => s.records);
-        const present = allRecords.filter((r) => r.status === "PRESENT").length;
+        // Get units assigned to this lecturer
+        const lecturerAssignments = allSessions.filter(
+          (s) => s.lecturerId === l.id,
+        );
+        // Sum expected sessions across lecturer's distinct units
+        const lecturerUnitIds = [
+          ...new Set(lecturerAssignments.map((s) => s.unitId)),
+        ];
+        const sessionsExpected = lecturerUnitIds.length * totalWeeksInSemester;
+        const sessionsHeld = lecturerAssignments.length;
+
         const rate =
-          allRecords.length > 0
-            ? ((present / allRecords.length) * 100).toFixed(1)
+          sessionsExpected > 0
+            ? ((sessionsHeld / sessionsExpected) * 100).toFixed(1)
             : "0.0";
+
         return {
           lecturerId: l.id,
           lecturerName: l.fullName,
-          sessionCount: l.sessions.length,
+          sessionCount: sessionsHeld,
           rate,
         };
       })
-      .sort((a: any, b: any) => parseFloat(b.rate) - parseFloat(a.rate));
-  }
+      .sort((a, b) => parseFloat(b.rate) - parseFloat(a.rate));
 
-  private async getUnitStats(deptId: string) {
-    const units = await prisma.unit.findMany({
-      where: { departmentId: deptId },
-      include: { sessions: { include: { records: true } } },
-    });
-    return units
-      .map((u) => {
-        const allRecords = u.sessions.flatMap((s) => s.records);
-        const present = allRecords.filter((r) => r.status === "PRESENT").length;
-        const rate =
-          allRecords.length > 0
-            ? ((present / allRecords.length) * 100).toFixed(1)
-            : "0.0";
-        return {
-          unitId: u.id,
-          unitName: u.name,
-          sessionCount: u.sessions.length,
-          rate,
-        };
-      })
-      .sort((a: any, b: any) => parseFloat(a.rate) - parseFloat(b.rate));
-  }
+    // ============================================================
+    // 4. WORST PERFORMING UNITS = Sessions Held / Expected × 100
+    // ============================================================
+    const unitStats = units.map((u) => {
+      const unitSessions = allSessions.filter((s) => s.unitId === u.id);
+      const sessionsExpected = totalWeeksInSemester;
+      const sessionsHeld = unitSessions.length;
 
-  private async getLowAttendees(deptId: string) {
-    const students = await prisma.student.findMany({
-      where: { departmentId: deptId },
-      include: { records: true, program: true },
+      const rate =
+        sessionsExpected > 0
+          ? ((sessionsHeld / sessionsExpected) * 100).toFixed(1)
+          : "0.0";
+
+      // Fetch unit name
+      return {
+        unitId: u.id,
+        unitName: "", // will be filled below
+        sessionCount: sessionsHeld,
+        rate,
+        sessionsExpected,
+      };
     });
-    return students
+
+    // Fill in unit names
+    const unitIds = unitStats.map((u) => u.unitId);
+    const unitNames = await prisma.unit.findMany({
+      where: { id: { in: unitIds } },
+      select: { id: true, name: true },
+    });
+    const unitNameMap = new Map(unitNames.map((u) => [u.id, u.name]));
+    unitStats.forEach((u) => {
+      u.unitName = unitNameMap.get(u.unitId) || "Unknown";
+    });
+    unitStats.sort((a, b) => parseFloat(a.rate) - parseFloat(b.rate));
+
+    // ============================================================
+    // 5. INTERVENTION LIST = Students with (Present / Total) < 75%
+    // ============================================================
+    const lowAttendees = students
       .map((s) => {
         const present = s.records.filter((r) => r.status === "PRESENT").length;
         const rate =
@@ -1569,12 +1666,20 @@ export class HodService {
           studentId: s.id,
           regNo: s.regNo,
           name: s.fullName,
-          program: s.program.name,
+          program: s.program?.name || "N/A",
           rate: rate.toFixed(1),
         };
       })
-      .filter((s: any) => parseFloat(s.rate) < 75)
-      .sort((a: any, b: any) => parseFloat(a.rate) - parseFloat(b.rate));
+      .filter((s) => parseFloat(s.rate) < 75)
+      .sort((a, b) => parseFloat(a.rate) - parseFloat(b.rate));
+
+    return {
+      departmentRate,
+      programStats,
+      lecturerStats,
+      unitStats,
+      lowAttendees,
+    };
   }
 
   // --- Search ---

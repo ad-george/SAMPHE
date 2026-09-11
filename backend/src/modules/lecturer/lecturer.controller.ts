@@ -95,6 +95,25 @@ export const getSession = async (
 ) => {
   try {
     const data = await service.getSession(req.params.id);
+    if (!data) {
+      return res.status(404).json({
+        success: false,
+        message: "Session not found or has expired.",
+      });
+    }
+    res.json({ success: true, data });
+  } catch (e: any) {
+    next({ statusCode: 400, message: e.message });
+  }
+};
+
+export const getSessionsAnalytics = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const data = await service.getSessionsAnalytics(req.user!.id);
     res.json({ success: true, data });
   } catch (e: any) {
     next({ statusCode: 400, message: e.message });
@@ -150,6 +169,12 @@ export const getSessionByToken = async (
 ) => {
   try {
     const data = await service.getSessionByToken(req.params.token);
+    if (!data) {
+      return res.status(404).json({
+        success: false,
+        message: "The attendance link is invalid or has expired.",
+      });
+    }
     res.json({ success: true, data });
   } catch (e: any) {
     next({ statusCode: 400, message: e.message });
