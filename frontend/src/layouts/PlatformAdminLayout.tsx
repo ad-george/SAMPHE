@@ -197,7 +197,7 @@ const PlatformAdminLayout = () => {
             {!collapsed && (
               <div className="overflow-hidden">
                 <h1 className="font-bold text-2xl text-white tracking-tight whitespace-nowrap">
-                  SUAMP<span className="text-violet-400">.dev</span>
+                  SAMPHE<span className="text-violet-400">.dev</span>
                 </h1>
                 <p className="text-[10px] text-gray-500 uppercase tracking-widest whitespace-nowrap">
                   Platform Control

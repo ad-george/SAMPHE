@@ -13,6 +13,7 @@ const LecturerLayout = () => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [searchQ, setSearchQ] = useState("");
   const [searchResults, setSearchResults] = useState<any>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [editProfile, setEditProfile] = useState(false);
@@ -29,14 +30,15 @@ const LecturerLayout = () => {
   const profileRef = useRef<HTMLDivElement>(null);
 
   const navItems = [
-    { path: "/lecturer", label: "Dashboard", icon: "◈" },
-    { path: "/lecturer/units", label: "My Units", icon: "◉" },
+    { path: "/lecturer", label: "Dashboard", icon: "◯" },
+    { path: "/lecturer/units", label: "My Units", icon: "◯" },
     { path: "/lecturer/start", label: "Start Attendance", icon: "▶" },
-    { path: "/lecturer/live", label: "Live Session", icon: "●" },
-    { path: "/lecturer/history", label: "History", icon: "◧" },
-    { path: "/lecturer/students", label: "Students", icon: "◎" },
-    { path: "/lecturer/reports", label: "Reports", icon: "📄" },
-    { path: "/lecturer/analytics", label: "Analytics", icon: "◯" },
+    { path: "/lecturer/live", label: "Live Session", icon: "◉" },
+    { path: "/lecturer/history", label: "History", icon: "◯" },
+    { path: "/lecturer/students", label: "Students", icon: "◯" },
+    { path: "/lecturer/reports", label: "Reports", icon: "◯" },
+    { path: "/lecturer/analytics", label: "Attendance", icon: "◯" },
+    { path: "/lecturer/sessions-analytics", label: "Sessions", icon: "◯" },
   ];
 
   useEffect(() => {
@@ -174,11 +176,22 @@ const LecturerLayout = () => {
 
   return (
     <div className="min-h-screen bg-gray-200 text-gray-800 flex font-sans">
+      {/* Mobile Overlay */}
+      {mobileOpen && (
+        <div
+          onClick={() => setMobileOpen(false)}
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+        />
+      )}
+
       {/* Sidebar — Gray */}
       <aside
-        className={`sticky top-0 h-screen flex flex-col shrink-0 z-40 transition-all duration-300 overflow-visible ${
-          collapsed ? "w-20" : "w-64"
-        } bg-gray-800`}
+        className={`h-screen flex flex-col shrink-0 z-40 transition-all duration-300 overflow-visible bg-gray-800
+      w-64
+      fixed md:sticky md:top-0
+      ${collapsed ? "md:w-20" : "md:w-64"}
+      ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+    `}
       >
         {/* Brand — circular pill */}
         <div className="bg-gray-800 shrink-0 flex items-center justify-center border-b border-gray-700 p-4">
@@ -207,7 +220,7 @@ const LecturerLayout = () => {
             {!collapsed && (
               <div className="overflow-hidden">
                 <h1 className="font-bold text-white text-2xl tracking-tight whitespace-nowrap">
-                  SAMP
+                  SAMPHE
                 </h1>
                 <p className="text-xs text-gray-300 font-medium whitespace-nowrap">
                   Lecturer Portal
@@ -234,6 +247,7 @@ const LecturerLayout = () => {
                 <Link
                   key={item.path}
                   to={item.path}
+                  onClick={() => setMobileOpen(false)}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm ${
                     active
                       ? "bg-emerald-600 text-white font-medium shadow-sm"
@@ -303,108 +317,72 @@ const LecturerLayout = () => {
       {/* Main — expands to fill remaining space */}
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto bg-gray-100">
         {/* Top Bar — Green */}
-        {/* Top Bar — Green */}
-        <header className="sticky top-0 bg-emerald-600 border-b border-emerald-500 flex items-center px-6 z-30 h-16 shrink-0">
-          <div className="flex flex-col mr-8">
-            <h2 className="text-lg font-semibold text-white leading-tight">
-              {navItems.find((n) => n.path === location.pathname)?.label ||
-                "Dashboard"}
-            </h2>
-            <p className="text-xs text-emerald-100 leading-tight">
-              {new Date().toLocaleDateString("en-US", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </p>
-          </div>
+        <header className="sticky top-0 bg-emerald-600 border-b border-emerald-500 z-30 shrink-0">
+          <div className="flex items-center px-4 md:px-6 h-16">
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="md:hidden mr-3 text-white text-2xl"
+              aria-label="Toggle menu"
+            >
+              ☰
+            </button>
 
-          <div className="flex items-center gap-4">
-            <div className="flex flex-col items-center h-10 justify-between">
-              <div className="h-full w-px bg-emerald-300/50"></div>
-            </div>
-
-            <div className="flex flex-col">
-              <span className="text-lg font-semibold text-white leading-tight">
-                {user?.universityName || "University"}
-              </span>
-              <p className="text-xs text-emerald-100 leading-tight">
-                Department of {user?.departmentName || "Department"}
+            {/* Left: Tab Name + Date */}
+            <div className="flex flex-col min-w-0">
+              <h2 className="text-base md:text-lg font-semibold text-white leading-tight truncate">
+                {navItems.find((n) => n.path === location.pathname)?.label ||
+                  "Dashboard"}
+              </h2>
+              <p className="text-[10px] md:text-xs text-emerald-100 leading-tight truncate">
+                {new Date().toLocaleDateString("en-US", {
+                  weekday: "short",
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })}
               </p>
             </div>
-          </div>
 
-          <div className="flex-1"></div>
-
-          <div className="flex items-center gap-4 ml-4">
-            <div className="relative" ref={searchRef}>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                  ⌕
+            {/* Divider + Institution + Department — right next to date */}
+            <div className="hidden md:flex items-center gap-4 ml-6">
+              <div className="h-10 w-px bg-emerald-300/50"></div>
+              <div className="flex flex-col">
+                <span className="text-lg font-semibold text-white leading-tight">
+                  {user?.universityName || "University"}
                 </span>
-                <input
-                  type="text"
-                  value={searchQ}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  onFocus={() => searchQ.length >= 2 && setShowSearch(true)}
-                  placeholder="Search"
-                  className="bg-slate-100 border border-slate-200 rounded-lg pl-10 pr-4 py-2 text-sm w-40 focus:outline-none focus:border-emerald-400 text-slate-700 placeholder-slate-400"
-                />
+                <p className="text-xs text-emerald-100 leading-tight">
+                  Department of {user?.departmentName || "Department"}
+                </p>
               </div>
-              {showSearch && searchResults && (
-                <div className="absolute top-full right-0 mt-2 w-96 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden z-50">
-                  {!searchResults.lecturers?.length &&
-                    !searchResults.students?.length &&
-                    !searchResults.units?.length &&
-                    !searchResults.programs?.length && (
-                      <div className="p-4 text-sm text-slate-500 text-center">
-                        No results
-                      </div>
-                    )}
-                  {["lecturers", "students", "units", "programs"].map(
-                    (cat) =>
-                      searchResults[cat]?.length > 0 && (
-                        <div
-                          key={cat}
-                          className="p-2 border-t border-slate-100 first:border-0"
-                        >
-                          <p className="text-[10px] text-slate-400 uppercase tracking-wider px-3 py-1">
-                            {cat}
-                          </p>
-                          {searchResults[cat].map((item: any) => (
-                            <button
-                              key={item.id}
-                              onClick={() => goToResult(item.type)}
-                              className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50 transition"
-                            >
-                              <p className="text-sm text-slate-800 font-medium">
-                                {item.title}
-                              </p>
-                              <p className="text-xs text-slate-500">
-                                {item.subtitle}
-                              </p>
-                            </button>
-                          ))}
-                        </div>
-                      ),
-                  )}
-                </div>
-              )}
             </div>
 
-            {/* Notifications */}
-            <button
-              onClick={() => setNotifOpen(true)}
-              className="w-9 h-9 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center hover:bg-slate-200 transition relative"
-            >
-              <span className="text-slate-500">🔔</span>
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 rounded-full text-[9px] text-white flex items-center justify-center font-bold">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
+            {/* Spacer — pushes Search + Bell to the far right */}
+            <div className="flex-1"></div>
+
+            {/* Right: Search + Notifications */}
+            <div className="flex items-center gap-2 md:gap-4">
+              {/* Search Bar */}
+              <div className="hidden md:flex items-center">
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  className="w-32 lg:w-40 h-9 px-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-emerald-100/70 text-sm focus:outline-none focus:bg-white/20 transition"
+                />
+              </div>
+
+              <button
+                onClick={() => setNotifOpen(true)}
+                className="w-9 h-9 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition relative"
+              >
+                <span className="text-white">🔔</span>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 rounded-full text-[9px] text-white flex items-center justify-center font-bold">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
         </header>
 

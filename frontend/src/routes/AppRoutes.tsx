@@ -9,7 +9,6 @@ import PlatformAdminSystem from "../features/platform-admin/SystemHealth";
 import PlatformAdminAudit from "../features/platform-admin/AuditLogs";
 import PlatformAdminSettings from "../features/platform-admin/Settings";
 import AuthLayout from "../layouts/AuthLayout";
-// import Login from "../features/auth/Login";
 import StudentAttendance from "../features/student/Attendance";
 import UniversityAdminLayout from "../layouts/UniversityAdminLayout";
 import UniversityAdminDashboard from "../features/university-admin/Dashboard";
@@ -48,6 +47,7 @@ import LoginPlatformAdmin from "../features/auth/LoginPlatformAdmin";
 import LoginUniversityAdmin from "../features/auth/LoginUniversityAdmin";
 import LoginHOD from "../features/auth/LoginHOD";
 import LoginLecturer from "../features/auth/LoginLecturer";
+import SessionsAnalytics from "../features/lecturer/SessionsAnalytics";
 
 const ProtectedRoute = ({
   allowedRoles,
@@ -102,16 +102,6 @@ const AppRoutes = () => (
         path="/"
         element={<Navigate to="/login/university-admin" replace />}
       />
-
-      {/* Keep old /login for backward compatibility
-      <Route
-        path="/login"
-        element={
-          <AuthLayout>
-            <Login />
-          </AuthLayout>
-        }
-      /> */}
 
       <Route path="/attendance/:token" element={<StudentAttendance />} />
 
@@ -210,6 +200,7 @@ const AppRoutes = () => (
         <Route path="students" element={<LecturerStudentSearch />} />
         <Route path="reports" element={<LecturerReports />} />
         <Route path="analytics" element={<LecturerAnalytics />} />
+        <Route path="sessions-analytics" element={<SessionsAnalytics />} />
       </Route>
 
       {/* FALLBACK */}

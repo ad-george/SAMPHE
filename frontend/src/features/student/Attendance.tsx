@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import api from "../../services/api";
 import toast from "react-hot-toast";
+import backgroundImage from "../../assets/submission.png";
 
 const StudentAttendance = () => {
   const { token } = useParams<{ token: string }>();
@@ -10,16 +11,70 @@ const StudentAttendance = () => {
   const [studentName, setStudentName] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [expired, setExpired] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const pollInterval = useRef<any>(null);
+  const timerInterval = useRef<any>(null);
+
+  const accentColor = "#10b981"; // Green accent
+
+  // ✅ Check if session is still valid
+  const checkSessionValidity = async () => {
+    try {
+      const res = await api.get(`/lecturer/attend/${token}`);
+      if (!res.data.success || !res.data.data) {
+        setExpired(true);
+        setSession(null);
+        if (pollInterval.current) clearInterval(pollInterval.current);
+        if (timerInterval.current) clearInterval(timerInterval.current);
+      }
+    } catch (err: any) {
+      if (err.response?.status === 404) {
+        setExpired(true);
+        setSession(null);
+        if (pollInterval.current) clearInterval(pollInterval.current);
+        if (timerInterval.current) clearInterval(timerInterval.current);
+      }
+    }
+  };
 
   useEffect(() => {
+    const submittedKey = `attendance_submitted_${token}`;
+    if (localStorage.getItem(submittedKey) === "true") {
+      setSubmitted(true);
+    }
+
     api
       .get(`/lecturer/attend/${token}`)
       .then((res) => {
         setSession(res.data.data);
+
+        // ✅ Start countdown timer
+        const startTime = new Date(res.data.data.createdAt).getTime();
+        const endTime = startTime + res.data.data.duration * 60000;
+
+        const tick = () => {
+          const remaining = Math.max(0, endTime - Date.now());
+          setTimeLeft(Math.floor(remaining / 1000));
+        };
+        tick();
+        timerInterval.current = setInterval(tick, 1000);
+
+        // ✅ Start polling
+        pollInterval.current = setInterval(checkSessionValidity, 5000);
       })
-      .catch(() => {
-        toast.error("Invalid or expired attendance link");
+      .catch((err) => {
+        if (err.response?.status === 404) {
+          setExpired(true);
+        } else {
+          toast.error("Invalid or expired attendance link");
+        }
       });
+
+    return () => {
+      if (pollInterval.current) clearInterval(pollInterval.current);
+      if (timerInterval.current) clearInterval(timerInterval.current);
+    };
   }, [token]);
 
   const lookupStudent = async () => {
@@ -45,7 +100,6 @@ const StudentAttendance = () => {
     if (!studentName) return toast.error("Enter a valid registration number");
     setLoading(true);
 
-    // Get Google Account ID if available
     let googleAccountId = null;
     try {
       const accounts = await (
@@ -68,10 +122,18 @@ const StudentAttendance = () => {
             studentAccuracy: pos.coords.accuracy,
             googleAccountId: googleAccountId,
           });
+          localStorage.setItem(`attendance_submitted_${token}`, "true");
           setSubmitted(true);
           toast.success("Attendance submitted successfully!");
         } catch (err: any) {
-          toast.error(err.response?.data?.message || "Submission failed");
+          if (err.response?.status === 404) {
+            setExpired(true);
+            setSession(null);
+          } else {
+            toast.error(err.response?.data?.message || "Submission failed", {
+              duration: 6000,
+            });
+          }
         } finally {
           setLoading(false);
         }
@@ -80,9 +142,38 @@ const StudentAttendance = () => {
         toast.error("Location permission is required");
         setLoading(false);
       },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0,
+      },
     );
   };
 
+  const formatCountdown = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${m}:${sec.toString().padStart(2, "0")}`;
+  };
+
+  // ✅ Expired
+  if (expired) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-800 p-4">
+        <div className="bg-slate-700 rounded-2xl p-8 text-center border border-slate-600 max-w-md">
+          <div className="w-16 h-16 rounded-full bg-rose-900/30 flex items-center justify-center mx-auto mb-4 border border-rose-800">
+            <span className="text-3xl">🚫</span>
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">Link Expired</h2>
+          <p className="text-slate-400 text-sm">
+            This attendance link is no longer valid.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ Loading
   if (!session) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-800">
@@ -103,15 +194,41 @@ const StudentAttendance = () => {
   const studyYear = unit?.studyYear;
   const semester = unit?.semester;
 
+  // Format year/sem: "Year 2" → "Y2", "Semester 1" → "S1"
+  const yearNum = studyYear?.name?.match(/\d+/)?.[0] || "?";
+  const semNum = semester?.name?.match(/\d+/)?.[0] || "?";
+  const yearSem = `Y${yearNum}S${semNum}`;
+
+  // Start and End time
   const sessionDate = new Date(session.createdAt);
+  const endDate = new Date(sessionDate.getTime() + session.duration * 60000);
+  const startTimeStr = sessionDate.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const endTimeStr = endDate.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  // Week number
   const startOfYear = new Date(sessionDate.getFullYear(), 0, 1);
   const weekNumber = Math.ceil(
     ((sessionDate.getTime() - startOfYear.getTime()) / 86400000 + 1) / 7,
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full border border-slate-200">
+    <div
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
+      {/* Card with reduced opacity backdrop */}
+      <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl p-6 md:p-8 max-w-2xl w-full border border-slate-200">
         {/* University Header */}
         <div className="text-center border-b border-slate-200 pb-6 mb-6">
           {university?.logo ? (
@@ -121,7 +238,10 @@ const StudentAttendance = () => {
               className="h-20 w-auto mx-auto mb-4 object-contain"
             />
           ) : (
-            <div className="w-20 h-20 bg-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div
+              className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4"
+              style={{ backgroundColor: accentColor }}
+            >
               <span className="text-3xl text-white">🎓</span>
             </div>
           )}
@@ -139,62 +259,102 @@ const StudentAttendance = () => {
           </div>
         </div>
 
+        {/* Countdown Banner */}
+        <div className="mb-5 flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
+          <div>
+            <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">
+              Session Closes In
+            </p>
+            <p
+              className="text-2xl font-bold font-mono"
+              style={{ color: accentColor }}
+            >
+              {formatCountdown(timeLeft)}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">
+              Started / Ends
+            </p>
+            <p className="text-sm font-semibold text-slate-700">
+              {startTimeStr} — {endTimeStr}
+            </p>
+          </div>
+        </div>
+
         {/* Academic Session Details */}
         <div className="mb-6">
-          <h2 className="text-lg font-bold text-slate-800 mb-4 text-center uppercase tracking-wide border-b border-slate-200 pb-2">
+          <h2
+            className="text-sm font-bold mb-4 text-center uppercase tracking-wide border-b border-slate-200 pb-2"
+            style={{ color: accentColor }}
+          >
             Academic Session Details
           </h2>
+
           <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
+            {/* LEFT COLUMN */}
             <div className="flex">
-              <span className="text-slate-500 w-32 flex-shrink-0">School:</span>
+              <span className="text-slate-500 w-28 flex-shrink-0">School:</span>
               <span className="text-slate-800 font-medium">
                 {faculty?.name || department?.faculty?.name || "N/A"}
               </span>
             </div>
+
+            {/* RIGHT COLUMN */}
             <div className="flex">
-              <span className="text-slate-500 w-32 flex-shrink-0">
+              <span className="text-slate-500 w-28 flex-shrink-0">
+                Stage / Campus:
+              </span>
+              <span className="text-slate-800 font-medium">
+                {yearSem} / MAIN
+              </span>
+            </div>
+
+            {/* LEFT */}
+            <div className="flex">
+              <span className="text-slate-500 w-28 flex-shrink-0">
                 Department:
               </span>
               <span className="text-slate-800 font-medium">
                 {department?.name || "N/A"}
               </span>
             </div>
+
+            {/* RIGHT */}
             <div className="flex">
-              <span className="text-slate-500 w-32 flex-shrink-0">
-                Programme:
-              </span>
-              <span className="text-slate-800 font-medium">
-                {program?.name || "N/A"}
-              </span>
-            </div>
-            <div className="flex">
-              <span className="text-slate-500 w-32 flex-shrink-0">Unit:</span>
-              <span className="text-slate-800 font-medium">
-                {unit?.code} - {unit?.name}
-              </span>
-            </div>
-            <div className="flex">
-              <span className="text-slate-500 w-32 flex-shrink-0">
-                Stage / Campus:
-              </span>
-              <span className="text-slate-800 font-medium">
-                {studyYear?.name || "N/A"} / MAIN
-              </span>
-            </div>
-            <div className="flex">
-              <span className="text-slate-500 w-32 flex-shrink-0">
+              <span className="text-slate-500 w-28 flex-shrink-0">
                 Date / Week:
               </span>
               <span className="text-slate-800 font-medium">
                 {sessionDate.toLocaleDateString()} / Week {weekNumber}
               </span>
             </div>
-            <div className="flex col-span-2">
-              <span className="text-slate-500 w-32 flex-shrink-0">
+
+            {/* LEFT */}
+            <div className="flex">
+              <span className="text-slate-500 w-28 flex-shrink-0">
+                Programme:
+              </span>
+              <span className="text-slate-800 font-medium">
+                {program?.name || "N/A"}
+              </span>
+            </div>
+
+            {/* RIGHT */}
+            <div className="flex">
+              <span className="text-slate-500 w-28 flex-shrink-0">
                 Lecturer:
               </span>
               <span className="text-slate-800 font-medium">
                 {lecturer?.fullName || "N/A"}
+              </span>
+            </div>
+
+            {/* LEFT — Unit */}
+            <div className="flex col-span-2">
+              <span className="text-slate-500 w-28 flex-shrink-0">Unit:</span>
+              <span className="text-slate-800 font-medium">
+                {unit?.code} - {unit?.name}
               </span>
             </div>
           </div>
@@ -202,13 +362,10 @@ const StudentAttendance = () => {
 
         <hr className="border-slate-200 mb-6" />
 
-        {/* ================================================ */}
-        {/* ✅ SUCCESS STATE - CENTERED CARD OVERLAY */}
-        {/* ================================================ */}
-
+        {/* Success State */}
         {submitted ? (
           <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
-            <div className="bg-white rounded-3xl shadow-2xl p-10 max-w-md w-full text-center animate-in fade-in zoom-in duration-300">
+            <div className="bg-white rounded-3xl shadow-2xl p-10 max-w-md w-full text-center">
               <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-5">
                 <span className="text-5xl">✅</span>
               </div>
@@ -223,9 +380,6 @@ const StudentAttendance = () => {
             </div>
           </div>
         ) : (
-          /* ================================================ */
-          /* ATTENDANCE FORM */
-          /* ================================================ */
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -236,7 +390,7 @@ const StudentAttendance = () => {
                 value={regNo}
                 onChange={(e) => setRegNo(e.target.value)}
                 onBlur={lookupStudent}
-                className="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white/80 border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500"
                 placeholder="e.g. BSC/01/2023"
               />
             </div>
@@ -255,7 +409,8 @@ const StudentAttendance = () => {
             <button
               onClick={submit}
               disabled={!studentName || loading}
-              className="w-full bg-emerald-600 text-white py-3 rounded-lg font-semibold hover:bg-emerald-500 transition disabled:opacity-50"
+              className="w-full text-white py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50"
+              style={{ backgroundColor: accentColor }}
             >
               {loading ? "Submitting..." : "Submit Attendance"}
             </button>

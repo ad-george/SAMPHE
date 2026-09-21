@@ -293,7 +293,7 @@ const Dashboard = () => {
               onClick={() => navigate("/lecturer/history")}
               className="text-xs text-emerald-400 font-medium hover:underline"
             >
-              View all →
+              View all
             </button>
           </div>
           <div className="overflow-x-auto">
@@ -303,9 +303,7 @@ const Dashboard = () => {
                   <th className="text-left pb-3 font-medium">Date</th>
                   <th className="text-left pb-3 font-medium">Unit</th>
                   <th className="text-left pb-3 font-medium">Program/Year</th>
-                  <th className="text-left pb-3 font-medium">Present/Total</th>
                   <th className="text-left pb-3 font-medium">Attendance</th>
-                  <th className="text-left pb-3 font-medium">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -324,9 +322,6 @@ const Dashboard = () => {
                       <td className="py-3 text-slate-400 text-xs">
                         {s.program} {s.studyYear}
                       </td>
-                      <td className="py-3 text-slate-300 text-xs">
-                        {s.present}/{s.total}
-                      </td>
                       <td className="py-3">
                         <span
                           className={`text-xs font-bold px-2 py-0.5 rounded-full ${
@@ -338,11 +333,6 @@ const Dashboard = () => {
                           }`}
                         >
                           {s.rate}%
-                        </span>
-                      </td>
-                      <td className="py-3">
-                        <span className="w-5 h-5 rounded-full bg-emerald-900/30 text-emerald-400 flex items-center justify-center text-xs">
-                          ✓
                         </span>
                       </td>
                     </tr>
@@ -365,9 +355,6 @@ const Dashboard = () => {
         <div className="bg-slate-700 border border-slate-600 rounded-2xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-white">Weekly Attendance Trend</h3>
-            <select className="text-xs bg-slate-600 border border-slate-500 rounded-lg px-2 py-1 text-white focus:outline-none">
-              <option>This Semester</option>
-            </select>
           </div>
           <div className="h-64">
             {analytics?.weekly?.length > 0 ? (
@@ -409,12 +396,6 @@ const Dashboard = () => {
         <div className="bg-slate-700 border border-slate-600 rounded-2xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-white">My Units</h3>
-            <button
-              onClick={() => navigate("/lecturer/units")}
-              className="text-xs text-emerald-400 font-medium hover:underline"
-            >
-              View all →
-            </button>
           </div>
           <div className="space-y-4">
             {myUnits.map((u: any, i: number) => (
@@ -462,7 +443,7 @@ const Dashboard = () => {
               onClick={() => navigate("/lecturer/analytics")}
               className="text-xs text-emerald-400 font-medium hover:underline"
             >
-              View analytics →
+              View analytics
             </button>
           </div>
           <div className="h-48 flex items-center justify-center relative">

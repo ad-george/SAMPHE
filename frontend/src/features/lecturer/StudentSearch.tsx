@@ -147,9 +147,9 @@ const Students = () => {
             setSelectedStudent(null);
             setDetail(null);
           }}
-          className="text-sm text-slate-600 hover:text-slate-800 flex items-center gap-1 mb-2"
+          className="text-sm text-green-600 hover:text-green-800 font-bold flex items-center gap-1 mb-2"
         >
-          ← Back to Students
+          Back to Students
         </button>
 
         {/* Student Header */}

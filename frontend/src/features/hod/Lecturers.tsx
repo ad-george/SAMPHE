@@ -306,11 +306,11 @@ const Lecturers = () => {
     : { labels: [], datasets: [] };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto px-6">
+    <div className="space-y-6 max-w-5xl mx-auto px-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-800 tracking-tight">
-            👨Lecturer Management
+            Lecturer Management
           </h1>
           <p className="text-slate-500 mt-1">
             Manage all lecturers in your department
@@ -356,13 +356,13 @@ const Lecturers = () => {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-100 text-slate-500 text-xs uppercase bg-slate-50/50">
-                {/* Changed all th classes from text-left to text-center */}
-                <th className="text-center p-3 font-medium w-10">#</th>
-                <th className="text-center p-3 font-medium w-20">Staff No</th>
-                <th className="text-center p-3 font-medium w-64">Name</th>
-                <th className="text-center p-3 font-medium w-16">Units</th>
-                <th className="text-center p-3 font-medium w-28">Status</th>
-                <th className="text-center p-3 font-medium w-20">Action</th>
+                {/* Left-aligned all th classes */}
+                <th className="text-left p-3 font-medium w-10">#</th>
+                <th className="text-left p-3 font-medium w-20">Staff No</th>
+                <th className="text-left p-3 font-medium w-64">Name</th>
+                <th className="text-left p-3 font-medium w-16">Units</th>
+                <th className="text-left p-3 font-medium w-28">Status</th>
+                <th className="text-left p-3 font-medium w-20">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -377,28 +377,28 @@ const Lecturers = () => {
                       l.status !== "ACTIVE" ? "opacity-50" : ""
                     } ${idx % 2 === 0 ? "bg-white" : "bg-slate-50/30"}`}
                   >
-                    {/* Centered serial number */}
-                    <td className="p-3 text-slate-400 font-mono text-xs text-center">
+                    {/* Left-aligned serial number */}
+                    <td className="p-3 text-slate-400 font-mono text-xs text-left">
                       {idx + 1}
                     </td>
 
-                    {/* Centered staff number */}
-                    <td className="p-3 text-slate-800 font-mono text-xs truncate max-w-[110px] text-center">
+                    {/* Left-aligned staff number */}
+                    <td className="p-3 text-slate-800 font-mono text-xs truncate max-w-[110px] text-left">
                       {l.staffNumber}
                     </td>
 
-                    {/* Centered full name */}
-                    <td className="p-3 text-slate-800 font-medium truncate max-w-[200px] text-center">
+                    {/* left aligned full name */}
+                    <td className="p-3 text-slate-800 font-medium truncate max-w-[200px] text-left">
                       {l.fullName}
                     </td>
 
-                    {/* Centered unit count */}
-                    <td className="p-3 text-slate-500 text-center font-medium">
+                    {/* Left-aligned unit count */}
+                    <td className="p-3 text-slate-500 text-left font-medium">
                       {unitCount}
                     </td>
 
-                    {/* Centered status wrapper */}
-                    <td className="p-3 text-center">
+                    {/* Left-aligned status wrapper */}
+                    <td className="p-3 text-left">
                       <span
                         className={`text-[10px] font-bold px-2 py-1 rounded-full border whitespace-nowrap ${
                           hasUnits
@@ -410,8 +410,8 @@ const Lecturers = () => {
                       </span>
                     </td>
 
-                    {/* Centered action button */}
-                    <td className="p-3 text-center">
+                    {/* Left-aligned action button */}
+                    <td className="p-3 text-left">
                       <button
                         onClick={() => openProfile(l)}
                         className="text-xs px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 transition font-medium whitespace-nowrap"

@@ -373,7 +373,7 @@ const UniversityAdminLayout = () => {
             {!collapsed && (
               <div className="overflow-hidden">
                 <h1 className="font-bold text-xl text-white tracking-tight whitespace-nowrap">
-                  SUAMP
+                  SAMPHE
                 </h1>
                 <p className="text-[10px] text-slate-400 uppercase tracking-widest whitespace-nowrap">
                   Admin Portal

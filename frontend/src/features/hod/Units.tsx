@@ -123,12 +123,12 @@ const Units = () => {
   }
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto px-6">
+    <div className="space-y-6 max-w-7xl mx-auto px-6">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
-            📚 Units
+            Units
           </h1>
           <p className="text-slate-500 mt-1">
             Manage all units in your department
@@ -173,8 +173,8 @@ const Units = () => {
       </div>
 
       {/* View More / View Less - Above Table, Right Aligned */}
-      {hasMore && (
-        <div className="flex justify-end">
+      {filtered.length > 10 && (
+        <div className="flex justify-end mb-3">
           <button
             onClick={() =>
               setShowCount(showCount === 10 ? filtered.length : 10)
@@ -194,16 +194,17 @@ const Units = () => {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-100 text-slate-500 text-xs uppercase bg-slate-50/50">
-                {/* All header alignments updated to text-center */}
-                <th className="text-center p-3 font-medium w-12">S/N</th>
-                <th className="text-center p-3 font-medium w-24">Code</th>
-                <th className="text-center p-3 font-medium w-64">Unit Name</th>
-                <th className="text-center p-3 font-medium w-48">Program</th>
-                <th className="text-center p-3 font-medium w-20">Year</th>
-                <th className="text-center p-3 font-medium w-24">Semester</th>
-                <th className="text-center p-3 font-medium w-28">Actions</th>
+                {/* All header alignments updated to text-left */}
+                <th className="text-left p-3 font-medium w-12">S/N</th>
+                <th className="text-left p-3 font-medium w-24">Code</th>
+                <th className="text-left p-3 font-medium w-64">Unit Name</th>
+                <th className="text-left p-3 font-medium w-48">Program</th>
+                <th className="text-left p-3 font-medium w-20">Year</th>
+                <th className="text-left p-3 font-medium w-24">Semester</th>
+                <th className="text-left p-3 font-medium w-28">Actions</th>
               </tr>
             </thead>
+
             <tbody>
               {displayed.map((u: any, i: number) => (
                 <tr
@@ -212,39 +213,39 @@ const Units = () => {
                     i % 2 === 0 ? "bg-white" : "bg-slate-50/30"
                   }`}
                 >
-                  {/* Centered serial number */}
-                  <td className="p-3 text-slate-400 font-mono text-xs text-center">
+                  {/* Left-aligned serial number */}
+                  <td className="p-3 text-slate-400 font-mono text-xs text-left">
                     {i + 1}
                   </td>
 
-                  {/* Centered unit code */}
-                  <td className="p-3 text-emerald-600 font-mono text-xs font-medium text-center">
+                  {/* Left-aligned unit code */}
+                  <td className="p-3 text-emerald-600 font-mono text-xs font-medium text-left">
                     {u.code}
                   </td>
 
-                  {/* Centered unit name with truncation boundaries */}
-                  <td className="p-3 text-slate-800 font-medium text-center truncate max-w-[200px]">
+                  {/* Left-aligned unit name with truncation boundaries */}
+                  <td className="p-3 text-slate-800 font-medium text-left truncate max-w-[200px]">
                     {u.name}
                   </td>
 
-                  {/* Centered program name */}
-                  <td className="p-3 text-slate-500 text-xs text-center truncate max-w-[150px]">
+                  {/* Left-aligned program name */}
+                  <td className="p-3 text-slate-500 text-xs text-left truncate max-w-[150px]">
                     {u.program?.name}
                   </td>
 
-                  {/* Centered academic year */}
-                  <td className="p-3 text-slate-500 text-xs text-center">
+                  {/* Left-aligned academic year */}
+                  <td className="p-3 text-slate-500 text-xs text-left">
                     {u.studyYear?.name}
                   </td>
 
-                  {/* Centered academic semester */}
-                  <td className="p-3 text-slate-500 text-xs text-center">
+                  {/* Left-aligned academic semester */}
+                  <td className="p-3 text-slate-500 text-xs text-left">
                     {u.semester?.name}
                   </td>
 
-                  {/* Centered action button clusters */}
-                  <td className="p-3 text-center">
-                    <div className="flex items-center justify-center gap-2">
+                  {/* Left-aligned action button clusters */}
+                  <td className="p-3 text-left">
+                    <div className="flex items-center gap-2">
                       <button
                         onClick={() => {
                           setEditing(u);

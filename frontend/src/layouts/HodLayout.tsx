@@ -216,7 +216,7 @@ const HodLayout = () => {
             {!collapsed && (
               <div className="overflow-hidden">
                 <h1 className="font-bold text-white text-2xl tracking-tight whitespace-nowrap">
-                  SAMP
+                  SAMPHE
                 </h1>
                 <p className="text-xs text-emerald-100 font-medium whitespace-nowrap">
                   HOD Portal

@@ -249,7 +249,7 @@ const Students = () => {
     : sortedPreview.slice(0, 10);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto px-6">
+    <div className="space-y-6 max-w-7.5xl mx-auto px-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
           Students
@@ -408,7 +408,7 @@ const Students = () => {
       </div>
 
       {/* View More / View Less - Top Right */}
-      {view === "active" && hasMore && (
+      {filtered.length > 10 && (
         <div className="flex justify-end">
           <button
             onClick={() =>

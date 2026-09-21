@@ -17,17 +17,28 @@ const LiveSession = () => {
         sessionId || (await api.get("/lecturer/sessions/active")).data.data?.id;
       if (!id) {
         fetchRecent();
+        setSession(null); // ✅ Clear session when none is active
         return;
       }
       const res = await api.get(`/lecturer/sessions/${id}`);
       setSession(res.data.data);
+
       const elapsed = Math.floor(
         (Date.now() - new Date(res.data.data.createdAt).getTime()) / 1000,
       );
       const remaining = Math.max(0, res.data.data.duration * 60 - elapsed);
       setTimer(remaining);
+
+      // AUTO-END when timer reaches 0
+      if (remaining === 0 && res.data.data.status === "ACTIVE") {
+        console.log("⏰ Session time expired, auto-ending...");
+        await api.patch(`/lecturer/sessions/${res.data.data.id}/end`);
+        setSession(null);
+        fetchRecent();
+      }
     } catch {
       fetchRecent();
+      setSession(null);
     }
   };
 
@@ -40,16 +51,38 @@ const LiveSession = () => {
 
   useEffect(() => {
     fetchSession();
+
     const interval = setInterval(fetchSession, 5000);
-    const countdown = setInterval(
-      () => setTimer((t) => Math.max(0, t - 1)),
-      1000,
-    );
+
+    const countdown = setInterval(() => {
+      setTimer((t) => {
+        const newTime = Math.max(0, t - 1);
+
+        // ✅ Auto-end session when timer reaches 0
+        if (newTime === 0 && session?.id && session?.status === "ACTIVE") {
+          console.log("⏰ Timer reached 0, auto-ending session...");
+          api
+            .patch(`/lecturer/sessions/${session.id}/end`)
+            .then(() => {
+              setSession(null);
+              fetchRecent();
+            })
+            .catch((err) => {
+              console.error("Auto-end failed:", err);
+              // Force re-fetch to sync state
+              fetchSession();
+            });
+        }
+
+        return newTime;
+      });
+    }, 1000);
+
     return () => {
       clearInterval(interval);
       clearInterval(countdown);
     };
-  }, [sessionId]);
+  }, [sessionId, session?.id, session?.status]);
 
   const end = async () => {
     if (!session) return;
@@ -403,7 +436,9 @@ const LiveSession = () => {
                       })}
                     </td>
                     <td className="p-4 text-slate-400">
-                      {r.distance ? `${Math.round(r.distance)}m` : "—"}
+                      {r.distance !== null && r.distance !== undefined
+                        ? `${Math.round(r.distance)}m`
+                        : "—"}
                     </td>
                     <td className="p-4">
                       <span

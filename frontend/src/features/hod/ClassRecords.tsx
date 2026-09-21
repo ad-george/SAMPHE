@@ -65,9 +65,10 @@ const ClassRecords = () => {
   records.forEach((r: any) => {
     const present =
       r.records?.filter((rec: any) => rec.status === "PRESENT").length || 0;
-    const total = r.records?.length || 0;
+    // ✅ Use totalStudents instead of records.length
+    const total = r.totalStudents || 0;
     totalPresent += present;
-    totalAbsent += total - present;
+    totalAbsent += Math.max(0, total - present);
     if (total > 0) {
       totalRate += (present / total) * 100;
     }
@@ -93,7 +94,7 @@ const ClassRecords = () => {
   }
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto px-6">
+    <div className="space-y-6 max-w-7xl mx-auto px-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
           📊 Class Attendance Records
@@ -198,22 +199,25 @@ const ClassRecords = () => {
         </button>
       </div>
 
-      {/* View More / View Less */}
-      {hasMore && (
-        <div className="flex justify-end">
-          <button
-            onClick={() => setShowCount(showCount === 10 ? records.length : 10)}
-            className="text-sm text-emerald-600 hover:text-emerald-700 transition font-medium"
-          >
-            {showCount === 10
-              ? `View More (${records.length - 10} more)`
-              : "View Less"}
-          </button>
-        </div>
-      )}
-
       {/* Records Table */}
       <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+        <div className="flex items-center justify-between p-4 border-b border-slate-100">
+          <span className="text-xs text-slate-500">
+            Showing {displayed.length} of {records.length} records
+          </span>
+          {records.length > 10 && (
+            <button
+              onClick={() =>
+                setShowCount(showCount === 10 ? records.length : 10)
+              }
+              className="text-sm text-emerald-600 hover:text-emerald-700 transition font-medium"
+            >
+              {showCount === 10
+                ? `View More (${records.length - 10} more)`
+                : "View Less"}
+            </button>
+          )}
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -234,53 +238,61 @@ const ClassRecords = () => {
             </thead>
             <tbody>
               {viewBy === "student"
-                ? displayed.flatMap((s: any) => {
-                    return (
-                      s.records?.map((r: any, i: number) => (
-                        <tr
-                          key={`${s.id}-${i}`}
-                          className="border-b border-slate-100 hover:bg-slate-50/50 transition"
-                        >
-                          <td className="p-3 text-slate-400 font-mono text-xs text-center">
-                            {i + 1}
-                          </td>
-                          <td className="p-3 text-slate-700">
-                            {new Date(
-                              r.session.sessionDate,
-                            ).toLocaleDateString()}
-                          </td>
-                          <td className="p-3 text-slate-700">
-                            {r.session.unit?.name}
-                          </td>
-                          <td className="p-3 text-slate-700">
-                            {r.session.lecturer?.fullName}
-                          </td>
-                          <td className="p-3 text-center font-medium">
-                            {r.status === "PRESENT" ? (
-                              <span className="text-emerald-600">
-                                ✅ Present
-                              </span>
-                            ) : (
-                              <span className="text-rose-500">❌ Absent</span>
-                            )}
-                          </td>
-                          <td className="p-3 text-center">
-                            <button
-                              onClick={() => viewSession(r.session)}
-                              className="text-xs px-3 py-1.5 rounded bg-blue-900/20 text-blue-400 border border-blue-800 hover:bg-blue-900/40 transition"
+                ? (() => {
+                    let runningIndex = 0;
+                    return displayed.flatMap((s: any) => {
+                      return (
+                        s.records?.map((r: any) => {
+                          runningIndex++;
+                          return (
+                            <tr
+                              key={`${s.id}-${runningIndex}`}
+                              className="border-b border-slate-100 hover:bg-slate-50/50 transition"
                             >
-                              View
-                            </button>
-                          </td>
-                        </tr>
-                      )) || []
-                    );
-                  })
+                              <td className="p-3 text-slate-400 font-mono text-xs text-center">
+                                {runningIndex}
+                              </td>
+                              <td className="p-3 text-slate-700">
+                                {new Date(
+                                  r.session.sessionDate,
+                                ).toLocaleDateString()}
+                              </td>
+                              <td className="p-3 text-slate-700">
+                                {r.session.unit?.name}
+                              </td>
+                              <td className="p-3 text-slate-700">
+                                {r.session.lecturer?.fullName}
+                              </td>
+                              <td className="p-3 text-center font-medium">
+                                {r.status === "PRESENT" ? (
+                                  <span className="text-emerald-600">
+                                    ✅ Present
+                                  </span>
+                                ) : (
+                                  <span className="text-rose-500">
+                                    ❌ Absent
+                                  </span>
+                                )}
+                              </td>
+                              <td className="p-3 text-center">
+                                <button
+                                  onClick={() => viewSession(r.session)}
+                                  className="text-xs px-3 py-1.5 rounded bg-blue-900/20 text-blue-400 border border-blue-800 hover:bg-blue-900/40 transition"
+                                >
+                                  View
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        }) || []
+                      );
+                    });
+                  })()
                 : displayed.map((r: any, idx: number) => {
                     const present =
                       r.records?.filter((rec: any) => rec.status === "PRESENT")
                         .length || 0;
-                    const total = r.records?.length || 0;
+                    const total = r.totalStudents || 0;
                     const rate =
                       total > 0 ? ((present / total) * 100).toFixed(1) : "0.0";
                     return (
@@ -455,7 +467,7 @@ const ClassRecords = () => {
 
               {/* STATS */}
               {(() => {
-                const total = selectedSession.records?.length || 0;
+                const total = selectedSession.totalStudents || 0;
                 const present =
                   selectedSession.records?.filter(
                     (r: any) => r.status === "PRESENT",

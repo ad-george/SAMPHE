@@ -73,7 +73,7 @@ const MyUnits = () => {
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white tracking-tight">
+        <h1 className="text-2xl font-bold text-green tracking-tight">
           My Teaching Units
         </h1>
         <span className="text-xs text-slate-400 bg-slate-700 border border-slate-600 px-3 py-1.5 rounded-lg">

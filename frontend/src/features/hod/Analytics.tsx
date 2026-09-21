@@ -3,10 +3,16 @@ import api from "../../services/api";
 
 const Analytics = () => {
   const [data, setData] = useState<any>(null);
+  const [showAllPrograms, setShowAllPrograms] = useState(false);
+  const [showAllLecturers, setShowAllLecturers] = useState(false);
+  const [showAllUnits, setShowAllUnits] = useState(false);
+  const [showAllAttendees, setShowAllAttendees] = useState(false);
 
   useEffect(() => {
     api.get("/hod/analytics").then((r) => setData(r.data.data));
   }, []);
+
+  const VISIBLE_COUNT = 3;
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -14,6 +20,7 @@ const Analytics = () => {
         Department Analytics
       </h1>
 
+      {/* Department Attendance Rate */}
       <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">
@@ -34,12 +41,26 @@ const Analytics = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Program Comparison */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-          <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider mb-4">
-            Program Comparison
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">
+              Program Comparison
+            </h3>
+            {data?.programStats?.length > VISIBLE_COUNT && (
+              <button
+                onClick={() => setShowAllPrograms(!showAllPrograms)}
+                className="text-xs font-medium text-emerald-600 hover:text-emerald-500 transition"
+              >
+                {showAllPrograms ? "View Less" : "View More →"}
+              </button>
+            )}
+          </div>
           <div className="space-y-3">
-            {data?.programStats?.map((p: any) => (
+            {(showAllPrograms
+              ? data?.programStats
+              : data?.programStats?.slice(0, VISIBLE_COUNT)
+            )?.map((p: any) => (
               <div
                 key={p.programId}
                 className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100"
@@ -49,7 +70,8 @@ const Analytics = () => {
                     {p.programName}
                   </p>
                   <p className="text-xs text-slate-500">
-                    {p.studentCount} students
+                    {p.studentCount} students • {p.sessionsHeld || 0}/
+                    {p.sessionsExpected || 0} sessions
                   </p>
                 </div>
                 <span className="text-lg font-bold text-blue-600">
@@ -63,12 +85,26 @@ const Analytics = () => {
           </div>
         </div>
 
+        {/* Lecturer Performance */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-          <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider mb-4">
-            Lecturer Performance
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">
+              Lecturer Performance
+            </h3>
+            {data?.lecturerStats?.length > VISIBLE_COUNT && (
+              <button
+                onClick={() => setShowAllLecturers(!showAllLecturers)}
+                className="text-xs font-medium text-emerald-600 hover:text-emerald-500 transition"
+              >
+                {showAllLecturers ? "View Less" : "View More →"}
+              </button>
+            )}
+          </div>
           <div className="space-y-3">
-            {data?.lecturerStats?.map((l: any) => (
+            {(showAllLecturers
+              ? data?.lecturerStats
+              : data?.lecturerStats?.slice(0, VISIBLE_COUNT)
+            )?.map((l: any) => (
               <div
                 key={l.lecturerId}
                 className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100"
@@ -95,12 +131,26 @@ const Analytics = () => {
         </div>
       </div>
 
+      {/* Worst Performing Units */}
       <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-        <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider mb-4">
-          Worst Performing Units
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">
+            Worst Performing Units
+          </h3>
+          {data?.unitStats?.length > VISIBLE_COUNT && (
+            <button
+              onClick={() => setShowAllUnits(!showAllUnits)}
+              className="text-xs font-medium text-emerald-600 hover:text-emerald-500 transition"
+            >
+              {showAllUnits ? "View Less" : "View More →"}
+            </button>
+          )}
+        </div>
         <div className="space-y-3">
-          {data?.unitStats?.slice(0, 5).map((u: any) => (
+          {(showAllUnits
+            ? data?.unitStats
+            : data?.unitStats?.slice(0, VISIBLE_COUNT)
+          )?.map((u: any) => (
             <div
               key={u.unitId}
               className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100"
@@ -110,7 +160,7 @@ const Analytics = () => {
                   {u.unitName}
                 </p>
                 <p className="text-xs text-slate-500">
-                  {u.sessionCount} sessions
+                  {u.sessionCount}/{u.sessionsExpected || 0} sessions
                 </p>
               </div>
               <span className="text-lg font-bold text-rose-600">{u.rate}%</span>
@@ -122,12 +172,26 @@ const Analytics = () => {
         </div>
       </div>
 
+      {/* Intervention List */}
       <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-        <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider mb-4 text-rose-600">
-          Intervention List (&lt; 75% Attendance)
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-rose-600">
+            Intervention List (&lt; 75% Attendance)
+          </h3>
+          {data?.lowAttendees?.length > VISIBLE_COUNT && (
+            <button
+              onClick={() => setShowAllAttendees(!showAllAttendees)}
+              className="text-xs font-medium text-emerald-600 hover:text-emerald-500 transition"
+            >
+              {showAllAttendees ? "View Less" : "View More →"}
+            </button>
+          )}
+        </div>
         <div className="space-y-3">
-          {data?.lowAttendees?.map((s: any) => (
+          {(showAllAttendees
+            ? data?.lowAttendees
+            : data?.lowAttendees?.slice(0, VISIBLE_COUNT)
+          )?.map((s: any) => (
             <div
               key={s.studentId}
               className="flex items-center justify-between p-3 bg-rose-50 rounded-lg border border-rose-100"

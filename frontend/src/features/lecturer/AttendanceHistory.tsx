@@ -105,7 +105,7 @@ const AttendanceHistory = () => {
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white tracking-tight">
+        <h1 className="text-2xl font-bold text-black tracking-tight">
           Attendance History
         </h1>
         <div className="flex items-center gap-3">
@@ -179,7 +179,7 @@ const AttendanceHistory = () => {
               onClick={toggleView}
               className="text-sm font-medium text-emerald-400 hover:text-emerald-300 transition"
             >
-              {showAll ? "View Less" : "View More →"}
+              {showAll ? "View Less" : "View More"}
             </button>
           )}
         </div>

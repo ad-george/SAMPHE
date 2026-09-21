@@ -217,6 +217,12 @@ const Dashboard = () => {
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard
+          title="Programs"
+          value={stats.programs || 0}
+          icon="🎯"
+          color="bg-cyan-100 text-cyan-600"
+        />
+        <StatCard
           title="Lecturers"
           value={stats.lecturers || 0}
           icon="👤"
@@ -239,12 +245,6 @@ const Dashboard = () => {
           value={stats.monthClasses || 0}
           icon="📅"
           color="bg-amber-100 text-amber-600"
-        />
-        <StatCard
-          title="Month's Overall"
-          value={`${stats.monthOverall || 0}%`}
-          icon="⏱"
-          color="bg-teal-100 text-teal-600"
         />
       </div>
 
@@ -285,7 +285,9 @@ const Dashboard = () => {
           <h3 className="font-semibold text-slate-800 mb-4">
             Attendance by Program
           </h3>
-          <div className="h-48 flex items-center justify-center">
+
+          {/* Doughnut with better spacing */}
+          <div className="h-52 flex items-center justify-center mb-4">
             <Doughnut
               data={doughnutData}
               options={{
@@ -296,29 +298,34 @@ const Dashboard = () => {
               }}
             />
           </div>
-          <div className="text-center -mt-6 mb-2">
-            <span className="text-2xl font-bold text-slate-800">
-              {summary.avgRate || 0}%
+
+          {/* Overall Rate */}
+          <div className="text-center mb-5">
+            <span className="text-3xl font-bold text-slate-800">
+              {data?.summary?.avgAttendance || 0}%
             </span>
-            <p className="text-xs text-slate-500">Overall</p>
+            <p className="text-xs text-slate-500 mt-1">
+              Overall Program Delivery
+            </p>
           </div>
-          <div className="space-y-2 mt-2">
+
+          {/* Program List with proper spacing */}
+          <div className="space-y-3 pt-4 border-t border-slate-100">
             {programs.slice(0, 4).map((p: any, i: number) => (
-              <div
-                key={i}
-                className="flex items-center justify-between text-xs"
-              >
+              <div key={i} className="flex items-center justify-between py-1.5">
                 <div className="flex items-center gap-2">
                   <span
-                    className="w-2 h-2 rounded-full"
+                    className="w-2.5 h-2.5 rounded-full shrink-0"
                     style={{
                       backgroundColor:
                         doughnutData.datasets[0].backgroundColor[i],
                     }}
                   />
-                  {p.name}
+                  <span className="text-sm text-slate-600">{p.name}</span>
                 </div>
-                <span className="font-medium text-slate-700">{p.rate}%</span>
+                <span className="text-sm font-semibold text-slate-700">
+                  {p.rate}%
+                </span>
               </div>
             ))}
           </div>
@@ -359,8 +366,9 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Row 3: Recent Classes | Bar Chart | Quick Actions */}
+      {/* Row 3: Recent Classes | Attendance Trend (Extended) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Recent Classes */}
         <div className="lg:col-span-1 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
           <h3 className="font-semibold text-slate-800 mb-4">Recent Classes</h3>
           <div className="space-y-3">
@@ -401,18 +409,15 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Attendance Trend Card - Line + Bar Combined */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
+        {/* Attendance Trend Card — Extended (2 columns) */}
+        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
             <h3 className="font-semibold text-slate-800">
               Attendance Trend (This Semester)
             </h3>
-            <select className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-slate-600">
-              <option>This Semester</option>
-            </select>
           </div>
 
-          <div className="h-64">
+          <div className="h-80">
             <Chart
               type="bar"
               data={{
@@ -488,7 +493,7 @@ const Dashboard = () => {
 
           {/* Summary Stats */}
           {weekly.length > 0 && (
-            <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-slate-100">
+            <div className="grid grid-cols-3 gap-4 mt-6 pt-5 border-t border-slate-100">
               <div>
                 <p className="text-xs text-slate-500">Semester</p>
                 <p className="text-sm font-semibold text-slate-800">
@@ -528,80 +533,6 @@ const Dashboard = () => {
             </div>
           )}
         </div>
-
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-          <h3 className="font-semibold text-slate-800 mb-4">Quick Actions</h3>
-          <div className="space-y-3">
-            <Link
-              to="/hod/reports"
-              className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 hover:bg-emerald-50 hover:border-emerald-100 transition group"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-xl">📄</span>
-                <div>
-                  <p className="text-sm font-medium text-slate-800 group-hover:text-emerald-700">
-                    Generate Class Report
-                  </p>
-                  <p className="text-[10px] text-slate-500">PDF / Excel</p>
-                </div>
-              </div>
-              <span className="text-slate-400 group-hover:text-emerald-600">
-                →
-              </span>
-            </Link>
-            <Link
-              to="/hod/reports"
-              className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 hover:bg-emerald-50 hover:border-emerald-100 transition group"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-xl">📊</span>
-                <div>
-                  <p className="text-sm font-medium text-slate-800 group-hover:text-emerald-700">
-                    Generate Student Report
-                  </p>
-                  <p className="text-[10px] text-slate-500">PDF / Excel</p>
-                </div>
-              </div>
-              <span className="text-slate-400 group-hover:text-emerald-600">
-                →
-              </span>
-            </Link>
-            <Link
-              to="/hod/reports"
-              className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 hover:bg-emerald-50 hover:border-emerald-100 transition group"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-xl">📥</span>
-                <div>
-                  <p className="text-sm font-medium text-slate-800 group-hover:text-emerald-700">
-                    Export Data to Excel
-                  </p>
-                  <p className="text-[10px] text-slate-500">For analysis</p>
-                </div>
-              </div>
-              <span className="text-slate-400 group-hover:text-emerald-600">
-                →
-              </span>
-            </Link>
-            <button
-              onClick={() => toast("Share feature coming soon")}
-              className="w-full flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 hover:bg-emerald-50 hover:border-emerald-100 transition group"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-xl">✉</span>
-                <div>
-                  <p className="text-sm font-medium text-slate-800 group-hover:text-emerald-700">
-                    Share Reports
-                  </p>
-                  <p className="text-[10px] text-slate-500">With Lecturers</p>
-                </div>
-              </div>
-              <span className="text-slate-400 group-hover:text-emerald-600">
-                →
-              </span>
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* Row 4: Semester Summary */}
@@ -609,7 +540,6 @@ const Dashboard = () => {
         <h3 className="font-semibold text-slate-800 mb-4">Semester summary</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
-            <span className="text-2xl">📅</span>
             <div>
               <p className="text-xs text-slate-500">Total Classes</p>
               <p className="text-xl font-bold text-slate-800">
@@ -618,7 +548,6 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
-            <span className="text-2xl">✅</span>
             <div>
               <p className="text-xs text-slate-500">Total Attended</p>
               <p className="text-xl font-bold text-emerald-600">
@@ -627,16 +556,14 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
-            <span className="text-2xl">❌</span>
             <div>
-              <p className="text-xs text-slate-500">Total Missed</p>
+              <p className="text-xs text-slate-500">Total Unattended</p>
               <p className="text-xl font-bold text-rose-600">
                 {data?.summary?.totalMissed || 0}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
-            <span className="text-2xl">📈</span>
             <div>
               <p className="text-xs text-slate-500">Avg Attendance</p>
               <p className="text-xl font-bold text-blue-600">
@@ -645,7 +572,6 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
-            <span className="text-2xl">🎓</span>
             <div>
               <p className="text-xs text-slate-500">Avg Stud. Attendance</p>
               <p className="text-xl font-bold text-violet-600">

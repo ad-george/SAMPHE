@@ -64,12 +64,12 @@ const Programmes = () => {
   const hasMore = filtered.length > showCount;
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto px-6">
+    <div className="space-y-6 max-w-6xl mx-auto px-6">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
-            📚 Programmes
+            Programs
           </h1>
           <p className="text-slate-500 mt-1">
             Manage all academic programs in your department
@@ -80,7 +80,7 @@ const Programmes = () => {
       {/* Stats + Search - Side by Side */}
       <div className="flex items-center gap-4">
         <div className="bg-white border border-slate-200 rounded-2xl px-5 py-3 shadow-sm shrink-0">
-          <p className="text-xs text-slate-500">Total Programmes</p>
+          <p className="text-xs text-slate-500">Total Programs</p>
           <p className="text-xl font-bold text-emerald-600">
             {programmes.length}
           </p>
@@ -93,7 +93,7 @@ const Programmes = () => {
             className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-700 focus:border-emerald-400 focus:outline-none placeholder-slate-400"
           />
           <button
-            onClick={() => {}} // Already filters on change, but for explicit search
+            onClick={() => {}}
             className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm font-medium transition text-white whitespace-nowrap"
           >
             Search
@@ -107,7 +107,7 @@ const Programmes = () => {
           onClick={() => setShowAddModal(true)}
           className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm font-medium transition text-white shadow-lg shadow-emerald-500/20"
         >
-          + Add Programme
+          + Add Program
         </button>
         {hasMore && (
           <button
@@ -123,22 +123,22 @@ const Programmes = () => {
         )}
       </div>
 
-      {/* Programmes Table */}
+      {/* Programs Table */}
       <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-100 text-slate-500 text-xs uppercase bg-slate-50/50">
                 {/* All headers changed to text-center */}
-                <th className="text-center p-3 font-medium w-12">S/N</th>
+                <th className="text-left p-3 font-medium w-12">S/N</th>
 
                 {/* Explicitly defined width added to stop expansion */}
-                <th className="text-center p-3 font-medium w-64">
+                <th className="text-left p-3 font-medium w-64">
                   Programme Name
                 </th>
 
-                <th className="text-center p-3 font-medium w-28">Code</th>
-                <th className="text-center p-3 font-medium w-28">Actions</th>
+                <th className="text-left p-3 font-medium w-28">Code</th>
+                <th className="text-left p-3 font-medium w-28">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -149,24 +149,24 @@ const Programmes = () => {
                     idx % 2 === 0 ? "bg-white" : "bg-slate-50/30"
                   }`}
                 >
-                  {/* Centered serial number */}
-                  <td className="p-3 text-slate-400 font-mono text-xs text-center">
+                  {/* Left-aligned serial number */}
+                  <td className="p-3 text-slate-400 font-mono text-xs text-left">
                     {idx + 1}
                   </td>
 
-                  {/* Centered name column with tighter width restrictions */}
-                  <td className="p-3 text-slate-800 font-medium text-center truncate max-w-[256px]">
+                  {/* Left-aligned name column with tighter width restrictions */}
+                  <td className="p-3 text-slate-800 font-medium text-left truncate max-w-[256px]">
                     {p.name}
                   </td>
 
-                  {/* Centered code column */}
-                  <td className="p-3 text-slate-500 font-mono text-xs text-center">
+                  {/* Left-aligned code column */}
+                  <td className="p-3 text-slate-500 font-mono text-xs text-left">
                     {p.code || "-"}
                   </td>
 
-                  {/* Centered actions buttons */}
-                  <td className="p-3 text-center">
-                    <div className="flex items-center justify-center gap-2">
+                  {/* Left-aligned actions buttons */}
+                  <td className="p-3 text-left">
+                    <div className="flex items-center justify-left gap-2">
                       <button
                         onClick={() => setEditing(p)}
                         className="text-xs px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-100 transition font-medium"
