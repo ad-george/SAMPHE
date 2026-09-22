@@ -41,7 +41,7 @@ app.use(
       "http://localhost:5174",
       "http://localhost:5175",
       "http://localhost:5176",
-      "https://suamp-frontend.onrender.com",
+      "https://samphe-frontend.onrender.com",
     ],
     credentials: true,
   }),
