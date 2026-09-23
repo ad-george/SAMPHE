@@ -96,10 +96,13 @@ const LecturerLayout = () => {
     setSearchQ(q);
     if (q.length < 2) {
       setSearchResults(null);
+      setShowSearch(false);
       return;
     }
     try {
-      const res = await api.get(`/lecturer/search?q=${encodeURIComponent(q)}`);
+      const res = await api.get(
+        `/lecturer/global-search?q=${encodeURIComponent(q)}`,
+      );
       setSearchResults(res.data.data);
       setShowSearch(true);
     } catch {}
@@ -176,7 +179,6 @@ const LecturerLayout = () => {
 
   return (
     <div className="min-h-screen bg-gray-200 text-gray-800 flex font-sans">
-      {/* Mobile Overlay */}
       {mobileOpen && (
         <div
           onClick={() => setMobileOpen(false)}
@@ -184,7 +186,6 @@ const LecturerLayout = () => {
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={`h-screen flex flex-col shrink-0 z-40 transition-all duration-300 overflow-visible bg-gray-800
       w-56 md:w-64
@@ -193,7 +194,6 @@ const LecturerLayout = () => {
       ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
     `}
       >
-        {/* Brand — circular pill */}
         <div className="bg-gray-800 shrink-0 flex items-center justify-center border-b border-gray-700 p-2 md:p-4">
           <div className="flex items-center gap-2 md:gap-3 bg-white/10 rounded-full px-3 py-2 md:px-5 md:py-3 border border-white/10">
             <div className="w-9 h-9 md:w-14 md:h-14 rounded-full bg-white flex items-center justify-center shadow-lg shrink-0">
@@ -230,9 +230,7 @@ const LecturerLayout = () => {
           </div>
         </div>
 
-        {/* Collapsible body */}
         <div className="relative flex flex-col flex-1 bg-gray-800 overflow-visible">
-          {/* Toggle button — desktop only */}
           <button
             onClick={() => setCollapsed(!collapsed)}
             className="hidden md:flex absolute top-8 -right-3 z-50 w-10 h-10 bg-emerald-600 rounded-full items-center justify-center text-xs text-white hover:bg-emerald-500 transition shadow-lg"
@@ -314,12 +312,9 @@ const LecturerLayout = () => {
         </div>
       </aside>
 
-      {/* Main */}
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto bg-gray-100">
-        {/* Top Bar */}
         <header className="sticky top-0 bg-emerald-600 border-b border-emerald-500 z-30 shrink-0">
           <div className="flex items-center px-3 md:px-6 h-14 md:h-16">
-            {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               className="md:hidden mr-2 text-white text-2xl leading-none"
@@ -328,7 +323,6 @@ const LecturerLayout = () => {
               ☰
             </button>
 
-            {/* Left: Tab Name + Date */}
             <div className="flex flex-col min-w-0">
               <h2 className="text-sm md:text-lg font-semibold text-white leading-tight truncate">
                 {navItems.find((n) => n.path === location.pathname)?.label ||
@@ -344,7 +338,6 @@ const LecturerLayout = () => {
               </p>
             </div>
 
-            {/* Divider + Institution + Department — desktop only */}
             <div className="hidden md:flex items-center gap-4 ml-6">
               <div className="h-10 w-px bg-emerald-300/50"></div>
               <div className="flex flex-col">
@@ -357,17 +350,91 @@ const LecturerLayout = () => {
               </div>
             </div>
 
-            {/* Spacer */}
             <div className="flex-1"></div>
 
-            {/* Right: Search + Notifications */}
             <div className="flex items-center gap-2 md:gap-4">
-              <div className="hidden md:flex items-center">
+              <div className="flex items-center relative" ref={searchRef}>
                 <input
                   type="text"
                   placeholder="Search..."
-                  className="w-32 lg:w-40 h-9 px-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-emerald-100/70 text-sm focus:outline-none focus:bg-white/20 transition"
+                  value={searchQ}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  onFocus={() => searchQ.length >= 2 && setShowSearch(true)}
+                  className="w-24 md:w-32 lg:w-40 h-8 md:h-9 px-2 md:px-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-emerald-100/70 text-xs md:text-sm focus:outline-none focus:bg-white/20 transition"
                 />
+
+                {showSearch && searchResults && (
+                  <div className="absolute top-full right-0 mt-2 w-72 md:w-80 bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden z-50 max-h-96 overflow-y-auto">
+                    {searchResults.units?.length > 0 && (
+                      <div className="p-2">
+                        <p className="text-[10px] text-gray-400 uppercase tracking-wider px-3 py-1 font-semibold">
+                          Units
+                        </p>
+                        {searchResults.units.map((u: any) => (
+                          <button
+                            key={u.id}
+                            onClick={() => goToResult("unit")}
+                            className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 transition"
+                          >
+                            <p className="text-sm font-medium text-gray-800">
+                              {u.code} — {u.name}
+                            </p>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {searchResults.students?.length > 0 && (
+                      <div className="p-2 border-t border-gray-100">
+                        <p className="text-[10px] text-gray-400 uppercase tracking-wider px-3 py-1 font-semibold">
+                          Students
+                        </p>
+                        {searchResults.students.map((s: any) => (
+                          <button
+                            key={s.id}
+                            onClick={() => goToResult("student")}
+                            className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 transition"
+                          >
+                            <p className="text-sm font-medium text-gray-800">
+                              {s.fullName}
+                            </p>
+                            <p className="text-xs text-gray-500">{s.regNo}</p>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {searchResults.sessions?.length > 0 && (
+                      <div className="p-2 border-t border-gray-100">
+                        <p className="text-[10px] text-gray-400 uppercase tracking-wider px-3 py-1 font-semibold">
+                          Sessions
+                        </p>
+                        {searchResults.sessions.map((s: any) => (
+                          <button
+                            key={s.id}
+                            onClick={() => goToResult("record")}
+                            className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 transition"
+                          >
+                            <p className="text-sm font-medium text-gray-800">
+                              {s.unit?.code} — {s.unit?.name}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {new Date(s.createdAt).toLocaleDateString()}
+                            </p>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {searchResults.units?.length === 0 &&
+                      searchResults.students?.length === 0 &&
+                      searchResults.sessions?.length === 0 && (
+                        <p className="p-6 text-center text-sm text-gray-500">
+                          No results
+                        </p>
+                      )}
+                  </div>
+                )}
               </div>
 
               <button
@@ -390,7 +457,6 @@ const LecturerLayout = () => {
         </div>
       </main>
 
-      {/* Notifications Modal */}
       {notifOpen && (
         <div className="fixed inset-0 top-0 left-0 w-full h-full bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-3 md:p-4">
           <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
@@ -442,7 +508,6 @@ const LecturerLayout = () => {
         </div>
       )}
 
-      {/* Edit Profile Modal */}
       {editProfile && (
         <div className="fixed inset-0 top-0 left-0 w-full h-full bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-3 md:p-4 overflow-y-auto">
           <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-md p-5 md:p-6 shadow-2xl my-auto">

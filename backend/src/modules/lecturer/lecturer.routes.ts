@@ -19,6 +19,7 @@ import {
   unarchiveSession,
   getArchived,
   searchStudentByName,
+  globalSearch,
   exportAttendanceReport,
   getSessionsAnalytics,
 } from "./lecturer.controller";
@@ -69,6 +70,7 @@ router.patch(
 router.get("/history", authenticate, authorize("LECTURER"), getHistory);
 
 router.get("/search", authenticate, authorize("LECTURER"), searchLecturerScope);
+router.get("/search/global", authenticate, authorize("LECTURER"), globalSearch);
 router.patch(
   "/sessions/:id/archive",
   authenticate,

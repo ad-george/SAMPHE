@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { LecturerService } from "./lecturer.service";
 import { PrismaClient } from "@prisma/client";
+import { globalSearch as globalSearchService } from "./lecturer.search";
+
 const prisma = new PrismaClient();
 const service = new LecturerService();
 
@@ -418,6 +420,20 @@ export const exportAttendanceReport = async (
       format as "pdf" | "excel",
     );
 
+    res.json({ success: true, data });
+  } catch (e: any) {
+    next({ statusCode: 400, message: e.message });
+  }
+};
+
+export const globalSearch = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const q = (req.query.q as string) || "";
+    const data = await globalSearchService(req.user!.id, q);
     res.json({ success: true, data });
   } catch (e: any) {
     next({ statusCode: 400, message: e.message });
