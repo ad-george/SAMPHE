@@ -81,7 +81,7 @@ const StudentAttendance = () => {
     if (!regNo || !session) return;
     try {
       const res = await api.get(
-        `/lecturer/students/search?regNo=${regNo}&unitId=${session.unitId}`,
+        `/public/students/search?regNo=${regNo}&token=${token}`,
       );
       const student = res.data.data;
       if (student) {

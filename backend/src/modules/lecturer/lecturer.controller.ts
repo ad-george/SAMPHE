@@ -320,15 +320,54 @@ export const searchStudentByName = async (
   next: NextFunction,
 ) => {
   try {
-    const { regNo, unitId } = req.query;
+    const { regNo, token } = req.query;
 
-    if (!regNo || !unitId) {
+    if (!regNo || !token) {
       return next({
         statusCode: 400,
-        message: "regNo and unitId are required",
+        message: "regNo and token are required",
       });
     }
 
+    // 1. Look up the session by token to get the real unitId
+    const session = await prisma.attendanceSession.findUnique({
+      where: { token: token as string },
+      select: {
+        id: true,
+        unitId: true,
+        status: true,
+        createdAt: true,
+        duration: true,
+      },
+    });
+
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: "The attendance link is invalid or has expired.",
+      });
+    }
+
+    // 2. Reject if the session is not ACTIVE
+    if (session.status !== "ACTIVE") {
+      return res.status(404).json({
+        success: false,
+        message: "The attendance link is invalid or has expired.",
+      });
+    }
+
+    // 3. Reject if the session has exceeded its duration
+    const elapsedMin = Math.floor(
+      (Date.now() - new Date(session.createdAt).getTime()) / 60000,
+    );
+    if (elapsedMin > session.duration) {
+      return res.status(404).json({
+        success: false,
+        message: "The attendance link is invalid or has expired.",
+      });
+    }
+
+    // 4. Search students, scoped strictly to the session's unit
     const student = await prisma.student.findFirst({
       where: {
         regNo: {
@@ -336,15 +375,12 @@ export const searchStudentByName = async (
           mode: "insensitive",
         },
         registeredUnits: {
-          some: { id: unitId as string },
+          some: { id: session.unitId },
         },
       },
       select: {
-        id: true,
         regNo: true,
         fullName: true,
-        email: true,
-        phone: true,
       },
     });
 
