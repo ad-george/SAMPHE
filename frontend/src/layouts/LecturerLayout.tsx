@@ -264,6 +264,7 @@ const LecturerLayout = () => {
               );
             })}
           </nav>
+          <div className="flex-1" />
 
           <div
             className="p-2 md:p-3 border-t border-gray-700 relative"
@@ -282,7 +283,6 @@ const LecturerLayout = () => {
                 ) : (
                   profileForm.fullName?.charAt(0) || "L"
                 )}
-                <div className="flex-1" />
               </div>
               {!collapsed && (
                 <div className="flex-1 min-w-0 overflow-hidden">
