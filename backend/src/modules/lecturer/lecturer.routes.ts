@@ -17,11 +17,13 @@ import {
   searchLecturerScope,
   archiveSession,
   unarchiveSession,
+  getSessionByToken,
+  markAttendance,
   getArchived,
   searchStudentByName,
-  globalSearch,
   exportAttendanceReport,
   getSessionsAnalytics,
+  globalSearch,
 } from "./lecturer.controller";
 import { authenticate } from "../../middleware/auth.middleware";
 import { authorize } from "../../middleware/role.middleware";
@@ -38,6 +40,9 @@ router.get(
   getDashboardStats,
 );
 router.get("/units", authenticate, authorize("LECTURER"), getMyUnits);
+
+router.get("/attend/:token", getSessionByToken);
+router.post("/attend/:token", markAttendance);
 
 router.post("/sessions", authenticate, authorize("LECTURER"), createSession);
 router.get("/students", authenticate, authorize("LECTURER"), getMyStudents);
@@ -70,7 +75,8 @@ router.patch(
 router.get("/history", authenticate, authorize("LECTURER"), getHistory);
 
 router.get("/search", authenticate, authorize("LECTURER"), searchLecturerScope);
-router.get("/search/global", authenticate, authorize("LECTURER"), globalSearch);
+router.get("/global-search", authenticate, authorize("LECTURER"), globalSearch);
+
 router.patch(
   "/sessions/:id/archive",
   authenticate,
@@ -103,6 +109,13 @@ router.get(
   authenticate,
   authorize("LECTURER"),
   getStudentTracking,
+);
+
+router.get(
+  "/students/search",
+  authenticate,
+  authorize("LECTURER"),
+  searchStudentByName,
 );
 
 router.get(
