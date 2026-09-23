@@ -282,6 +282,7 @@ const LecturerLayout = () => {
                 ) : (
                   profileForm.fullName?.charAt(0) || "L"
                 )}
+                <div className="flex-1" />
               </div>
               {!collapsed && (
                 <div className="flex-1 min-w-0 overflow-hidden">
