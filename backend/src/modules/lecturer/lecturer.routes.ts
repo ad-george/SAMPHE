@@ -17,8 +17,6 @@ import {
   searchLecturerScope,
   archiveSession,
   unarchiveSession,
-  getSessionByToken,
-  markAttendance,
   getArchived,
   searchStudentByName,
   exportAttendanceReport,
@@ -39,9 +37,6 @@ router.get(
   getDashboardStats,
 );
 router.get("/units", authenticate, authorize("LECTURER"), getMyUnits);
-
-router.get("/attend/:token", getSessionByToken);
-router.post("/attend/:token", markAttendance);
 
 router.post("/sessions", authenticate, authorize("LECTURER"), createSession);
 router.get("/students", authenticate, authorize("LECTURER"), getMyStudents);

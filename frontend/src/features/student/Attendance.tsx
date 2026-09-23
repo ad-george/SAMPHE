@@ -21,7 +21,7 @@ const StudentAttendance = () => {
   // ✅ Check if session is still valid
   const checkSessionValidity = async () => {
     try {
-      const res = await api.get(`/lecturer/attend/${token}`);
+      const res = await api.get(`/public/attend/${token}`);
       if (!res.data.success || !res.data.data) {
         setExpired(true);
         setSession(null);
@@ -45,7 +45,7 @@ const StudentAttendance = () => {
     }
 
     api
-      .get(`/lecturer/attend/${token}`)
+      .get(`/public/attend/${token}`)
       .then((res) => {
         setSession(res.data.data);
 
@@ -115,7 +115,7 @@ const StudentAttendance = () => {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         try {
-          await api.post(`/lecturer/attend/${token}`, {
+          await api.post(`/public/attend/${token}`, {
             regNo: regNo.trim(),
             studentLat: pos.coords.latitude,
             studentLng: pos.coords.longitude,

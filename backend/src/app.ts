@@ -27,6 +27,7 @@ import universityAdminRoutes from "./modules/university-admin/university-admin.r
 import { authenticate } from "./middleware/auth.middleware";
 import { authorize } from "./middleware/role.middleware";
 import { checkLicenseAccess } from "./middleware/license.middleware";
+import publicAttendRoutes from "./modules/attendance/public.routes";
 import {
   getLicenseStatus,
   requestNewLicense,
@@ -96,6 +97,9 @@ app.use(
   checkLicenseAccess,
   hodRoutes,
 );
+
+// PUBLIC: Student attendance check-in
+app.use("/api/public", publicAttendRoutes);
 
 // Lecturer
 app.use(
