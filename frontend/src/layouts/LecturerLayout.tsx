@@ -189,15 +189,16 @@ const LecturerLayout = () => {
           className="fixed inset-0 bg-black/50 z-30 md:hidden"
         />
       )}
-
+      {/* Sidebar */}
       <aside
-        className={`fixed md:sticky top-0 bottom-0 md:bottom-auto md:top-0 h-full md:h-screen flex flex-col shrink-0 z-40 transition-all duration-300 bg-gray-800
-    w-56 md:w-64
-    ${collapsed ? "md:w-20" : "md:w-64"}
-    ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
-  `}
+        className={`h-screen flex flex-col shrink-0 z-40 transition-all duration-300 overflow-visible bg-gray-800
+          w-56 md:w-64
+          fixed md:sticky md:top-0
+          ${collapsed ? "md:w-20" : "md:w-64"}
+          ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+        `}
       >
-        {/* ── BRAND — fixed at top ── */}
+        {/* Brand */}
         <div className="bg-gray-800 shrink-0 flex items-center justify-center border-b border-gray-700 p-2 md:p-4">
           <div className="flex items-center gap-2 md:gap-3 bg-white/10 rounded-full px-3 py-2 md:px-5 md:py-3 border border-white/10">
             <div className="w-9 h-9 md:w-14 md:h-14 rounded-full bg-white flex items-center justify-center shadow-lg shrink-0">
@@ -234,16 +235,17 @@ const LecturerLayout = () => {
           </div>
         </div>
 
-        {/* ── MIDDLE — flex column that fills the rest ── */}
+        {/* Body */}
         <div className="relative flex flex-col flex-1 bg-gray-800 overflow-visible">
-          {/* Desktop-only collapse toggle */}
+          {/* Collapse toggle — desktop only, matches HOD style */}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="hidden md:flex absolute top-8 -right-3 z-50 w-10 h-10 bg-emerald-600 rounded-full items-center justify-center text-xs text-white hover:bg-emerald-500 transition shadow-lg"
+            className="hidden md:flex absolute top-0 -right-3 z-50 w-10 h-10 bg-cyan-500 rounded-full items-center justify-center text-xs text-white hover:bg-cyan-400 transition shadow-lg"
           >
             {collapsed ? "▶" : "◀"}
           </button>
 
+          {/* Nav — no scroll */}
           <nav className="p-2 md:p-3 space-y-1">
             {navItems.map((item) => {
               const active = location.pathname === item.path;
@@ -267,10 +269,10 @@ const LecturerLayout = () => {
             })}
           </nav>
 
-          {/* Spacer — eats remaining space, pushes profile to bottom */}
+          {/* Spacer — pushes profile to bottom */}
           <div className="flex-1" />
 
-          {/* Profile — pinned to bottom */}
+          {/* Profile */}
           <div
             className="p-2 md:p-3 border-t border-gray-700 relative shrink-0"
             ref={profileRef}
@@ -279,14 +281,16 @@ const LecturerLayout = () => {
               onClick={() => setProfileOpen(!profileOpen)}
               className="flex items-center gap-2.5 md:gap-3 w-full text-left p-2 rounded-lg hover:bg-gray-700 transition"
             >
-              <div className="w-9 h-9 rounded-full bg-gray-700 flex items-center justify-center text-sm font-bold text-white shrink-0 overflow-hidden border border-gray-600">
+              <div className="w-9 h-9 rounded-full bg-gray-700 flex items-center justify-center text-sm font-bold text-white shrink-0 overflow-hidden border border-gray-600 leading-none">
                 {profileForm.avatar ? (
                   <img
                     src={profileForm.avatar}
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  profileForm.fullName?.charAt(0) || "L"
+                  <span className="leading-none">
+                    {profileForm.fullName?.charAt(0) || "L"}
+                  </span>
                 )}
               </div>
               {!collapsed && (
@@ -322,7 +326,6 @@ const LecturerLayout = () => {
           </div>
         </div>
       </aside>
-
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto bg-gray-100 relative z-0">
         <header className="sticky top-0 bg-emerald-600 border-b border-emerald-500 z-30 shrink-0">
           <div className="flex items-center px-3 md:px-6 h-14 md:h-16">
