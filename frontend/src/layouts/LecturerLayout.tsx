@@ -191,7 +191,7 @@ const LecturerLayout = () => {
       )}
 
       <aside
-        className={`h-screen flex flex-col shrink-0 z-40 transition-all duration-300 overflow-visible bg-gray-800
+        className={`h-[100dvh] md:h-screen flex flex-col shrink-0 z-40 transition-all duration-300 bg-gray-800
     w-56 md:w-64
     fixed md:sticky md:top-0
     ${collapsed ? "md:w-20" : "md:w-64"}
