@@ -48,14 +48,18 @@ const LecturerLayout = () => {
   }, [user, navigate]);
 
   useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
+    const handleClick = (e: MouseEvent | TouchEvent) => {
       if (searchRef.current && !searchRef.current.contains(e.target as Node))
         setShowSearch(false);
       if (profileRef.current && !profileRef.current.contains(e.target as Node))
         setProfileOpen(false);
     };
     document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    document.addEventListener("touchstart", handleClick);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("touchstart", handleClick);
+    };
   }, []);
 
   const fetchNotifications = async () => {
@@ -364,7 +368,8 @@ const LecturerLayout = () => {
                 />
 
                 {showSearch && searchResults && (
-                  <div className="absolute top-full right-0 mt-2 w-72 md:w-80 bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden z-50 max-h-96 overflow-y-auto">
+                  <div className="fixed md:absolute left-2 right-2 md:left-auto md:right-0 top-14 md:top-full mt-2 md:w-80 bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden z-[70] max-h-96 overflow-y-auto">
+                    {" "}
                     {searchResults.units?.length > 0 && (
                       <div className="p-2">
                         <p className="text-[10px] text-gray-400 uppercase tracking-wider px-3 py-1 font-semibold">
@@ -383,7 +388,6 @@ const LecturerLayout = () => {
                         ))}
                       </div>
                     )}
-
                     {searchResults.students?.length > 0 && (
                       <div className="p-2 border-t border-gray-100">
                         <p className="text-[10px] text-gray-400 uppercase tracking-wider px-3 py-1 font-semibold">
@@ -403,7 +407,6 @@ const LecturerLayout = () => {
                         ))}
                       </div>
                     )}
-
                     {searchResults.sessions?.length > 0 && (
                       <div className="p-2 border-t border-gray-100">
                         <p className="text-[10px] text-gray-400 uppercase tracking-wider px-3 py-1 font-semibold">
@@ -425,7 +428,6 @@ const LecturerLayout = () => {
                         ))}
                       </div>
                     )}
-
                     {searchResults.units?.length === 0 &&
                       searchResults.students?.length === 0 &&
                       searchResults.sessions?.length === 0 && (
