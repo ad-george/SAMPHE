@@ -191,11 +191,11 @@ const LecturerLayout = () => {
       )}
       {/* Sidebar */}
       <aside
-        className={`h-screen flex flex-col shrink-0 z-40 transition-all duration-300 overflow-visible bg-gray-800
-          fixed md:sticky md:top-0
-          ${collapsed ? "w-56 md:w-20" : "w-56 md:w-64"}
-          ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
-        `}
+        className={`h-screen flex flex-col shrink-0 z-40 transition-all duration-300 bg-gray-800
+    fixed md:!sticky top-0
+    ${collapsed ? "w-56 md:w-20" : "w-56 md:w-64"}
+    ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+  `}
       >
         {/* Brand */}
         <div className="bg-gray-800 shrink-0 flex items-center justify-center border-b border-gray-700 p-2 md:p-4">
