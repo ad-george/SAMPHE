@@ -192,12 +192,13 @@ const LecturerLayout = () => {
 
       <aside
         className={`h-screen flex flex-col shrink-0 z-40 transition-all duration-300 overflow-visible bg-gray-800
-      w-56 md:w-64
-      fixed md:sticky md:top-0
-      ${collapsed ? "md:w-20" : "md:w-64"}
-      ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
-    `}
+    w-56 md:w-64
+    fixed md:sticky md:top-0
+    ${collapsed ? "md:w-20" : "md:w-64"}
+    ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+  `}
       >
+        {/* ── BRAND — fixed at top ── */}
         <div className="bg-gray-800 shrink-0 flex items-center justify-center border-b border-gray-700 p-2 md:p-4">
           <div className="flex items-center gap-2 md:gap-3 bg-white/10 rounded-full px-3 py-2 md:px-5 md:py-3 border border-white/10">
             <div className="w-9 h-9 md:w-14 md:h-14 rounded-full bg-white flex items-center justify-center shadow-lg shrink-0">
@@ -234,7 +235,9 @@ const LecturerLayout = () => {
           </div>
         </div>
 
+        {/* ── MIDDLE — flex column that fills the rest ── */}
         <div className="relative flex flex-col flex-1 bg-gray-800 overflow-visible">
+          {/* Desktop-only collapse toggle */}
           <button
             onClick={() => setCollapsed(!collapsed)}
             className="hidden md:flex absolute top-8 -right-3 z-50 w-10 h-10 bg-emerald-600 rounded-full items-center justify-center text-xs text-white hover:bg-emerald-500 transition shadow-lg"
@@ -242,6 +245,7 @@ const LecturerLayout = () => {
             {collapsed ? "▶" : "◀"}
           </button>
 
+          {/* Nav — natural height, scrolls if too many items */}
           <nav className="p-2 md:p-3 space-y-1 overflow-y-auto">
             {navItems.map((item) => {
               const active = location.pathname === item.path;
@@ -265,8 +269,12 @@ const LecturerLayout = () => {
             })}
           </nav>
 
+          {/* Spacer — eats remaining space, pushes profile to bottom */}
+          <div className="flex-1" />
+
+          {/* Profile — pinned to bottom */}
           <div
-            className="p-2 md:p-3 border-t border-gray-700 relative"
+            className="p-2 md:p-3 border-t border-gray-700 relative shrink-0"
             ref={profileRef}
           >
             <button
@@ -282,7 +290,6 @@ const LecturerLayout = () => {
                 ) : (
                   profileForm.fullName?.charAt(0) || "L"
                 )}
-                <div className="flex-1" />
               </div>
               {!collapsed && (
                 <div className="flex-1 min-w-0 overflow-hidden">
@@ -293,6 +300,7 @@ const LecturerLayout = () => {
                 </div>
               )}
             </button>
+
             {profileOpen && (
               <div className="absolute bottom-full left-2 md:left-3 mb-2 w-52 md:w-56 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden z-50">
                 <button
