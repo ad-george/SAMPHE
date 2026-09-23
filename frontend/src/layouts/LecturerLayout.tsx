@@ -191,7 +191,7 @@ const LecturerLayout = () => {
       )}
       {/* Sidebar */}
       <aside
-        className={`h-screen flex flex-col shrink-0 z-40 transition-all duration-300 bg-gray-800
+        className={`h-[100dvh] md:h-screen flex flex-col shrink-0 z-40 transition-all duration-300 bg-gray-800
     fixed md:!sticky top-0
     ${collapsed ? "w-56 md:w-20" : "w-56 md:w-64"}
     ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
@@ -273,7 +273,7 @@ const LecturerLayout = () => {
 
           {/* Profile */}
           <div
-            className="p-2 md:p-3 border-t border-gray-700 relative shrink-0"
+            className="p-2 md:p-3 pb-6 md:pb-3 border-t border-gray-700 relative shrink-0"
             ref={profileRef}
           >
             <button
