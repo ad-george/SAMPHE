@@ -244,8 +244,7 @@ const LecturerLayout = () => {
             {collapsed ? "▶" : "◀"}
           </button>
 
-          {/* Nav — natural height, scrolls if too many items */}
-          <nav className="p-2 md:p-3 space-y-1 overflow-y-auto">
+          <nav className="flex-1 p-2 md:p-3 space-y-1 overflow-y-auto">
             {navItems.map((item) => {
               const active = location.pathname === item.path;
               return (
