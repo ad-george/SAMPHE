@@ -184,21 +184,21 @@ const LecturerLayout = () => {
         />
       )}
 
-      {/* Sidebar — Gray */}
+      {/* Sidebar */}
       <aside
         className={`h-screen flex flex-col shrink-0 z-40 transition-all duration-300 overflow-visible bg-gray-800
-      w-64
+      w-56 md:w-64
       fixed md:sticky md:top-0
       ${collapsed ? "md:w-20" : "md:w-64"}
       ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
     `}
       >
         {/* Brand — circular pill */}
-        <div className="bg-gray-800 shrink-0 flex items-center justify-center border-b border-gray-700 p-4">
-          <div className="flex items-center gap-3 bg-white/10 rounded-full px-5 py-3 border border-white/10">
-            <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-lg shrink-0">
+        <div className="bg-gray-800 shrink-0 flex items-center justify-center border-b border-gray-700 p-2 md:p-4">
+          <div className="flex items-center gap-2 md:gap-3 bg-white/10 rounded-full px-3 py-2 md:px-5 md:py-3 border border-white/10">
+            <div className="w-9 h-9 md:w-14 md:h-14 rounded-full bg-white flex items-center justify-center shadow-lg shrink-0">
               <svg
-                className="w-8 h-8 text-gray-800"
+                className="w-5 h-5 md:w-8 md:h-8 text-gray-800"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -219,10 +219,10 @@ const LecturerLayout = () => {
             </div>
             {!collapsed && (
               <div className="overflow-hidden">
-                <h1 className="font-bold text-white text-2xl tracking-tight whitespace-nowrap">
+                <h1 className="font-bold text-white text-base md:text-2xl tracking-tight whitespace-nowrap">
                   SAMPHE
                 </h1>
-                <p className="text-xs text-gray-300 font-medium whitespace-nowrap">
+                <p className="text-[10px] md:text-xs text-gray-300 font-medium whitespace-nowrap">
                   Lecturer Portal
                 </p>
               </div>
@@ -232,15 +232,15 @@ const LecturerLayout = () => {
 
         {/* Collapsible body */}
         <div className="relative flex flex-col flex-1 bg-gray-800 overflow-visible">
-          {/* Toggle button */}
+          {/* Toggle button — desktop only */}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="absolute top-8 -right-3 z-50 w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center text-xs text-white hover:bg-emerald-500 transition shadow-lg"
+            className="hidden md:flex absolute top-8 -right-3 z-50 w-10 h-10 bg-emerald-600 rounded-full items-center justify-center text-xs text-white hover:bg-emerald-500 transition shadow-lg"
           >
             {collapsed ? "▶" : "◀"}
           </button>
 
-          <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+          <nav className="flex-1 p-2 md:p-3 space-y-1 overflow-y-auto">
             {navItems.map((item) => {
               const active = location.pathname === item.path;
               return (
@@ -248,7 +248,7 @@ const LecturerLayout = () => {
                   key={item.path}
                   to={item.path}
                   onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm ${
+                  className={`flex items-center gap-2.5 md:gap-3 px-3 py-2 md:py-2.5 rounded-lg transition-all text-[13px] md:text-sm ${
                     active
                       ? "bg-emerald-600 text-white font-medium shadow-sm"
                       : "text-gray-300 hover:text-white hover:bg-gray-700"
@@ -264,12 +264,12 @@ const LecturerLayout = () => {
           </nav>
 
           <div
-            className="p-3 border-t border-gray-700 relative"
+            className="p-2 md:p-3 border-t border-gray-700 relative"
             ref={profileRef}
           >
             <button
               onClick={() => setProfileOpen(!profileOpen)}
-              className="flex items-center gap-3 w-full text-left p-2 rounded-lg hover:bg-gray-700 transition"
+              className="flex items-center gap-2.5 md:gap-3 w-full text-left p-2 rounded-lg hover:bg-gray-700 transition"
             >
               <div className="w-9 h-9 rounded-full bg-gray-700 flex items-center justify-center text-sm font-bold text-white shrink-0 overflow-hidden border border-gray-600">
                 {profileForm.avatar ? (
@@ -283,7 +283,7 @@ const LecturerLayout = () => {
               </div>
               {!collapsed && (
                 <div className="flex-1 min-w-0 overflow-hidden">
-                  <p className="text-sm font-medium text-white truncate">
+                  <p className="text-[13px] md:text-sm font-medium text-white truncate">
                     {profileForm.fullName || user?.fullName}
                   </p>
                   <p className="text-[10px] text-gray-400">Lecturer</p>
@@ -291,7 +291,7 @@ const LecturerLayout = () => {
               )}
             </button>
             {profileOpen && (
-              <div className="absolute bottom-full left-3 mb-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden z-50">
+              <div className="absolute bottom-full left-2 md:left-3 mb-2 w-52 md:w-56 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden z-50">
                 <button
                   onClick={() => {
                     setEditProfile(true);
@@ -314,15 +314,15 @@ const LecturerLayout = () => {
         </div>
       </aside>
 
-      {/* Main — expands to fill remaining space */}
+      {/* Main */}
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto bg-gray-100">
-        {/* Top Bar — Green */}
+        {/* Top Bar */}
         <header className="sticky top-0 bg-emerald-600 border-b border-emerald-500 z-30 shrink-0">
-          <div className="flex items-center px-4 md:px-6 h-16">
+          <div className="flex items-center px-3 md:px-6 h-14 md:h-16">
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="md:hidden mr-3 text-white text-2xl"
+              className="md:hidden mr-2 text-white text-2xl leading-none"
               aria-label="Toggle menu"
             >
               ☰
@@ -330,7 +330,7 @@ const LecturerLayout = () => {
 
             {/* Left: Tab Name + Date */}
             <div className="flex flex-col min-w-0">
-              <h2 className="text-base md:text-lg font-semibold text-white leading-tight truncate">
+              <h2 className="text-sm md:text-lg font-semibold text-white leading-tight truncate">
                 {navItems.find((n) => n.path === location.pathname)?.label ||
                   "Dashboard"}
               </h2>
@@ -344,7 +344,7 @@ const LecturerLayout = () => {
               </p>
             </div>
 
-            {/* Divider + Institution + Department — right next to date */}
+            {/* Divider + Institution + Department — desktop only */}
             <div className="hidden md:flex items-center gap-4 ml-6">
               <div className="h-10 w-px bg-emerald-300/50"></div>
               <div className="flex flex-col">
@@ -357,12 +357,11 @@ const LecturerLayout = () => {
               </div>
             </div>
 
-            {/* Spacer — pushes Search + Bell to the far right */}
+            {/* Spacer */}
             <div className="flex-1"></div>
 
             {/* Right: Search + Notifications */}
             <div className="flex items-center gap-2 md:gap-4">
-              {/* Search Bar */}
               <div className="hidden md:flex items-center">
                 <input
                   type="text"
@@ -386,17 +385,19 @@ const LecturerLayout = () => {
           </div>
         </header>
 
-        <div className="flex-1 p-6 bg-gray-100">
+        <div className="flex-1 p-3 md:p-6 bg-gray-100">
           <Outlet />
         </div>
       </main>
 
-      {/* Modals */}
+      {/* Notifications Modal */}
       {notifOpen && (
-        <div className="fixed inset-0 top-0 left-0 w-full h-full bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+        <div className="fixed inset-0 top-0 left-0 w-full h-full bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-3 md:p-4">
           <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
-            <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-gray-800">Notifications</h3>
+            <div className="p-4 md:p-5 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="text-base md:text-lg font-bold text-gray-800">
+                Notifications
+              </h3>
               <button
                 onClick={() => setNotifOpen(false)}
                 className="text-gray-400 hover:text-gray-700"
@@ -441,15 +442,16 @@ const LecturerLayout = () => {
         </div>
       )}
 
+      {/* Edit Profile Modal */}
       {editProfile && (
-        <div className="fixed inset-0 top-0 left-0 w-full h-full bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-          <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-md p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">
+        <div className="fixed inset-0 top-0 left-0 w-full h-full bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-3 md:p-4 overflow-y-auto">
+          <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-md p-5 md:p-6 shadow-2xl my-auto">
+            <h3 className="text-base md:text-lg font-bold text-gray-800 mb-4">
               Edit Profile
             </h3>
-            <form onSubmit={saveProfile} className="space-y-4">
+            <form onSubmit={saveProfile} className="space-y-3 md:space-y-4">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-xl font-bold text-gray-600 border border-gray-300 overflow-hidden">
+                <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-gray-200 flex items-center justify-center text-xl font-bold text-gray-600 border border-gray-300 overflow-hidden">
                   {profileForm.avatar ? (
                     <img
                       src={profileForm.avatar}
@@ -488,7 +490,7 @@ const LecturerLayout = () => {
                 onChange={(e) =>
                   setProfileForm({ ...profileForm, fullName: e.target.value })
                 }
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 focus:border-emerald-400 focus:outline-none"
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 md:px-4 py-2.5 text-sm text-gray-800 focus:border-emerald-400 focus:outline-none"
                 required
               />
               <input
@@ -498,7 +500,7 @@ const LecturerLayout = () => {
                 onChange={(e) =>
                   setProfileForm({ ...profileForm, email: e.target.value })
                 }
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 focus:border-emerald-400 focus:outline-none"
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 md:px-4 py-2.5 text-sm text-gray-800 focus:border-emerald-400 focus:outline-none"
                 required
               />
               <input
@@ -507,7 +509,7 @@ const LecturerLayout = () => {
                 onChange={(e) =>
                   setProfileForm({ ...profileForm, phone: e.target.value })
                 }
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 focus:border-emerald-400 focus:outline-none"
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 md:px-4 py-2.5 text-sm text-gray-800 focus:border-emerald-400 focus:outline-none"
               />
               <div className="border-t border-gray-100 pt-4">
                 <p className="text-xs text-gray-400 uppercase tracking-wider mb-3 font-medium">
@@ -523,7 +525,7 @@ const LecturerLayout = () => {
                       currentPassword: e.target.value,
                     })
                   }
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 mb-3 focus:border-emerald-400 focus:outline-none"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 md:px-4 py-2.5 text-sm text-gray-800 mb-3 focus:border-emerald-400 focus:outline-none"
                 />
                 <input
                   placeholder="New Password"
@@ -535,7 +537,7 @@ const LecturerLayout = () => {
                       newPassword: e.target.value,
                     })
                   }
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 mb-3 focus:border-emerald-400 focus:outline-none"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 md:px-4 py-2.5 text-sm text-gray-800 mb-3 focus:border-emerald-400 focus:outline-none"
                 />
                 <input
                   placeholder="Confirm New Password"
@@ -547,7 +549,7 @@ const LecturerLayout = () => {
                       confirmPassword: e.target.value,
                     })
                   }
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 focus:border-emerald-400 focus:outline-none"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 md:px-4 py-2.5 text-sm text-gray-800 focus:border-emerald-400 focus:outline-none"
                 />
               </div>
               <div className="flex gap-3 pt-2">
