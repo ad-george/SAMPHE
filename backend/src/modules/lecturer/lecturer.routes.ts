@@ -104,13 +104,6 @@ router.get(
 );
 
 router.get(
-  "/students/search",
-  authenticate,
-  authorize("LECTURER"),
-  searchStudentByName,
-);
-
-router.get(
   "/reports/export/:sessionId",
   authenticate,
   authorize("LECTURER"),
