@@ -244,7 +244,7 @@ const LecturerLayout = () => {
             {collapsed ? "▶" : "◀"}
           </button>
 
-          <nav className="flex-1 p-2 md:p-3 space-y-1 overflow-y-auto">
+          <nav className="p-2 md:p-3 space-y-1">
             {navItems.map((item) => {
               const active = location.pathname === item.path;
               return (
@@ -323,7 +323,7 @@ const LecturerLayout = () => {
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto bg-gray-100">
+      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto bg-gray-100 relative z-0">
         <header className="sticky top-0 bg-emerald-600 border-b border-emerald-500 z-30 shrink-0">
           <div className="flex items-center px-3 md:px-6 h-14 md:h-16">
             <button
