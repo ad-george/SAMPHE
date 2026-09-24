@@ -13,6 +13,11 @@ const AttendanceHistory = () => {
   });
   const [view, setView] = useState<"active" | "archived">("active");
   const [moreModal, setMoreModal] = useState<string | null>(null);
+  const [dropdownPos, setDropdownPos] = useState<{
+    top: number;
+    left: number;
+    openUp: boolean;
+  } | null>(null);
   const [archivedModal, setArchivedModal] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [viewLimit] = useState(10);
@@ -22,19 +27,6 @@ const AttendanceHistory = () => {
     fetchHistory();
     fetchArchived();
   }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        moreModal &&
-        !(event.target as Element).closest(".more-modal-container")
-      ) {
-        setMoreModal(null);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [moreModal]);
 
   const fetchHistory = async () => {
     const params = new URLSearchParams();
@@ -65,6 +57,7 @@ const AttendanceHistory = () => {
       fetchHistory();
       fetchArchived();
       setMoreModal(null);
+      setDropdownPos(null);
     } catch {
       toast.error("Failed");
     }
@@ -89,6 +82,7 @@ const AttendanceHistory = () => {
       fetchHistory();
       fetchArchived();
       setMoreModal(null);
+      setDropdownPos(null);
     } catch {
       toast.error("Failed");
     }
@@ -135,37 +129,63 @@ const AttendanceHistory = () => {
       </div>
 
       {/* Filter Bar */}
-      <div className="flex flex-wrap items-center gap-1.5 md:gap-3 bg-slate-700 border border-slate-600 rounded-md md:rounded-xl p-2 md:p-3 shadow-sm">
-        <select
-          value={filters.unitId}
-          onChange={(e) => setFilters({ ...filters, unitId: e.target.value })}
-          className="bg-slate-600 border border-slate-500 rounded-md md:rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-[11px] md:text-sm text-white focus:border-emerald-400 focus:outline-none"
-        >
-          <option value="">All Units</option>
-          {units.map((u: any) => (
-            <option key={u.id} value={u.id}>
-              {u.code}
-            </option>
-          ))}
-        </select>
-        <input
-          type="date"
-          value={filters.dateFrom}
-          onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
-          className="bg-slate-600 border border-slate-500 rounded-md md:rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-[11px] md:text-sm text-white focus:border-emerald-400 focus:outline-none"
-        />
-        <input
-          type="date"
-          value={filters.dateTo}
-          onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
-          className="bg-slate-600 border border-slate-500 rounded-md md:rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-[11px] md:text-sm text-white focus:border-emerald-400 focus:outline-none"
-        />
-        <button
-          onClick={fetchHistory}
-          className="px-3 md:px-4 py-1.5 md:py-2 bg-emerald-600 text-white rounded-md md:rounded-lg text-[11px] md:text-sm font-medium hover:bg-emerald-500 transition"
-        >
-          Apply
-        </button>
+      <div className="bg-slate-700 border border-slate-600 rounded-md md:rounded-xl p-2 md:p-3 shadow-sm">
+        <div className="flex flex-wrap items-end gap-1.5 md:gap-3">
+          <div className="flex flex-col gap-0.5">
+            <label className="text-[9px] md:text-[10px] text-slate-400 uppercase tracking-wide font-semibold">
+              Unit
+            </label>
+            <select
+              value={filters.unitId}
+              onChange={(e) =>
+                setFilters({ ...filters, unitId: e.target.value })
+              }
+              className="bg-slate-600 border border-slate-500 rounded-md md:rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-[11px] md:text-sm text-white focus:border-emerald-400 focus:outline-none"
+            >
+              <option value="">All Units</option>
+              {units.map((u: any) => (
+                <option key={u.id} value={u.id}>
+                  {u.code}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-0.5 flex-1 min-w-[110px]">
+            <label className="text-[9px] md:text-[10px] text-slate-400 uppercase tracking-wide font-semibold">
+              From
+            </label>
+            <input
+              type="date"
+              value={filters.dateFrom}
+              onChange={(e) =>
+                setFilters({ ...filters, dateFrom: e.target.value })
+              }
+              className="bg-slate-600 border border-slate-500 rounded-md md:rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-[11px] md:text-sm text-white focus:border-emerald-400 focus:outline-none appearance-none w-full"
+            />
+          </div>
+
+          <div className="flex flex-col gap-0.5 flex-1 min-w-[110px]">
+            <label className="text-[9px] md:text-[10px] text-slate-400 uppercase tracking-wide font-semibold">
+              To
+            </label>
+            <input
+              type="date"
+              value={filters.dateTo}
+              onChange={(e) =>
+                setFilters({ ...filters, dateTo: e.target.value })
+              }
+              className="bg-slate-600 border border-slate-500 rounded-md md:rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-[11px] md:text-sm text-white focus:border-emerald-400 focus:outline-none appearance-none w-full"
+            />
+          </div>
+
+          <button
+            onClick={fetchHistory}
+            className="px-3 md:px-4 py-1.5 md:py-2 bg-emerald-600 text-white rounded-md md:rounded-lg text-[11px] md:text-sm font-medium hover:bg-emerald-500 transition self-end"
+          >
+            Apply
+          </button>
+        </div>
       </div>
 
       {/* Table card */}
@@ -185,8 +205,6 @@ const AttendanceHistory = () => {
           )}
         </div>
 
-        {/* Table (scroll horizontally on mobile) */}
-        {/* Table (no horizontal scroll on mobile) */}
         {/* Table (horizontally scrollable on mobile) */}
         <div className="overflow-x-auto">
           <table className="w-full text-[11px] md:text-sm">
@@ -247,52 +265,26 @@ const AttendanceHistory = () => {
                     <td className="px-2 py-1 md:p-4 text-[11px] md:text-sm font-bold text-blue-400 whitespace-nowrap">
                       {rate}%
                     </td>
-                    <td className="px-2 py-1 md:p-4 relative more-modal-container">
+                    <td className="px-2 py-1 md:p-4">
                       <button
-                        onClick={() =>
-                          setMoreModal(moreModal === h.id ? null : h.id)
-                        }
+                        onClick={(e) => {
+                          const rect = (
+                            e.currentTarget as HTMLElement
+                          ).getBoundingClientRect();
+                          const dropdownHeight = 180;
+                          const spaceBelow = window.innerHeight - rect.bottom;
+                          const openUp = spaceBelow < dropdownHeight + 20;
+                          setDropdownPos({
+                            top: openUp ? rect.top - 8 : rect.bottom + 8,
+                            left: Math.max(8, rect.right - 160),
+                            openUp,
+                          });
+                          setMoreModal(moreModal === h.id ? null : h.id);
+                        }}
                         className="text-[11px] md:text-xs px-2 md:px-3 py-0.5 md:py-1.5 rounded md:rounded-lg bg-slate-600 text-slate-300 border border-slate-500 hover:bg-slate-500 transition"
                       >
                         ⋯
                       </button>
-                      {moreModal === h.id && (
-                        <div className="absolute right-0 bottom-full mb-1 md:mb-2 w-32 md:w-40 bg-white border border-slate-200 rounded-md md:rounded-xl shadow-xl overflow-hidden z-50">
-                          <button
-                            onClick={() => download(h.id, "pdf")}
-                            className="w-full text-left px-3 md:px-4 py-2 md:py-2.5 text-[11px] md:text-sm text-slate-700 hover:bg-slate-100 transition"
-                          >
-                            PDF
-                          </button>
-                          <button
-                            onClick={() => download(h.id, "excel")}
-                            className="w-full text-left px-3 md:px-4 py-2 md:py-2.5 text-[11px] md:text-sm text-slate-700 hover:bg-slate-100 transition"
-                          >
-                            Excel
-                          </button>
-                          {view === "active" ? (
-                            <button
-                              onClick={() => archive(h.id)}
-                              className="w-full text-left px-3 md:px-4 py-2 md:py-2.5 text-[11px] md:text-sm text-slate-700 hover:bg-slate-100 transition"
-                            >
-                              Archive
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => unarchive(h.id)}
-                              className="w-full text-left px-3 md:px-4 py-2 md:py-2.5 text-[11px] md:text-sm text-slate-700 hover:bg-slate-100 transition"
-                            >
-                              Restore
-                            </button>
-                          )}
-                          <button
-                            onClick={() => deleteSession(h.id)}
-                            className="w-full text-left px-3 md:px-4 py-2 md:py-2.5 text-[11px] md:text-sm text-red-600 hover:bg-slate-100 transition"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      )}
                     </td>
                   </tr>
                 );
@@ -311,6 +303,71 @@ const AttendanceHistory = () => {
           </table>
         </div>
       </div>
+
+      {/* Floating actions dropdown — escapes the card, never clipped */}
+      {moreModal && dropdownPos && (
+        <>
+          <div
+            className="fixed inset-0 z-[70]"
+            onClick={() => {
+              setMoreModal(null);
+              setDropdownPos(null);
+            }}
+          />
+          <div
+            className="fixed w-40 bg-white border border-slate-200 rounded-xl shadow-2xl overflow-hidden z-[80]"
+            style={{
+              top: dropdownPos.openUp ? undefined : dropdownPos.top,
+              bottom: dropdownPos.openUp
+                ? window.innerHeight - dropdownPos.top
+                : undefined,
+              left: dropdownPos.left,
+            }}
+          >
+            <button
+              onClick={() => {
+                download(moreModal, "pdf");
+                setMoreModal(null);
+                setDropdownPos(null);
+              }}
+              className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-100 transition"
+            >
+              PDF
+            </button>
+            <button
+              onClick={() => {
+                download(moreModal, "excel");
+                setMoreModal(null);
+                setDropdownPos(null);
+              }}
+              className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-100 transition"
+            >
+              Excel
+            </button>
+            {view === "active" ? (
+              <button
+                onClick={() => archive(moreModal)}
+                className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-100 transition"
+              >
+                Archive
+              </button>
+            ) : (
+              <button
+                onClick={() => unarchive(moreModal)}
+                className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-100 transition"
+              >
+                Restore
+              </button>
+            )}
+            <button
+              onClick={() => deleteSession(moreModal)}
+              className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-slate-100 transition"
+            >
+              Delete
+            </button>
+          </div>
+        </>
+      )}
 
       {/* Archived Modal */}
       {archivedModal && (
