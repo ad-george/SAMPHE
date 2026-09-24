@@ -366,7 +366,7 @@ const Students = () => {
         {/* Per Unit Breakdown */}
         {detail.byUnit?.length > 0 && (
           <div className="space-y-2 md:space-y-4">
-            <h3 className="text-[11px] md:text-base font-bold text-white">
+            <h3 className="text-[11px] md:text-base font-bold text-black mb-1.5 md:mb-3">
               Per Unit Breakdown
             </h3>
             {detail.byUnit.map((u: any) => (
