@@ -244,25 +244,25 @@ const LiveSession = () => {
   return (
     <div className="space-y-2 md:space-y-6 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col gap-2 md:gap-4 bg-slate-700 border border-slate-600 rounded-lg md:rounded-2xl p-2.5 md:p-6 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-1.5 md:gap-4 bg-slate-700 border border-slate-600 rounded-lg md:rounded-2xl p-2 md:p-6 shadow-sm lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
-          <div className="flex items-center gap-2 md:gap-3 mb-0.5 md:mb-1">
-            <span className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-            <h1 className="text-[13px] md:text-2xl font-bold text-white tracking-tight truncate">
+          <div className="flex items-center gap-1.5 md:gap-3">
+            <span className="w-1.5 h-1.5 md:w-2.5 md:h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <h1 className="text-[11px] md:text-2xl font-bold text-white tracking-tight truncate">
               Live Session — {session.unit?.name}
             </h1>
           </div>
-          <p className="text-[10px] md:text-sm text-slate-400 truncate">
+          <p className="text-[9px] md:text-sm text-slate-400 truncate mt-0.5">
             Code: {session.unit?.code} • Radius: {session.radius}m
           </p>
         </div>
-        <div className="flex items-center gap-1.5 md:gap-3 flex-wrap">
-          <div className="bg-slate-600 border border-slate-500 rounded-md md:rounded-xl px-2.5 md:px-5 py-1 md:py-3 text-center min-w-[70px] md:min-w-[100px]">
-            <p className="text-[9px] md:text-xs text-slate-400 uppercase">
-              Remaining
+        <div className="flex items-center gap-1 md:gap-3 flex-wrap">
+          <div className="bg-slate-600 border border-slate-500 rounded-md md:rounded-xl px-1.5 md:px-5 py-0.5 md:py-3 text-center min-w-[50px] md:min-w-[100px]">
+            <p className="text-[7px] md:text-xs text-slate-400 uppercase leading-tight">
+              Left
             </p>
             <p
-              className={`text-sm md:text-xl font-mono font-bold ${
+              className={`text-[11px] md:text-xl font-mono font-bold leading-tight ${
                 timer < 60 ? "text-rose-400" : "text-emerald-400"
               }`}
             >
@@ -271,48 +271,50 @@ const LiveSession = () => {
           </div>
           <button
             onClick={copyLink}
-            className="px-2 md:px-4 py-1.5 md:py-2.5 bg-slate-600 text-emerald-400 border border-slate-500 rounded-md md:rounded-lg text-[10px] md:text-sm font-medium hover:bg-slate-500 transition"
+            className="px-1.5 md:px-4 py-1 md:py-2.5 bg-slate-600 text-emerald-400 border border-slate-500 rounded md:rounded-lg text-[9px] md:text-sm font-medium hover:bg-slate-500 transition whitespace-nowrap"
           >
-            Copy Link
+            Copy
           </button>
           <button
             onClick={end}
-            className="px-2 md:px-4 py-1.5 md:py-2.5 bg-rose-900/20 text-rose-400 border border-rose-800 rounded-md md:rounded-lg text-[10px] md:text-sm font-medium hover:bg-rose-900/40 transition"
+            className="px-1.5 md:px-4 py-1 md:py-2.5 bg-rose-900/20 text-rose-400 border border-rose-800 rounded md:rounded-lg text-[9px] md:text-sm font-medium hover:bg-rose-900/40 transition whitespace-nowrap"
           >
-            End Session
+            End
           </button>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 md:grid-cols-4 gap-1.5 md:gap-4">
-        <div className="bg-slate-700 border border-slate-600 rounded-md md:rounded-2xl p-1.5 md:p-5 shadow-sm text-center">
-          <p className="text-[9px] md:text-xs text-slate-400 uppercase">
+      <div className="grid grid-cols-4 gap-1 md:gap-4">
+        <div className="bg-slate-700 border border-slate-600 rounded-md md:rounded-2xl p-1 md:p-5 shadow-sm text-center">
+          <p className="text-[8px] md:text-xs text-slate-400 uppercase leading-tight">
             Total
           </p>
-          <p className="text-sm md:text-2xl font-bold text-white mt-0.5 md:mt-1">
+          <p className="text-[11px] md:text-2xl font-bold text-white leading-tight">
             {totalStudents}
           </p>
         </div>
-        <div className="bg-slate-700 border border-slate-600 rounded-md md:rounded-2xl p-1.5 md:p-5 shadow-sm text-center">
-          <p className="text-[9px] md:text-xs text-slate-400 uppercase">
+        <div className="bg-slate-700 border border-slate-600 rounded-md md:rounded-2xl p-1 md:p-5 shadow-sm text-center">
+          <p className="text-[8px] md:text-xs text-slate-400 uppercase leading-tight">
             Present
           </p>
-          <p className="text-sm md:text-2xl font-bold text-emerald-400 mt-0.5 md:mt-1">
+          <p className="text-[11px] md:text-2xl font-bold text-emerald-400 leading-tight">
             {present}
           </p>
         </div>
-        <div className="bg-slate-700 border border-slate-600 rounded-md md:rounded-2xl p-1.5 md:p-5 shadow-sm text-center">
-          <p className="text-[9px] md:text-xs text-slate-400 uppercase">
+        <div className="bg-slate-700 border border-slate-600 rounded-md md:rounded-2xl p-1 md:p-5 shadow-sm text-center">
+          <p className="text-[8px] md:text-xs text-slate-400 uppercase leading-tight">
             Absent
           </p>
-          <p className="text-sm md:text-2xl font-bold text-rose-400 mt-0.5 md:mt-1">
+          <p className="text-[11px] md:text-2xl font-bold text-rose-400 leading-tight">
             {absent}
           </p>
         </div>
-        <div className="bg-slate-700 border border-slate-600 rounded-md md:rounded-2xl p-1.5 md:p-5 shadow-sm text-center">
-          <p className="text-[9px] md:text-xs text-slate-400 uppercase">Rate</p>
-          <p className="text-sm md:text-2xl font-bold text-blue-400 mt-0.5 md:mt-1">
+        <div className="bg-slate-700 border border-slate-600 rounded-md md:rounded-2xl p-1 md:p-5 shadow-sm text-center">
+          <p className="text-[8px] md:text-xs text-slate-400 uppercase leading-tight">
+            Rate
+          </p>
+          <p className="text-[11px] md:text-2xl font-bold text-blue-400 leading-tight">
             {rate}%
           </p>
         </div>
