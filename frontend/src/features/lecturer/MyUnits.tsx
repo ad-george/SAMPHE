@@ -31,8 +31,8 @@ const MyUnits = () => {
 
   if (units.length === 0) {
     return (
-      <div className="max-w-5xl mx-auto flex flex-col items-center justify-center h-[60vh] text-center">
-        <div className="w-24 h-24 rounded-full bg-slate-700 flex items-center justify-center mb-6 border border-slate-600">
+      <div className="max-w-5xl mx-auto flex flex-col items-center justify-center h-[60vh] text-center px-4">
+        <div className="w-14 h-14 md:w-24 md:h-24 rounded-full bg-slate-700 flex items-center justify-center mb-3 md:mb-6 border border-slate-600">
           <svg
             className="w-12 h-12 text-slate-500"
             fill="none"
@@ -47,21 +47,23 @@ const MyUnits = () => {
             />
           </svg>
         </div>
-        <h2 className="text-xl font-bold text-white mb-2">No Units Assigned</h2>
-        <p className="text-sm text-slate-400 max-w-sm mb-6">
+        <h2 className="text-sm md:text-xl font-bold text-white mb-1 md:mb-2">
+          No Units Assigned
+        </h2>
+        <p className="text-[11px] md:text-sm text-slate-400 max-w-sm mb-4 md:mb-6">
           You currently have no teaching units assigned for this semester.
           Contact your HOD or University Admin to get started.
         </p>
-        <div className="flex gap-3">
+        <div className="flex gap-2 md:gap-3">
           <button
             onClick={() => navigate("/lecturer")}
-            className="px-5 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-500 transition"
+            className="px-3 md:px-5 py-1.5 md:py-2 bg-emerald-600 text-white rounded-md md:rounded-lg text-[11px] md:text-sm font-medium hover:bg-emerald-500 transition"
           >
-            Back to Dashboard
+            Back
           </button>
           <button
             onClick={() => window.location.reload()}
-            className="px-5 py-2 bg-slate-700 border border-slate-600 text-slate-300 rounded-lg text-sm font-medium hover:bg-slate-600 transition"
+            className="px-3 md:px-5 py-1.5 md:py-2 bg-slate-700 border border-slate-600 text-slate-300 rounded-md md:rounded-lg text-[11px] md:text-sm font-medium hover:bg-slate-600 transition"
           >
             Refresh
           </button>
@@ -71,38 +73,42 @@ const MyUnits = () => {
   }
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-green tracking-tight">
+    <div className="space-y-3 md:space-y-8 max-w-5xl mx-auto">
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="text-base md:text-2xl font-bold text-green tracking-tight truncate">
           My Teaching Units
         </h1>
-        <span className="text-xs text-slate-400 bg-slate-700 border border-slate-600 px-3 py-1.5 rounded-lg">
-          {units.length} total units
+        <span className="text-[10px] md:text-xs text-slate-400 bg-slate-700 border border-slate-600 px-2 md:px-3 py-1 md:py-1.5 rounded-md md:rounded-lg whitespace-nowrap shrink-0">
+          {units.length} units
         </span>
       </div>
 
       {Object.entries(grouped).map(([group, list]: [string, any]) => (
         <div
           key={group}
-          className="bg-slate-700 border border-slate-600 rounded-2xl p-6 shadow-sm"
+          className="bg-slate-700 border border-slate-600 rounded-lg md:rounded-2xl p-2.5 md:p-6 shadow-sm"
         >
-          <h3 className="text-sm font-semibold text-emerald-400 uppercase tracking-wider mb-4">
+          <h3 className="text-[10px] md:text-sm font-semibold text-emerald-400 uppercase tracking-wide md:tracking-wider mb-2 md:mb-4">
             {group}
           </h3>
-          <div className="space-y-3">
+          <div className="space-y-1.5 md:space-y-3">
             {list.map((u: any) => (
               <div
                 key={u.id}
-                className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-800 rounded-xl border border-slate-600 gap-4"
+                className="flex flex-col sm:flex-row sm:items-center justify-between p-2 md:p-4 bg-slate-800 rounded-md md:rounded-xl border border-slate-600 gap-2 md:gap-4"
               >
                 <div className="flex-1">
-                  <div className="flex items-center gap-3">
-                    <p className="text-sm font-bold text-white">{u.code}</p>
-                    <p className="text-sm text-slate-300">{u.name}</p>
+                  <div className="flex items-center gap-2 md:gap-3 flex-wrap">
+                    <p className="text-[11px] md:text-sm font-bold text-white">
+                      {u.code}
+                    </p>
+                    <p className="text-[11px] md:text-sm text-slate-300 truncate">
+                      {u.name}
+                    </p>
                   </div>
-                  <p className="text-xs text-slate-400 mt-1.5">
-                    {u.semester} • {u.totalStudents} students enrolled •{" "}
-                    {u.sessionsConducted} sessions conducted • Avg attendance{" "}
+                  <p className="text-[9px] md:text-xs text-slate-400 mt-1 md:mt-1.5 leading-snug">
+                    {u.semester} • {u.totalStudents} students •{" "}
+                    {u.sessionsConducted} sessions • Avg{" "}
                     <span className="text-emerald-400 font-medium">
                       {u.avgAttendance}%
                     </span>
@@ -115,9 +121,9 @@ const MyUnits = () => {
                         state: { unitId: u.id, unitName: u.name },
                       })
                     }
-                    className="text-xs px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 transition font-medium shadow-lg shadow-emerald-500/10"
+                    className="text-[10px] md:text-xs px-2.5 md:px-4 py-1.5 md:py-2 rounded-md md:rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 transition font-medium shadow-lg shadow-emerald-500/10 w-full sm:w-auto"
                   >
-                    Start Attendance
+                    Start
                   </button>
                 </div>
               </div>
