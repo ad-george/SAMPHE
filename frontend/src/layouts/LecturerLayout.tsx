@@ -193,7 +193,7 @@ const LecturerLayout = () => {
       <aside
         className={`h-[100dvh] md:h-screen flex flex-col shrink-0 z-40 transition-all duration-300 bg-gray-800
     fixed md:!sticky top-0
-    ${collapsed ? "w-32 md:w-20" : "w-32 md:w-64"}
+    ${collapsed ? "w-36 md:w-20" : "w-36 md:w-64"}
     ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
   `}
       >
