@@ -15,6 +15,8 @@ const Reports = () => {
   const [accentColor, setAccentColor] = useState("#10b981");
   const [showAll, setShowAll] = useState(false);
   const [viewLimit] = useState(10);
+  const [unitDropdownOpen, setUnitDropdownOpen] = useState(false);
+  const [formatDropdownOpen, setFormatDropdownOpen] = useState(false);
 
   const generateReportHTML = (session: any, summary: any) => {
     const records = session.records || [];
@@ -479,48 +481,47 @@ const Reports = () => {
       </div>
 
       {/* Generator */}
+      {/* Generator */}
       <div className="bg-slate-700 border border-slate-600 rounded-lg md:rounded-2xl p-2.5 md:p-6 shadow-sm">
         <h3 className="text-xs md:text-base font-semibold text-white mb-2 md:mb-4">
           Generate Report
         </h3>
         <div className="flex flex-wrap items-end gap-1.5 md:gap-3">
+          {/* Unit — custom dropdown */}
           <div className="flex flex-col gap-0.5 flex-1 min-w-[120px]">
             <label className="text-[9px] md:text-xs text-slate-400 uppercase tracking-wide md:tracking-wider font-medium">
               Unit
             </label>
-            <select
-              value={filters.unitId}
-              onChange={(e) =>
-                setFilters({ ...filters, unitId: e.target.value })
-              }
-              className="bg-slate-800 border border-slate-600 rounded-md md:rounded-lg px-2 md:px-3 py-1.5 md:py-2.5 text-[11px] md:text-sm text-white focus:border-emerald-400 focus:outline-none w-full md:w-48"
+            <button
+              type="button"
+              onClick={() => setUnitDropdownOpen(true)}
+              className="bg-slate-800 border border-slate-600 rounded-md md:rounded-lg px-2 md:px-3 py-1.5 md:py-2.5 text-[11px] md:text-sm text-white text-left focus:border-emerald-400 focus:outline-none w-full md:w-48 flex items-center justify-between gap-1"
             >
-              <option value="">All Units</option>
-              {units.map((u: any) => (
-                <option key={u.id} value={u.id}>
-                  {u.code} — {u.name}
-                </option>
-              ))}
-            </select>
+              <span className="truncate">
+                {filters.unitId
+                  ? units.find((u: any) => u.id === filters.unitId)?.code ||
+                    "Selected"
+                  : "All Units"}
+              </span>
+              <span className="text-slate-400 shrink-0">▾</span>
+            </button>
           </div>
+
+          {/* Format — custom dropdown */}
           <div className="flex flex-col gap-0.5">
             <label className="text-[9px] md:text-xs text-slate-400 uppercase tracking-wide md:tracking-wider font-medium">
               Format
             </label>
-            <select
-              value={filters.format}
-              onChange={(e) =>
-                setFilters({
-                  ...filters,
-                  format: e.target.value as "pdf" | "excel",
-                })
-              }
-              className="bg-slate-800 border border-slate-600 rounded-md md:rounded-lg px-2 md:px-3 py-1.5 md:py-2.5 text-[11px] md:text-sm text-white focus:border-emerald-400 focus:outline-none w-20 md:w-32"
+            <button
+              type="button"
+              onClick={() => setFormatDropdownOpen(true)}
+              className="bg-slate-800 border border-slate-600 rounded-md md:rounded-lg px-2 md:px-3 py-1.5 md:py-2.5 text-[11px] md:text-sm text-white text-left focus:border-emerald-400 focus:outline-none w-20 md:w-32 flex items-center justify-between gap-1"
             >
-              <option value="pdf">PDF</option>
-              <option value="excel">Excel</option>
-            </select>
+              <span>{filters.format === "pdf" ? "PDF" : "Excel"}</span>
+              <span className="text-slate-400 shrink-0">▾</span>
+            </button>
           </div>
+
           <button
             onClick={generateReport}
             disabled={generating}
@@ -531,6 +532,126 @@ const Reports = () => {
         </div>
       </div>
 
+      {/* Unit dropdown — custom modal */}
+      {unitDropdownOpen && (
+        <div
+          className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 md:p-4"
+          onClick={() => setUnitDropdownOpen(false)}
+        >
+          <div
+            className="bg-slate-800 border border-slate-600 rounded-xl md:rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[70vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-3 py-2 md:px-4 md:py-3 border-b border-slate-700 flex items-center justify-between shrink-0">
+              <p className="text-[11px] md:text-sm text-emerald-400 uppercase tracking-wide font-semibold">
+                Choose Unit
+              </p>
+              <button
+                type="button"
+                onClick={() => setUnitDropdownOpen(false)}
+                className="text-slate-400 hover:text-white text-base"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="overflow-y-auto flex-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setFilters({ ...filters, unitId: "" });
+                  setUnitDropdownOpen(false);
+                }}
+                className={`w-full text-left px-3 py-2 md:px-4 md:py-2.5 border-b border-slate-700/60 hover:bg-slate-700/50 transition text-[11px] md:text-sm ${
+                  !filters.unitId
+                    ? "bg-emerald-900/30 text-emerald-400"
+                    : "text-white"
+                }`}
+              >
+                All Units
+              </button>
+              {units.map((u: any) => {
+                const isSelected = u.id === filters.unitId;
+                return (
+                  <button
+                    key={u.id}
+                    type="button"
+                    onClick={() => {
+                      setFilters({ ...filters, unitId: u.id });
+                      setUnitDropdownOpen(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 md:px-4 md:py-2.5 border-b border-slate-700/60 hover:bg-slate-700/50 transition flex items-start gap-2 ${
+                      isSelected ? "bg-emerald-900/30" : ""
+                    }`}
+                  >
+                    <span
+                      className={`text-[11px] md:text-sm font-bold shrink-0 ${
+                        isSelected ? "text-emerald-400" : "text-white"
+                      }`}
+                    >
+                      {u.code}
+                    </span>
+                    <span className="text-[10px] md:text-xs text-slate-300 truncate">
+                      {u.name}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Format dropdown — custom modal */}
+      {formatDropdownOpen && (
+        <div
+          className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 md:p-4"
+          onClick={() => setFormatDropdownOpen(false)}
+        >
+          <div
+            className="bg-slate-800 border border-slate-600 rounded-xl md:rounded-2xl w-full max-w-xs shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-3 py-2 md:px-4 md:py-3 border-b border-slate-700 flex items-center justify-between">
+              <p className="text-[11px] md:text-sm text-emerald-400 uppercase tracking-wide font-semibold">
+                Choose Format
+              </p>
+              <button
+                type="button"
+                onClick={() => setFormatDropdownOpen(false)}
+                className="text-slate-400 hover:text-white text-base"
+              >
+                ✕
+              </button>
+            </div>
+            {[
+              { value: "pdf", label: "PDF" },
+              { value: "excel", label: "Excel" },
+            ].map((opt) => {
+              const isSelected = filters.format === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => {
+                    setFilters({
+                      ...filters,
+                      format: opt.value as "pdf" | "excel",
+                    });
+                    setFormatDropdownOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2.5 md:px-4 md:py-3 border-b border-slate-700/60 hover:bg-slate-700/50 transition text-[12px] md:text-sm ${
+                    isSelected
+                      ? "bg-emerald-900/30 text-emerald-400 font-semibold"
+                      : "text-white"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
       {/* View Report Modal */}
       {viewModalOpen && selectedReport && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2 md:p-4">
