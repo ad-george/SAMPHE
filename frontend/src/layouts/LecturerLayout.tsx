@@ -193,16 +193,16 @@ const LecturerLayout = () => {
       <aside
         className={`h-[100dvh] md:h-screen flex flex-col shrink-0 z-40 transition-all duration-300 bg-gray-800
     fixed md:!sticky top-0
-    ${collapsed ? "w-56 md:w-20" : "w-56 md:w-64"}
+    ${collapsed ? "w-44 md:w-20" : "w-44 md:w-64"}
     ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
   `}
       >
         {/* Brand */}
-        <div className="bg-gray-800 shrink-0 flex items-center justify-center border-b border-gray-700 p-2 md:p-4">
-          <div className="flex items-center gap-2 md:gap-3 bg-white/10 rounded-full px-3 py-2 md:px-5 md:py-3 border border-white/10">
-            <div className="w-9 h-9 md:w-14 md:h-14 rounded-full bg-white flex items-center justify-center shadow-lg shrink-0">
+        <div className="bg-gray-800 shrink-0 flex items-center justify-center border-b border-gray-700 p-1.5 md:p-4">
+          <div className="flex items-center gap-2 md:gap-3 bg-white/10 rounded-full px-2.5 py-1.5 md:px-5 md:py-3 border border-white/10">
+            <div className="w-7 h-7 md:w-14 md:h-14 rounded-full bg-white flex items-center justify-center shadow-lg shrink-0">
               <svg
-                className="w-5 h-5 md:w-8 md:h-8 text-gray-800"
+                className="w-4 h-4 md:w-8 md:h-8 text-gray-800"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -223,10 +223,10 @@ const LecturerLayout = () => {
             </div>
             {!collapsed && (
               <div className="overflow-hidden">
-                <h1 className="font-bold text-white text-base md:text-2xl tracking-tight whitespace-nowrap">
+                <h1 className="font-bold text-white text-[13px] md:text-2xl tracking-tight whitespace-nowrap">
                   SAMPHE
                 </h1>
-                <p className="text-[10px] md:text-xs text-gray-300 font-medium whitespace-nowrap">
+                <p className="text-[9px] md:text-xs text-gray-300 font-medium whitespace-nowrap">
                   Lecturer Portal
                 </p>
               </div>
@@ -245,7 +245,7 @@ const LecturerLayout = () => {
           </button>
 
           {/* Nav — no scroll */}
-          <nav className="p-2 md:p-3 space-y-1">
+          <nav className="p-1.5 md:p-3 space-y-0.5 md:space-y-1">
             {navItems.map((item) => {
               const active = location.pathname === item.path;
               return (
@@ -253,13 +253,15 @@ const LecturerLayout = () => {
                   key={item.path}
                   to={item.path}
                   onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-2.5 md:gap-3 px-3 py-2 md:py-2.5 rounded-lg transition-all text-[13px] md:text-sm ${
+                  className={`flex items-center gap-2 md:gap-3 px-2.5 py-1.5 md:py-2.5 rounded-md md:rounded-lg transition-all text-[12px] md:text-sm ${
                     active
                       ? "bg-emerald-600 text-white font-medium shadow-sm"
                       : "text-gray-300 hover:text-white hover:bg-gray-700"
                   }`}
                 >
-                  <span className="text-base shrink-0">{item.icon}</span>
+                  <span className="text-sm md:text-base shrink-0">
+                    {item.icon}
+                  </span>
                   {!collapsed && (
                     <span className="whitespace-nowrap">{item.label}</span>
                   )}
@@ -273,14 +275,14 @@ const LecturerLayout = () => {
 
           {/* Profile */}
           <div
-            className="p-2 md:p-3 pb-6 md:pb-3 border-t border-gray-700 relative shrink-0"
+            className="p-1.5 md:p-3 border-t border-gray-700 relative shrink-0"
             ref={profileRef}
           >
             <button
               onClick={() => setProfileOpen(!profileOpen)}
-              className="flex items-center gap-2.5 md:gap-3 w-full text-left p-2 rounded-lg hover:bg-gray-700 transition"
+              className="flex items-center gap-2 md:gap-3 w-full text-left p-1.5 md:p-2 rounded-md md:rounded-lg hover:bg-gray-700 transition"
             >
-              <div className="w-9 h-9 rounded-full bg-gray-700 flex items-center justify-center text-sm font-bold text-white shrink-0 overflow-hidden border border-gray-600 leading-none">
+              <div className="w-7 h-7 md:w-9 md:h-9 rounded-full bg-gray-700 flex items-center justify-center text-xs md:text-sm font-bold text-white shrink-0 overflow-hidden border border-gray-600 leading-none">
                 {profileForm.avatar ? (
                   <img
                     src={profileForm.avatar}
@@ -294,10 +296,12 @@ const LecturerLayout = () => {
               </div>
               {!collapsed && (
                 <div className="flex-1 min-w-0 overflow-hidden">
-                  <p className="text-[13px] md:text-sm font-medium text-white truncate">
+                  <p className="text-[12px] md:text-sm font-medium text-white truncate">
                     {profileForm.fullName || user?.fullName}
                   </p>
-                  <p className="text-[10px] text-gray-400">Lecturer</p>
+                  <p className="text-[9px] md:text-[10px] text-gray-400">
+                    Lecturer
+                  </p>
                 </div>
               )}
             </button>
@@ -327,7 +331,7 @@ const LecturerLayout = () => {
       </aside>
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto bg-gray-100 relative z-0">
         <header className="sticky top-0 bg-emerald-600 border-b border-emerald-500 z-30 shrink-0">
-          <div className="flex items-center px-3 md:px-6 h-14 md:h-16">
+          <div className="flex items-center px-2.5 md:px-6 h-12 md:h-16">
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               className="md:hidden mr-2 text-white text-2xl leading-none"
@@ -337,11 +341,11 @@ const LecturerLayout = () => {
             </button>
 
             <div className="flex flex-col min-w-0">
-              <h2 className="text-sm md:text-lg font-semibold text-white leading-tight truncate">
+              <h2 className="text-[13px] md:text-lg font-semibold text-white leading-tight truncate">
                 {navItems.find((n) => n.path === location.pathname)?.label ||
                   "Dashboard"}
               </h2>
-              <p className="text-[10px] md:text-xs text-emerald-100 leading-tight truncate">
+              <p className="text-[9px] md:text-xs text-emerald-100 leading-tight truncate">
                 {new Date().toLocaleDateString("en-US", {
                   weekday: "short",
                   year: "numeric",
@@ -373,7 +377,7 @@ const LecturerLayout = () => {
                   value={searchQ}
                   onChange={(e) => handleSearch(e.target.value)}
                   onFocus={() => searchQ.length >= 2 && setShowSearch(true)}
-                  className="w-24 md:w-32 lg:w-40 h-8 md:h-9 px-2 md:px-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-emerald-100/70 text-xs md:text-sm focus:outline-none focus:bg-white/20 transition"
+                  className="w-20 md:w-32 lg:w-40 h-7 md:h-9 px-2 md:px-3 rounded-md md:rounded-lg bg-white/10 border border-white/20 text-white placeholder-emerald-100/70 text-[11px] md:text-sm focus:outline-none focus:bg-white/20 transition"
                 />
 
                 {showSearch && searchResults && (
@@ -450,11 +454,11 @@ const LecturerLayout = () => {
 
               <button
                 onClick={() => setNotifOpen(true)}
-                className="w-9 h-9 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition relative"
+                className="w-8 h-8 md:w-9 md:h-9 rounded-md md:rounded-lg bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition relative"
               >
                 <span className="text-white">🔔</span>
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 rounded-full text-[9px] text-white flex items-center justify-center font-bold">
+                  <span className="absolute -top-1 -right-1 w-3.5 h-3.5 md:w-4 md:h-4 bg-rose-500 rounded-full text-[8px] md:text-[9px] text-white flex items-center justify-center font-bold">
                     {unreadCount}
                   </span>
                 )}
@@ -463,7 +467,7 @@ const LecturerLayout = () => {
           </div>
         </header>
 
-        <div className="flex-1 p-3 md:p-6 bg-gray-100">
+        <div className="flex-1 p-2 md:p-6 bg-gray-100">
           <Outlet />
         </div>
       </main>
