@@ -52,22 +52,22 @@ const StartAttendance = () => {
   const unit = units.find((u: any) => u.id === selectedUnit);
 
   return (
-    <div className="relative min-h-[calc(100vh-6rem)] flex items-stretch overflow-hidden rounded-2xl border border-slate-600 bg-slate-700">
+    <div className="relative min-h-[calc(100vh-6rem)] flex items-stretch overflow-hidden rounded-lg md:rounded-2xl border border-slate-600 bg-slate-700">
       {/* Left — Fields */}
-      <div className="relative z-10 flex-1 p-8 lg:p-12 flex flex-col justify-center max-w-2xl">
-        <h1 className="text-3xl font-bold text-white tracking-tight mb-8">
+      <div className="relative z-10 flex-1 p-3 md:p-8 lg:p-12 flex flex-col justify-center max-w-2xl">
+        <h1 className="text-base md:text-3xl font-bold text-white tracking-tight mb-3 md:mb-8">
           Start Attendance
         </h1>
 
-        <div className="space-y-8">
+        <div className="space-y-3 md:space-y-8">
           <div>
-            <label className="text-xs text-emerald-400 uppercase tracking-wider font-medium mb-3 block">
+            <label className="text-[10px] md:text-xs text-emerald-400 uppercase tracking-wide md:tracking-wider font-medium mb-1.5 md:mb-3 block">
               Select Teaching Unit
             </label>
             <select
               value={selectedUnit}
               onChange={(e) => setSelectedUnit(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-500 rounded-xl px-4 py-3 text-sm text-white focus:border-emerald-400 focus:outline-none"
+              className="w-full bg-slate-800 border border-slate-500 rounded-md md:rounded-xl px-2.5 md:px-4 py-2 md:py-3 text-[12px] md:text-sm text-white focus:border-emerald-400 focus:outline-none"
             >
               <option value="" className="bg-slate-800">
                 Choose a unit...
@@ -79,17 +79,17 @@ const StartAttendance = () => {
               ))}
             </select>
             {unit && (
-              <p className="text-xs text-slate-400 mt-2">
+              <p className="text-[10px] md:text-xs text-slate-400 mt-1 md:mt-2">
                 {unit.program} {unit.studyYear} • {unit.totalStudents} students
               </p>
             )}
           </div>
 
           <div>
-            <label className="text-xs text-emerald-400 uppercase tracking-wider font-medium mb-3 block">
+            <label className="text-[10px] md:text-xs text-emerald-400 uppercase tracking-wide md:tracking-wider font-medium mb-1.5 md:mb-3 block">
               Session Duration
             </label>
-            <div className="flex gap-3 flex-wrap items-center">
+            <div className="flex gap-1.5 md:gap-3 flex-wrap items-center">
               {[5, 10, 15].map((d) => (
                 <button
                   key={d}
@@ -97,14 +97,14 @@ const StartAttendance = () => {
                     setDuration(d);
                     setCustomDuration("");
                   }}
-                  className={`px-5 py-2.5 rounded-xl text-sm font-medium border transition ${duration === d ? "bg-emerald-600 text-white border-emerald-500" : "bg-slate-800 text-slate-300 border-slate-600 hover:border-slate-500"}`}
+                  className={`px-2.5 md:px-5 py-1.5 md:py-2.5 rounded-md md:rounded-xl text-[11px] md:text-sm font-medium border transition ${duration === d ? "bg-emerald-600 text-white border-emerald-500" : "bg-slate-800 text-slate-300 border-slate-600 hover:border-slate-500"}`}
                 >
                   {d} min
                 </button>
               ))}
               <button
                 onClick={() => setDuration(-1)}
-                className={`px-5 py-2.5 rounded-xl text-sm font-medium border transition ${duration === -1 ? "bg-emerald-600 text-white border-emerald-500" : "bg-slate-800 text-slate-300 border-slate-600 hover:border-slate-500"}`}
+                className={`px-2.5 md:px-5 py-1.5 md:py-2.5 rounded-md md:rounded-xl text-[11px] md:text-sm font-medium border transition ${duration === -1 ? "bg-emerald-600 text-white border-emerald-500" : "bg-slate-800 text-slate-300 border-slate-600 hover:border-slate-500"}`}
               >
                 Customize
               </button>
@@ -114,17 +114,17 @@ const StartAttendance = () => {
                   placeholder="Minutes"
                   value={customDuration}
                   onChange={(e) => setCustomDuration(e.target.value)}
-                  className="w-28 bg-slate-800 border border-slate-500 rounded-xl px-3 py-2.5 text-sm text-white focus:border-emerald-400 focus:outline-none"
+                  className="w-20 md:w-28 bg-slate-800 border border-slate-500 rounded-md md:rounded-xl px-2 md:px-3 py-1.5 md:py-2.5 text-[11px] md:text-sm text-white focus:border-emerald-400 focus:outline-none"
                 />
               )}
             </div>
           </div>
 
           <div>
-            <label className="text-xs text-emerald-400 uppercase tracking-wider font-medium mb-3 block">
+            <label className="text-[10px] md:text-xs text-emerald-400 uppercase tracking-wide md:tracking-wider font-medium mb-1.5 md:mb-3 block">
               Session Radius
             </label>
-            <div className="flex gap-3 flex-wrap items-center">
+            <div className="flex gap-1.5 md:gap-3 flex-wrap items-center">
               {[30, 50, 70].map((r) => (
                 <button
                   key={r}
@@ -149,20 +149,20 @@ const StartAttendance = () => {
                   placeholder="Meters"
                   value={customRadius}
                   onChange={(e) => setCustomRadius(e.target.value)}
-                  className="w-28 bg-slate-800 border border-slate-500 rounded-xl px-3 py-2.5 text-sm text-white focus:border-emerald-400 focus:outline-none"
+                  className="w-20 md:w-28 bg-slate-800 border border-slate-500 rounded-md md:rounded-xl px-2 md:px-3 py-1.5 md:py-2.5 text-[11px] md:text-sm text-white focus:border-emerald-400 focus:outline-none"
                 />
               )}
             </div>
-            <p className="text-xs text-slate-500 mt-2">
+            <p className="text-[10px] md:text-xs text-slate-500 mt-1 md:mt-2">
               Recommended: 50m for standard lecture halls
             </p>
           </div>
 
-          <div className="bg-slate-800 rounded-xl p-5 border border-slate-600 space-y-2">
-            <p className="text-xs text-emerald-400 uppercase tracking-wider font-medium">
+          <div className="bg-slate-800 rounded-md md:rounded-xl p-2.5 md:p-5 border border-slate-600 space-y-1.5 md:space-y-2">
+            <p className="text-[10px] md:text-xs text-emerald-400 uppercase tracking-wide md:tracking-wider font-medium">
               Session Summary
             </p>
-            <div className="grid grid-cols-2 gap-2 text-sm">
+            <div className="grid grid-cols-2 gap-1 md:gap-2 text-[11px] md:text-sm">
               <p className="text-slate-400">
                 Unit:{" "}
                 <span className="text-white font-medium">
@@ -188,7 +188,7 @@ const StartAttendance = () => {
             </div>
             <button
               onClick={generate}
-              className="w-full mt-4 py-3.5 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-500 transition shadow-lg shadow-emerald-500/20 tracking-wide"
+              className="w-full mt-2 md:mt-4 py-2 md:py-3.5 rounded-md md:rounded-xl bg-emerald-600 text-white text-[11px] md:text-sm font-bold hover:bg-emerald-500 transition shadow-lg shadow-emerald-500/20 tracking-wide"
             >
               GENERATE ATTENDANCE LINK
             </button>
