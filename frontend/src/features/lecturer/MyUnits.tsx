@@ -73,7 +73,7 @@ const MyUnits = () => {
   }
 
   return (
-    <div className="space-y-3 md:space-y-8 max-w-5xl mx-auto">
+    <div className="space-y-1.5 md:space-y-8 max-w-5xl mx-auto">
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-base md:text-2xl font-bold text-green tracking-tight truncate">
           My Teaching Units
