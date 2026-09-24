@@ -161,7 +161,8 @@ const AttendanceHistory = () => {
               onChange={(e) =>
                 setFilters({ ...filters, dateFrom: e.target.value })
               }
-              className="bg-slate-600 border border-slate-500 rounded-md md:rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-[11px] md:text-sm text-white focus:border-emerald-400 focus:outline-none appearance-none w-full"
+              placeholder="dd/mm/yyyy"
+              className="bg-slate-600 border border-slate-500 rounded-md md:rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-[11px] md:text-sm text-white focus:border-emerald-400 focus:outline-none w-full min-h-[32px] md:min-h-0"
             />
           </div>
 
@@ -175,7 +176,8 @@ const AttendanceHistory = () => {
               onChange={(e) =>
                 setFilters({ ...filters, dateTo: e.target.value })
               }
-              className="bg-slate-600 border border-slate-500 rounded-md md:rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-[11px] md:text-sm text-white focus:border-emerald-400 focus:outline-none appearance-none w-full"
+              placeholder="dd/mm/yyyy"
+              className="bg-slate-600 border border-slate-500 rounded-md md:rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-[11px] md:text-sm text-white focus:border-emerald-400 focus:outline-none w-full min-h-[32px] md:min-h-0"
             />
           </div>
 
