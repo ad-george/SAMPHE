@@ -466,56 +466,125 @@ const Students = () => {
             </div>
           </div>
 
+          {/* Table (horizontally scrollable on mobile) */}
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-[11px] md:text-sm">
               <thead>
-                <tr className="border-b border-slate-600 text-slate-400 text-xs uppercase bg-slate-800/50">
-                  <th className="text-left p-4 font-medium">#</th>
-                  <th className="text-left p-4 font-medium">Student Name</th>
-                  <th className="text-left p-4 font-medium">Reg No.</th>
-                  <th className="text-left p-4 font-medium">Program</th>
-                  <th className="text-left p-4 font-medium">Year/Sem</th>
-                  <th className="text-left p-4 font-medium">Action</th>
+                <tr className="border-b border-slate-600 text-slate-400 text-[10px] md:text-xs uppercase bg-slate-800/50">
+                  <th className="text-left px-2 py-1 md:p-4 font-medium">#</th>
+                  <th className="text-left px-2 py-1 md:p-4 font-medium whitespace-nowrap">
+                    Date
+                  </th>
+                  <th className="text-left px-2 py-1 md:p-4 font-medium whitespace-nowrap">
+                    Code
+                  </th>
+                  <th className="text-left px-2 py-1 md:p-4 font-medium whitespace-nowrap">
+                    Unit
+                  </th>
+                  <th className="hidden md:table-cell text-left p-4 font-medium">
+                    Present
+                  </th>
+                  <th className="hidden md:table-cell text-left p-4 font-medium">
+                    Absent
+                  </th>
+                  <th className="text-left px-2 py-1 md:p-4 font-medium">
+                    Rate
+                  </th>
+                  <th className="text-left px-2 py-1 md:p-4 font-medium"></th>
                 </tr>
               </thead>
               <tbody>
-                {displayedStudents.map((s: any, index: number) => (
-                  <tr
-                    key={s.id}
-                    className="border-b border-slate-600 hover:bg-slate-600/30 transition cursor-pointer"
-                    onClick={() => viewStudent(s)}
-                  >
-                    <td className="p-4 text-slate-400 text-xs font-mono">
-                      {index + 1}
-                    </td>
-                    <td className="p-4 text-white font-medium">{s.fullName}</td>
-                    <td className="p-4 text-slate-300 font-mono text-xs">
-                      {s.regNo}
-                    </td>
-                    <td className="p-4 text-slate-300">{s.program?.name}</td>
-                    <td className="p-4 text-slate-300">
-                      {formatYearSem(s.studyYear, s.semester)}
-                    </td>
-                    <td className="p-4">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          viewStudent(s);
-                        }}
-                        className="text-xs px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition"
-                      >
-                        View
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {displayedStudents.length === 0 && (
+                {displayedData.map((h: any, i: number) => {
+                  const present =
+                    h.records?.filter((r: any) => r.status === "PRESENT")
+                      .length || 0;
+                  const total = h.totalStudents || h.records?.length || 0;
+                  const absent = Math.max(0, total - present);
+                  const rate =
+                    total > 0 ? Math.round((present / total) * 100) : 0;
+                  return (
+                    <tr
+                      key={h.id}
+                      className="border-b border-slate-600 hover:bg-slate-600/30 transition"
+                    >
+                      <td className="px-2 py-1 md:p-4 text-slate-400 text-[10px] md:text-xs">
+                        {i + 1}
+                      </td>
+                      <td className="px-2 py-1 md:p-4 text-slate-300 whitespace-nowrap">
+                        {new Date(h.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-2 py-1 md:p-4 text-emerald-400 font-mono text-[11px] md:text-xs font-medium whitespace-nowrap">
+                        {h.unit?.code}
+                      </td>
+                      <td className="px-2 py-1 md:p-4 text-white font-medium whitespace-nowrap">
+                        {h.unit?.name}
+                      </td>
+                      <td className="hidden md:table-cell p-4 text-emerald-400 font-medium">
+                        {present}
+                      </td>
+                      <td className="hidden md:table-cell p-4 text-rose-400 font-medium">
+                        {absent}
+                      </td>
+                      <td className="px-2 py-1 md:p-4 text-[11px] md:text-sm font-bold text-blue-400 whitespace-nowrap">
+                        {rate}%
+                      </td>
+                      <td className="px-2 py-1 md:p-4 relative more-modal-container">
+                        <button
+                          onClick={() =>
+                            setMoreModal(moreModal === h.id ? null : h.id)
+                          }
+                          className="text-[11px] md:text-xs px-2 md:px-3 py-0.5 md:py-1.5 rounded md:rounded-lg bg-slate-600 text-slate-300 border border-slate-500 hover:bg-slate-500 transition"
+                        >
+                          ⋯
+                        </button>
+                        {moreModal === h.id && (
+                          <div className="absolute right-0 bottom-full mb-1 md:mb-2 w-32 md:w-40 bg-white border border-slate-200 rounded-md md:rounded-xl shadow-xl overflow-hidden z-50">
+                            <button
+                              onClick={() => download(h.id, "pdf")}
+                              className="w-full text-left px-3 md:px-4 py-2 md:py-2.5 text-[11px] md:text-sm text-slate-700 hover:bg-slate-100 transition"
+                            >
+                              PDF
+                            </button>
+                            <button
+                              onClick={() => download(h.id, "excel")}
+                              className="w-full text-left px-3 md:px-4 py-2 md:py-2.5 text-[11px] md:text-sm text-slate-700 hover:bg-slate-100 transition"
+                            >
+                              Excel
+                            </button>
+                            {view === "active" ? (
+                              <button
+                                onClick={() => archive(h.id)}
+                                className="w-full text-left px-3 md:px-4 py-2 md:py-2.5 text-[11px] md:text-sm text-slate-700 hover:bg-slate-100 transition"
+                              >
+                                Archive
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => unarchive(h.id)}
+                                className="w-full text-left px-3 md:px-4 py-2 md:py-2.5 text-[11px] md:text-sm text-slate-700 hover:bg-slate-100 transition"
+                              >
+                                Restore
+                              </button>
+                            )}
+                            <button
+                              onClick={() => deleteSession(h.id)}
+                              className="w-full text-left px-3 md:px-4 py-2 md:py-2.5 text-[11px] md:text-sm text-red-600 hover:bg-slate-100 transition"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+                {displayedData.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="p-12 text-center text-slate-400">
-                      <div className="flex flex-col items-center gap-3">
-                        <span className="text-4xl">👤</span>
-                        <p>No students found matching your criteria</p>
-                      </div>
+                    <td
+                      colSpan={8}
+                      className="p-6 md:p-12 text-center text-slate-400 text-[11px] md:text-sm"
+                    >
+                      No {view} records found
                     </td>
                   </tr>
                 )}
