@@ -99,7 +99,7 @@ const LiveSession = () => {
     const link = `${protocol}//${hostname}${port}/attendance/${session?.token}`;
 
     navigator.clipboard.writeText(link);
-    toast.success(`Link copied: ${link}`);
+    toast.success("Link copied");
     console.log("📋 Copied link:", link);
   };
 
