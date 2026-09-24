@@ -11,6 +11,7 @@ const StartAttendance = () => {
   const [radius, setRadius] = useState(50);
   const [customRadius, setCustomRadius] = useState("");
   const [gps, setGps] = useState("");
+  const [dropdownOpen, setDropdownOpen] = useState(false); // ⬅️ new
   const navigate = useNavigate();
   const location = useLocation();
   const preselected = (location.state as any)?.unitId;
@@ -52,41 +53,106 @@ const StartAttendance = () => {
   const unit = units.find((u: any) => u.id === selectedUnit);
 
   return (
-    <div className="relative min-h-[calc(100vh-6rem)] flex items-stretch overflow-hidden rounded-lg md:rounded-2xl border border-slate-600 bg-slate-700">
+    // ── Fix 1: no full-height stretch, no justify-center, so no scroll
+    <div className="relative flex items-stretch overflow-hidden rounded-lg md:rounded-2xl border border-slate-600 bg-slate-700">
       {/* Left — Fields */}
-      <div className="relative z-10 flex-1 p-3 md:p-8 lg:p-12 flex flex-col justify-center max-w-2xl">
-        <h1 className="text-base md:text-3xl font-bold text-white tracking-tight mb-3 md:mb-8">
+      <div className="relative z-10 flex-1 p-3 md:p-8 lg:p-12 max-w-2xl">
+        <h1 className="text-base md:text-3xl font-bold text-white tracking-tight mb-2 md:mb-8">
           Start Attendance
         </h1>
 
-        <div className="space-y-3 md:space-y-8">
+        <div className="space-y-2.5 md:space-y-8">
+          {/* ── Fix 3: custom dropdown ── */}
           <div>
-            <label className="text-[10px] md:text-xs text-emerald-400 uppercase tracking-wide md:tracking-wider font-medium mb-1.5 md:mb-3 block">
+            <label className="text-[10px] md:text-xs text-emerald-400 uppercase tracking-wide md:tracking-wider font-medium mb-1 md:mb-3 block">
               Select Teaching Unit
             </label>
-            <select
-              value={selectedUnit}
-              onChange={(e) => setSelectedUnit(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-500 rounded-md md:rounded-xl px-2.5 md:px-4 py-2 md:py-3 text-[12px] md:text-sm text-white focus:border-emerald-400 focus:outline-none"
+
+            {/* Trigger button */}
+            <button
+              type="button"
+              onClick={() => setDropdownOpen(true)}
+              className="w-full bg-slate-800 border border-slate-500 rounded-md md:rounded-xl px-2.5 md:px-4 py-2 md:py-3 text-[12px] md:text-sm text-white text-left focus:border-emerald-400 focus:outline-none flex items-center justify-between gap-2"
             >
-              <option value="" className="bg-slate-800">
-                Choose a unit...
-              </option>
-              {units.map((u: any) => (
-                <option key={u.id} value={u.id} className="bg-slate-800">
-                  {u.code} — {u.name}
-                </option>
-              ))}
-            </select>
+              <span className="truncate">
+                {unit ? `${unit.code} — ${unit.name}` : "Choose a unit..."}
+              </span>
+              <span className="text-slate-400 shrink-0">▾</span>
+            </button>
+
             {unit && (
               <p className="text-[10px] md:text-xs text-slate-400 mt-1 md:mt-2">
                 {unit.program} {unit.studyYear} • {unit.totalStudents} students
               </p>
             )}
+
+            {/* Dropdown modal — centered, small, scrollable */}
+            {dropdownOpen && (
+              <div
+                className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 md:p-4"
+                onClick={() => setDropdownOpen(false)}
+              >
+                <div
+                  className="bg-slate-800 border border-slate-600 rounded-xl md:rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[70vh]"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Header */}
+                  <div className="px-3 py-2 md:px-4 md:py-3 border-b border-slate-700 flex items-center justify-between shrink-0">
+                    <p className="text-[11px] md:text-sm text-emerald-400 uppercase tracking-wide font-semibold">
+                      Choose Unit
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setDropdownOpen(false)}
+                      className="text-slate-400 hover:text-white text-base"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {/* Unit list */}
+                  <div className="overflow-y-auto flex-1">
+                    {units.length === 0 && (
+                      <p className="text-center text-[11px] text-slate-400 py-6">
+                        No units assigned
+                      </p>
+                    )}
+                    {units.map((u: any) => {
+                      const isSelected = u.id === selectedUnit;
+                      return (
+                        <button
+                          key={u.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedUnit(u.id);
+                            setDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-3 py-2 md:px-4 md:py-2.5 border-b border-slate-700/60 hover:bg-slate-700/50 transition flex items-start gap-2 ${
+                            isSelected ? "bg-emerald-900/30" : ""
+                          }`}
+                        >
+                          <span
+                            className={`text-[11px] md:text-sm font-bold shrink-0 ${
+                              isSelected ? "text-emerald-400" : "text-white"
+                            }`}
+                          >
+                            {u.code}
+                          </span>
+                          <span className="text-[10px] md:text-xs text-slate-300 truncate">
+                            {u.name}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
+          {/* Session Duration */}
           <div>
-            <label className="text-[10px] md:text-xs text-emerald-400 uppercase tracking-wide md:tracking-wider font-medium mb-1.5 md:mb-3 block">
+            <label className="text-[10px] md:text-xs text-emerald-400 uppercase tracking-wide md:tracking-wider font-medium mb-1 md:mb-3 block">
               Session Duration
             </label>
             <div className="flex gap-1.5 md:gap-3 flex-wrap items-center">
@@ -120,8 +186,9 @@ const StartAttendance = () => {
             </div>
           </div>
 
+          {/* ── Fix 2: Session Radius — same small sizes as Duration ── */}
           <div>
-            <label className="text-[10px] md:text-xs text-emerald-400 uppercase tracking-wide md:tracking-wider font-medium mb-1.5 md:mb-3 block">
+            <label className="text-[10px] md:text-xs text-emerald-400 uppercase tracking-wide md:tracking-wider font-medium mb-1 md:mb-3 block">
               Session Radius
             </label>
             <div className="flex gap-1.5 md:gap-3 flex-wrap items-center">
@@ -132,14 +199,14 @@ const StartAttendance = () => {
                     setRadius(r);
                     setCustomRadius("");
                   }}
-                  className={`px-5 py-2.5 rounded-xl text-sm font-medium border transition ${radius === r ? "bg-emerald-600 text-white border-emerald-500" : "bg-slate-800 text-slate-300 border-slate-600 hover:border-slate-500"}`}
+                  className={`px-2.5 md:px-5 py-1.5 md:py-2.5 rounded-md md:rounded-xl text-[11px] md:text-sm font-medium border transition ${radius === r ? "bg-emerald-600 text-white border-emerald-500" : "bg-slate-800 text-slate-300 border-slate-600 hover:border-slate-500"}`}
                 >
                   {r}m
                 </button>
               ))}
               <button
                 onClick={() => setRadius(-1)}
-                className={`px-5 py-2.5 rounded-xl text-sm font-medium border transition ${radius === -1 ? "bg-emerald-600 text-white border-emerald-500" : "bg-slate-800 text-slate-300 border-slate-600 hover:border-slate-500"}`}
+                className={`px-2.5 md:px-5 py-1.5 md:py-2.5 rounded-md md:rounded-xl text-[11px] md:text-sm font-medium border transition ${radius === -1 ? "bg-emerald-600 text-white border-emerald-500" : "bg-slate-800 text-slate-300 border-slate-600 hover:border-slate-500"}`}
               >
                 Customize
               </button>
@@ -158,6 +225,7 @@ const StartAttendance = () => {
             </p>
           </div>
 
+          {/* Summary */}
           <div className="bg-slate-800 rounded-md md:rounded-xl p-2.5 md:p-5 border border-slate-600 space-y-1.5 md:space-y-2">
             <p className="text-[10px] md:text-xs text-emerald-400 uppercase tracking-wide md:tracking-wider font-medium">
               Session Summary
@@ -165,7 +233,7 @@ const StartAttendance = () => {
             <div className="grid grid-cols-2 gap-1 md:gap-2 text-[11px] md:text-sm">
               <p className="text-slate-400">
                 Unit:{" "}
-                <span className="text-white font-medium">
+                <span className="text-white font-medium truncate">
                   {unit?.name || "—"}
                 </span>
               </p>
@@ -196,19 +264,15 @@ const StartAttendance = () => {
         </div>
       </div>
 
-      {/* Right — Fading Image & Statements */}
+      {/* Right — Fading Image & Statements (desktop only) */}
       <div className="hidden lg:block relative w-[45%] overflow-hidden">
         <img
           src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1000&q=80"
           alt="Classroom"
           className="absolute inset-0 w-full h-full object-cover"
         />
-        {/* Fade to left (into fields) */}
         <div className="absolute inset-0 bg-gradient-to-l from-transparent via-slate-700/40 to-slate-700" />
-        {/* Fade to bottom (for statements) */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-slate-700/90" />
-
-        {/* Statements */}
         <div className="absolute right-8 top-1/3 max-w-xs text-right space-y-6">
           <p className="text-white/90 text-lg font-semibold leading-relaxed drop-shadow-lg">
             Set a radius that matches your classroom size to ensure only present
