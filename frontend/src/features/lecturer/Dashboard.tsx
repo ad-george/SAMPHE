@@ -27,18 +27,24 @@ ChartJS.register(
 );
 
 const StatCard = ({ title, value, sub, icon, color, bg }: any) => (
-  <div className="bg-slate-700 border border-slate-600 rounded-2xl p-5 shadow-sm flex items-center gap-4">
+  <div className="bg-slate-700 border border-slate-600 rounded-xl md:rounded-2xl p-3 md:p-5 shadow-sm flex items-center gap-2.5 md:gap-4">
     <div
-      className={`w-12 h-12 rounded-xl ${bg} flex items-center justify-center text-xl shrink-0`}
+      className={`w-9 h-9 md:w-12 md:h-12 rounded-lg md:rounded-xl ${bg} flex items-center justify-center text-base md:text-xl shrink-0`}
     >
       {icon}
     </div>
-    <div>
-      <p className="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">
+    <div className="min-w-0">
+      <p className="text-[10px] md:text-[11px] text-slate-400 uppercase tracking-wider font-semibold truncate">
         {title}
       </p>
-      <p className={`text-2xl font-bold ${color}`}>{value}</p>
-      {sub && <p className="text-[11px] text-slate-500 mt-0.5">{sub}</p>}
+      <p className={`text-lg md:text-2xl font-bold ${color} leading-tight`}>
+        {value}
+      </p>
+      {sub && (
+        <p className="text-[10px] md:text-[11px] text-slate-500 mt-0.5 truncate">
+          {sub}
+        </p>
+      )}
     </div>
   </div>
 );
@@ -173,7 +179,7 @@ const Dashboard = () => {
   const avgRate = data?.avgAttendance || 0;
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-3 md:space-y-6 max-w-7xl mx-auto">
       {/* License Warning Banner */}
       {(() => {
         const licenseInfo = getLicenseDisplay();
@@ -182,23 +188,25 @@ const Dashboard = () => {
         const isExpired = licenseInfo.type === "expired";
         return (
           <div
-            className={`border rounded-2xl p-4 flex items-center justify-between relative ${
+            className={`border rounded-xl md:rounded-2xl p-3 md:p-4 flex items-center justify-between relative ${
               isExpired
                 ? "bg-rose-500/10 border-rose-500/30"
                 : "bg-amber-500/10 border-amber-500/30"
             }`}
           >
             <div className="flex items-center gap-3 pr-8">
-              <span className="text-2xl">{isExpired ? "🚫" : "⏰"}</span>
+              <span className="text-lg md:text-2xl">
+                {isExpired ? "🚫" : "⏰"}
+              </span>
               <div>
                 <p
-                  className={`font-medium ${
-                    isExpired ? "text-rose-400" : "text-amber-400"
-                  }`}
+                  className={`text-sm md:text-base font-medium ${isExpired ? "text-rose-400" : "text-amber-400"}`}
                 >
                   {isExpired ? "License Expired" : "License Expiring Soon"}
                 </p>
-                <p className="text-sm text-slate-400">{licenseInfo.message}</p>
+                <p className="text-xs md:text-sm text-slate-400">
+                  {licenseInfo.message}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -215,7 +223,7 @@ const Dashboard = () => {
       })()}
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 md:gap-4">
         <StatCard
           title="Today's Classes"
           value={data?.todayClasses ?? 0}
@@ -263,32 +271,34 @@ const Dashboard = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-2 md:gap-3">
         <button
           onClick={() => navigate("/lecturer/start")}
-          className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-500 transition shadow-sm flex items-center gap-2"
+          className="px-3 py-2 md:px-5 md:py-2.5 bg-emerald-600 text-white rounded-lg md:rounded-xl text-xs md:text-sm font-medium hover:bg-emerald-500 transition shadow-sm flex items-center gap-1.5 md:gap-2"
         >
           ▶ Start Attendance
         </button>
         <button
           onClick={() => navigate("/lecturer/reports")}
-          className="px-5 py-2.5 bg-slate-700 border border-slate-600 text-white rounded-xl text-sm font-medium hover:bg-slate-600 transition flex items-center gap-2"
+          className="px-3 py-2 md:px-5 md:py-2.5 bg-slate-700 border border-slate-600 text-white rounded-lg md:rounded-xl text-xs md:text-sm font-medium hover:bg-slate-600 transition flex items-center gap-1.5 md:gap-2"
         >
           📄 View Reports
         </button>
         <button
           onClick={() => navigate("/lecturer/students")}
-          className="px-5 py-2.5 bg-slate-700 border border-slate-600 text-white rounded-xl text-sm font-medium hover:bg-slate-600 transition flex items-center gap-2"
+          className="px-3 py-2 md:px-5 md:py-2.5 bg-slate-700 border border-slate-600 text-white rounded-lg md:rounded-xl text-xs md:text-sm font-medium hover:bg-slate-600 transition flex items-center gap-1.5 md:gap-2"
         >
           ⌕ Search Student
         </button>
       </div>
 
       {/* Recent Sessions + Weekly Trend */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <div className="bg-slate-700 border border-slate-600 rounded-2xl p-6 shadow-sm">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 md:gap-6">
+        <div className="bg-slate-700 border border-slate-600 rounded-xl md:rounded-2xl p-3 md:p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-white">Recent Sessions</h3>
+            <h3 className="text-sm md:text-base font-bold text-white">
+              Recent Sessions
+            </h3>
             <button
               onClick={() => navigate("/lecturer/history")}
               className="text-xs text-emerald-400 font-medium hover:underline"
@@ -297,7 +307,7 @@ const Dashboard = () => {
             </button>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-xs md:text-sm">
               <thead>
                 <tr className="text-slate-400 text-[11px] uppercase border-b border-slate-600">
                   <th className="text-left pb-3 font-medium">Date</th>
@@ -352,11 +362,13 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="bg-slate-700 border border-slate-600 rounded-2xl p-6 shadow-sm">
+        <div className="bg-slate-700 border border-slate-600 rounded-xl md:rounded-2xl p-3 md:p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-white">Weekly Attendance Trend</h3>
+            <h3 className="text-sm md:text-base font-bold text-white">
+              Weekly Attendance Trend
+            </h3>
           </div>
-          <div className="h-64">
+          <div className="h-48 md:h-64">
             {analytics?.weekly?.length > 0 ? (
               <Line
                 data={weeklyData}
@@ -391,11 +403,13 @@ const Dashboard = () => {
       </div>
 
       {/* Bottom Row: My Units + Donut + Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-6">
         {/* My Units (Real) */}
-        <div className="bg-slate-700 border border-slate-600 rounded-2xl p-6 shadow-sm">
+        <div className="bg-slate-700 border border-slate-600 rounded-xl md:rounded-2xl p-3 md:p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-white">My Units</h3>
+            <h3 className="text-sm md:text-base font-bold text-white">
+              My Units
+            </h3>
           </div>
           <div className="space-y-4">
             {myUnits.map((u: any, i: number) => (
@@ -436,9 +450,11 @@ const Dashboard = () => {
         </div>
 
         {/* Attendance by Unit (Real) */}
-        <div className="bg-slate-700 border border-slate-600 rounded-2xl p-6 shadow-sm">
+        <div className="bg-slate-700 border border-slate-600 rounded-xl md:rounded-2xl p-3 md:p-6 shadow-sm">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-bold text-white">Attendance by Unit</h3>
+            <h3 className="text-sm md:text-base font-bold text-white">
+              Attendance by Unit
+            </h3>
             <button
               onClick={() => navigate("/lecturer/analytics")}
               className="text-xs text-emerald-400 font-medium hover:underline"
@@ -446,7 +462,7 @@ const Dashboard = () => {
               View analytics
             </button>
           </div>
-          <div className="h-48 flex items-center justify-center relative">
+          <div className="h-36 md:h-48 flex items-center justify-center relative">
             {analytics?.byUnit?.length > 0 ? (
               <>
                 <Doughnut
@@ -459,8 +475,12 @@ const Dashboard = () => {
                   }}
                 />
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <p className="text-2xl font-bold text-white">{avgRate}%</p>
-                  <p className="text-xs text-slate-400">Overall</p>
+                  <p className="text-lg md:text-2xl font-bold text-white">
+                    {avgRate}%
+                  </p>
+                  <p className="text-[10px] md:text-xs text-slate-400">
+                    Overall
+                  </p>
                 </div>
               </>
             ) : (
@@ -491,9 +511,11 @@ const Dashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-slate-700 border border-slate-600 rounded-2xl p-6 shadow-sm">
-          <h3 className="font-bold text-white mb-4">Quick Actions</h3>
-          <div className="space-y-3">
+        <div className="bg-slate-700 border border-slate-600 rounded-xl md:rounded-2xl p-3 md:p-6 shadow-sm">
+          <h3 className="text-sm md:text-base font-bold text-white mb-2 md:mb-4">
+            Quick Actions
+          </h3>
+          <div className="space-y-1.5 md:space-y-3">
             {[
               {
                 icon: "▶",
@@ -531,18 +553,20 @@ const Dashboard = () => {
               <button
                 key={i}
                 onClick={a.action}
-                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-600 transition border border-transparent hover:border-slate-500 text-left group"
+                className="w-full flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg md:rounded-xl hover:bg-slate-600 transition border border-transparent hover:border-slate-500 text-left group"
               >
                 <div
-                  className={`w-10 h-10 rounded-lg ${a.bg} ${a.color} flex items-center justify-center text-lg shrink-0`}
+                  className={`w-8 h-8 md:w-10 md:h-10 rounded-md md:rounded-lg ${a.bg} ${a.color} flex items-center justify-center text-sm md:text-lg shrink-0`}
                 >
                   {a.icon}
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-white group-hover:text-emerald-400 transition">
+                  <p className="text-[13px] md:text-sm font-semibold text-white group-hover:text-emerald-400 transition">
                     {a.title}
                   </p>
-                  <p className="text-xs text-slate-400">{a.desc}</p>
+                  <p className="text-[10px] md:text-xs text-slate-400">
+                    {a.desc}
+                  </p>
                 </div>
                 <span className="text-slate-500 group-hover:text-emerald-400 transition">
                   →
