@@ -78,7 +78,6 @@ const Students = () => {
     viewStudentWithFilters(student, period, unitFilter);
   };
 
-  // FIXED: Apply both search AND program filter
   const filteredStudents = students.filter(
     (s) =>
       (s.fullName?.toLowerCase().includes(searchQ.toLowerCase()) ||
@@ -86,7 +85,6 @@ const Students = () => {
       (programFilter ? s.programId === programFilter : true),
   );
 
-  // Display limited or all students
   const displayedStudents = showAll
     ? filteredStudents
     : filteredStudents.slice(0, viewLimit);
@@ -132,36 +130,38 @@ const Students = () => {
       }
     : { labels: [], datasets: [] };
 
-  // Format year and semester to Y2S1 format
   const formatYearSem = (studyYear: any, semester: any) => {
     const yearNum = studyYear?.name?.match(/\d+/)?.[0] || "?";
     const semNum = semester?.name?.match(/\d+/)?.[0] || "?";
     return `Y${yearNum}S${semNum}`;
   };
 
+  // ────────────────────────────────────────────────────────
+  // STUDENT DETAIL VIEW
+  // ────────────────────────────────────────────────────────
   if (selectedStudent && detail) {
     return (
-      <div className="space-y-6 max-w-6xl mx-auto animate-in fade-in duration-300">
+      <div className="space-y-2 md:space-y-6 max-w-6xl mx-auto animate-in fade-in duration-300">
         <button
           onClick={() => {
             setSelectedStudent(null);
             setDetail(null);
           }}
-          className="text-sm text-green-600 hover:text-green-800 font-bold flex items-center gap-1 mb-2"
+          className="text-[11px] md:text-sm text-green-600 hover:text-green-800 font-bold flex items-center gap-1 mb-1 md:mb-2"
         >
-          Back to Students
+          ← Back to Students
         </button>
 
         {/* Student Header */}
-        <div className="bg-slate-700 border border-slate-600 rounded-2xl p-6 flex items-start gap-5 shadow-sm">
-          <div className="w-16 h-16 rounded-full bg-emerald-900/30 flex items-center justify-center text-xl font-bold text-emerald-400 border border-emerald-700 shrink-0">
+        <div className="bg-slate-700 border border-slate-600 rounded-lg md:rounded-2xl p-2.5 md:p-6 flex items-start gap-2.5 md:gap-5 shadow-sm">
+          <div className="w-10 h-10 md:w-16 md:h-16 rounded-full bg-emerald-900/30 flex items-center justify-center text-sm md:text-xl font-bold text-emerald-400 border border-emerald-700 shrink-0">
             {selectedStudent.fullName?.charAt(0)}
           </div>
-          <div className="flex-1">
-            <h2 className="text-xl font-bold text-white">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-[13px] md:text-xl font-bold text-white truncate">
               {selectedStudent.fullName}
             </h2>
-            <p className="text-sm text-slate-400">
+            <p className="text-[10px] md:text-sm text-slate-400 truncate">
               {selectedStudent.regNo} • {selectedStudent.program?.name} •{" "}
               {formatYearSem(
                 selectedStudent.studyYear,
@@ -169,7 +169,7 @@ const Students = () => {
               )}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-1.5 md:gap-2 shrink-0">
             <select
               value={period}
               onChange={(e) => {
@@ -177,10 +177,10 @@ const Students = () => {
                 setPeriod(newPeriod);
                 viewStudentWithFilters(selectedStudent, newPeriod, unitFilter);
               }}
-              className="bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+              className="bg-slate-600 border border-slate-500 rounded-md md:rounded-lg px-1.5 md:px-3 py-1 md:py-2 text-[10px] md:text-sm text-white focus:border-emerald-400 focus:outline-none"
             >
-              <option value="semester">This Semester</option>
-              <option value="month">Last 30 Days</option>
+              <option value="semester">Sem</option>
+              <option value="month">30d</option>
               <option value="custom">Custom</option>
             </select>
             <select
@@ -190,9 +190,9 @@ const Students = () => {
                 setUnitFilter(newUnitFilter);
                 viewStudentWithFilters(selectedStudent, period, newUnitFilter);
               }}
-              className="bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+              className="bg-slate-600 border border-slate-500 rounded-md md:rounded-lg px-1.5 md:px-3 py-1 md:py-2 text-[10px] md:text-sm text-white focus:border-emerald-400 focus:outline-none"
             >
-              <option value="all">All Units</option>
+              <option value="all">All</option>
               {units.map((u: any) => (
                 <option key={u.id} value={u.id}>
                   {u.code}
@@ -203,46 +203,48 @@ const Students = () => {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-slate-700 border border-slate-600 rounded-2xl p-5 text-center shadow-sm">
-            <p className="text-xs text-slate-400 uppercase font-semibold">
-              Total Expected
+        <div className="grid grid-cols-4 gap-1 md:gap-4">
+          <div className="bg-slate-700 border border-slate-600 rounded-md md:rounded-2xl p-1 md:p-5 text-center shadow-sm">
+            <p className="text-[8px] md:text-xs text-slate-400 uppercase font-semibold leading-tight">
+              Expected
             </p>
-            <p className="text-2xl font-bold text-white mt-1">
+            <p className="text-[11px] md:text-2xl font-bold text-white leading-tight">
               {detail.summary.totalExpected}
             </p>
           </div>
-          <div className="bg-slate-700 border border-slate-600 rounded-2xl p-5 text-center shadow-sm">
-            <p className="text-xs text-slate-400 uppercase font-semibold">
-              Total Present
+          <div className="bg-slate-700 border border-slate-600 rounded-md md:rounded-2xl p-1 md:p-5 text-center shadow-sm">
+            <p className="text-[8px] md:text-xs text-slate-400 uppercase font-semibold leading-tight">
+              Present
             </p>
-            <p className="text-2xl font-bold text-emerald-400 mt-1">
+            <p className="text-[11px] md:text-2xl font-bold text-emerald-400 leading-tight">
               {detail.summary.totalPresent}
             </p>
           </div>
-          <div className="bg-slate-700 border border-slate-600 rounded-2xl p-5 text-center shadow-sm">
-            <p className="text-xs text-slate-400 uppercase font-semibold">
-              Total Missed
+          <div className="bg-slate-700 border border-slate-600 rounded-md md:rounded-2xl p-1 md:p-5 text-center shadow-sm">
+            <p className="text-[8px] md:text-xs text-slate-400 uppercase font-semibold leading-tight">
+              Missed
             </p>
-            <p className="text-2xl font-bold text-rose-400 mt-1">
+            <p className="text-[11px] md:text-2xl font-bold text-rose-400 leading-tight">
               {detail.summary.totalMissed}
             </p>
           </div>
-          <div className="bg-slate-700 border border-slate-600 rounded-2xl p-5 text-center shadow-sm">
-            <p className="text-xs text-slate-400 uppercase font-semibold">
-              Attendance Rate
+          <div className="bg-slate-700 border border-slate-600 rounded-md md:rounded-2xl p-1 md:p-5 text-center shadow-sm">
+            <p className="text-[8px] md:text-xs text-slate-400 uppercase font-semibold leading-tight">
+              Rate
             </p>
-            <p className="text-2xl font-bold text-blue-400 mt-1">
+            <p className="text-[11px] md:text-2xl font-bold text-blue-400 leading-tight">
               {detail.summary.rate}%
             </p>
           </div>
         </div>
 
         {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-slate-700 border border-slate-600 rounded-2xl p-6 shadow-sm">
-            <h3 className="font-bold text-white mb-4">Attendance Trend</h3>
-            <div className="h-56">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 md:gap-6">
+          <div className="bg-slate-700 border border-slate-600 rounded-lg md:rounded-2xl p-2.5 md:p-6 shadow-sm">
+            <h3 className="text-[11px] md:text-base font-bold text-white mb-1.5 md:mb-4">
+              Attendance Trend
+            </h3>
+            <div className="h-40 md:h-56">
               <Line
                 data={trendData}
                 options={{
@@ -266,9 +268,11 @@ const Students = () => {
               />
             </div>
           </div>
-          <div className="bg-slate-700 border border-slate-600 rounded-2xl p-6 shadow-sm">
-            <h3 className="font-bold text-white mb-4">Performance by Unit</h3>
-            <div className="h-56">
+          <div className="bg-slate-700 border border-slate-600 rounded-lg md:rounded-2xl p-2.5 md:p-6 shadow-sm">
+            <h3 className="text-[11px] md:text-base font-bold text-white mb-1.5 md:mb-4">
+              Performance by Unit
+            </h3>
+            <div className="h-40 md:h-56">
               <Bar
                 data={unitBarData}
                 options={{
@@ -292,77 +296,96 @@ const Students = () => {
         </div>
 
         {/* Session History */}
-        <div className="bg-slate-700 border border-slate-600 rounded-2xl overflow-hidden shadow-sm">
-          <div className="p-5 border-b border-slate-600">
-            <h3 className="font-bold text-white">Session History</h3>
+        <div className="bg-slate-700 border border-slate-600 rounded-lg md:rounded-2xl overflow-hidden shadow-sm">
+          <div className="px-2.5 py-1.5 md:p-5 border-b border-slate-600">
+            <h3 className="text-[11px] md:text-base font-bold text-white">
+              Session History
+            </h3>
           </div>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-600 text-slate-400 text-xs uppercase bg-slate-800/50">
-                <th className="text-left p-4 font-medium">Date</th>
-                <th className="text-left p-4 font-medium">Unit Code</th>
-                <th className="text-left p-4 font-medium">Unit Name</th>
-                <th className="text-left p-4 font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {detail.overallSessions?.map((s: any, i: number) => (
-                <tr
-                  key={i}
-                  className="border-b border-slate-600 hover:bg-slate-600/30 transition"
-                >
-                  <td className="p-4 text-slate-300">
-                    {new Date(s.date).toLocaleDateString()}
-                  </td>
-                  <td className="p-4 text-emerald-400 font-mono text-xs font-medium">
-                    {s.unitCode}
-                  </td>
-                  <td className="p-4 text-white">{s.unitName}</td>
-                  <td className="p-4">
-                    <span
-                      className={`text-xs font-bold px-2.5 py-1 rounded-full border ${
-                        s.status === "PRESENT"
-                          ? "bg-emerald-900/30 text-emerald-400 border-emerald-700"
-                          : "bg-rose-900/30 text-rose-400 border-rose-700"
-                      }`}
+          <div className="overflow-x-auto">
+            <table className="w-full text-[11px] md:text-sm">
+              <thead>
+                <tr className="border-b border-slate-600 text-slate-400 text-[10px] md:text-xs uppercase bg-slate-800/50">
+                  <th className="text-left px-2 py-1 md:p-4 font-medium whitespace-nowrap">
+                    Date
+                  </th>
+                  <th className="text-left px-2 py-1 md:p-4 font-medium whitespace-nowrap">
+                    Code
+                  </th>
+                  <th className="text-left px-2 py-1 md:p-4 font-medium whitespace-nowrap">
+                    Unit
+                  </th>
+                  <th className="text-left px-2 py-1 md:p-4 font-medium">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {detail.overallSessions?.map((s: any, i: number) => (
+                  <tr
+                    key={i}
+                    className="border-b border-slate-600 hover:bg-slate-600/30 transition"
+                  >
+                    <td className="px-2 py-1 md:p-4 text-slate-300 whitespace-nowrap">
+                      {new Date(s.date).toLocaleDateString()}
+                    </td>
+                    <td className="px-2 py-1 md:p-4 text-emerald-400 font-mono text-[11px] md:text-xs font-medium whitespace-nowrap">
+                      {s.unitCode}
+                    </td>
+                    <td className="px-2 py-1 md:p-4 text-white whitespace-nowrap">
+                      {s.unitName}
+                    </td>
+                    <td className="px-2 py-1 md:p-4">
+                      <span
+                        className={`text-[9px] md:text-xs font-bold px-1.5 md:px-2.5 py-0.5 md:py-1 rounded-full border ${
+                          s.status === "PRESENT"
+                            ? "bg-emerald-900/30 text-emerald-400 border-emerald-700"
+                            : "bg-rose-900/30 text-rose-400 border-rose-700"
+                        }`}
+                      >
+                        {s.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {detail.overallSessions?.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={4}
+                      className="p-6 md:p-8 text-center text-slate-400 text-[11px] md:text-sm"
                     >
-                      {s.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-              {detail.overallSessions?.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="p-8 text-center text-slate-400">
-                    No sessions found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                      No sessions found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Per Unit Breakdown */}
         {detail.byUnit?.length > 0 && (
-          <div className="space-y-4">
-            <h3 className="font-bold text-white">Per Unit Breakdown</h3>
+          <div className="space-y-2 md:space-y-4">
+            <h3 className="text-[11px] md:text-base font-bold text-white">
+              Per Unit Breakdown
+            </h3>
             {detail.byUnit.map((u: any) => (
               <div
                 key={u.unit?.id}
-                className="bg-slate-700 border border-slate-600 rounded-2xl p-5 shadow-sm"
+                className="bg-slate-700 border border-slate-600 rounded-lg md:rounded-2xl p-2.5 md:p-5 shadow-sm"
               >
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <p className="text-sm font-bold text-white">
+                <div className="flex items-center justify-between mb-1.5 md:mb-3 gap-2">
+                  <div className="min-w-0">
+                    <p className="text-[11px] md:text-sm font-bold text-white truncate">
                       {u.unit?.code} — {u.unit?.name}
                     </p>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-[9px] md:text-xs text-slate-400">
                       {u.expected} classes • {u.present} present • {u.missed}{" "}
                       missed
                     </p>
                   </div>
                   <span
-                    className={`text-lg font-bold ${
+                    className={`text-sm md:text-lg font-bold shrink-0 ${
                       u.expected > 0 && (u.present / u.expected) * 100 >= 75
                         ? "text-emerald-400"
                         : "text-rose-400"
@@ -374,9 +397,9 @@ const Students = () => {
                     %
                   </span>
                 </div>
-                <div className="w-full bg-slate-600 rounded-full h-2">
+                <div className="w-full bg-slate-600 rounded-full h-1.5 md:h-2">
                   <div
-                    className="bg-emerald-500 h-2 rounded-full transition-all"
+                    className="bg-emerald-500 h-1.5 md:h-2 rounded-full transition-all"
                     style={{
                       width: `${Math.min(100, u.expected > 0 ? (u.present / u.expected) * 100 : 0)}%`,
                     }}
@@ -390,23 +413,27 @@ const Students = () => {
     );
   }
 
+  // ────────────────────────────────────────────────────────
+  // STUDENT LIST VIEW
+  // ────────────────────────────────────────────────────────
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
+    <div className="space-y-2 md:space-y-6 max-w-6xl mx-auto">
+      <h1 className="text-base md:text-2xl font-bold text-slate-800 tracking-tight">
         Students
-      </h1>{" "}
+      </h1>
+
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3 bg-slate-700 border border-slate-600 rounded-2xl p-4 shadow-sm">
+      <div className="flex flex-wrap items-center gap-1.5 md:gap-3 bg-slate-700 border border-slate-600 rounded-md md:rounded-2xl p-2 md:p-4 shadow-sm">
         <input
           placeholder="Search by name or reg no..."
           value={searchQ}
           onChange={(e) => setSearchQ(e.target.value)}
-          className="flex-1 min-w-[200px] bg-slate-600 border border-slate-500 rounded-lg px-4 py-2.5 text-sm text-white focus:border-emerald-400 focus:outline-none placeholder-slate-400"
+          className="flex-1 min-w-[150px] bg-slate-600 border border-slate-500 rounded-md md:rounded-lg px-2 md:px-4 py-1.5 md:py-2.5 text-[11px] md:text-sm text-white focus:border-emerald-400 focus:outline-none placeholder-slate-400"
         />
         <select
           value={programFilter}
           onChange={(e) => setProgramFilter(e.target.value)}
-          className="bg-slate-600 border border-slate-500 rounded-lg px-3 py-2.5 text-sm text-white focus:border-emerald-400 focus:outline-none"
+          className="bg-slate-600 border border-slate-500 rounded-md md:rounded-lg px-2 md:px-3 py-1.5 md:py-2.5 text-[11px] md:text-sm text-white focus:border-emerald-400 focus:outline-none"
         >
           <option value="">All Programs</option>
           {programs.map((p: any) => (
@@ -416,66 +443,80 @@ const Students = () => {
           ))}
         </select>
       </div>
+
       {/* Stats Bar */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-slate-700 border border-slate-600 rounded-xl p-4 text-center shadow-sm">
-          <p className="text-xs text-slate-400 uppercase font-semibold">
-            Total Students
+      <div className="grid grid-cols-3 gap-1 md:gap-4">
+        <div className="bg-slate-700 border border-slate-600 rounded-md md:rounded-xl p-1.5 md:p-4 text-center shadow-sm">
+          <p className="text-[9px] md:text-xs text-slate-400 uppercase font-semibold leading-tight">
+            Students
           </p>
-          <p className="text-xl font-bold text-white mt-1">{students.length}</p>
+          <p className="text-[13px] md:text-xl font-bold text-white leading-tight">
+            {students.length}
+          </p>
         </div>
-        <div className="bg-slate-700 border border-slate-600 rounded-xl p-4 text-center shadow-sm">
-          <p className="text-xs text-slate-400 uppercase font-semibold">
+        <div className="bg-slate-700 border border-slate-600 rounded-md md:rounded-xl p-1.5 md:p-4 text-center shadow-sm">
+          <p className="text-[9px] md:text-xs text-slate-400 uppercase font-semibold leading-tight">
             Programs
           </p>
-          <p className="text-xl font-bold text-emerald-400 mt-1">
+          <p className="text-[13px] md:text-xl font-bold text-emerald-400 leading-tight">
             {programs.length}
           </p>
         </div>
-        <div className="bg-slate-700 border border-slate-600 rounded-xl p-4 text-center shadow-sm">
-          <p className="text-xs text-slate-400 uppercase font-semibold">
+        <div className="bg-slate-700 border border-slate-600 rounded-md md:rounded-xl p-1.5 md:p-4 text-center shadow-sm">
+          <p className="text-[9px] md:text-xs text-slate-400 uppercase font-semibold leading-tight">
             Showing
           </p>
-          <p className="text-xl font-bold text-blue-400 mt-1">
-            {displayedStudents.length} / {filteredStudents.length}
+          <p className="text-[13px] md:text-xl font-bold text-blue-400 leading-tight">
+            {displayedStudents.length}/{filteredStudents.length}
           </p>
         </div>
       </div>
+
       {/* Student Table */}
       {loading ? (
         <div className="flex items-center justify-center h-64">
           <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="bg-slate-700 border border-slate-600 rounded-2xl overflow-hidden shadow-sm">
+        <div className="bg-slate-700 border border-slate-600 rounded-lg md:rounded-2xl overflow-hidden shadow-sm">
           {/* Table Header with View More/Less */}
-          <div className="flex items-center justify-between p-5 border-b border-slate-600">
-            <h3 className="font-bold text-white">Student List</h3>
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-slate-400">
-                Showing {displayedStudents.length} of {filteredStudents.length}
+          <div className="flex items-center justify-between px-2.5 py-1.5 md:p-5 border-b border-slate-600">
+            <h3 className="text-[11px] md:text-base font-bold text-white">
+              Student List
+            </h3>
+            <div className="flex items-center gap-2 md:gap-3">
+              <span className="text-[10px] md:text-xs text-slate-400">
+                {displayedStudents.length}/{filteredStudents.length}
               </span>
               {filteredStudents.length > viewLimit && (
                 <button
                   onClick={toggleView}
-                  className="text-sm font-medium text-emerald-400 hover:text-emerald-300 transition"
+                  className="text-[11px] md:text-sm font-medium text-emerald-400 hover:text-emerald-300 transition"
                 >
-                  {showAll ? "View Less" : "View More →"}
+                  {showAll ? "Less" : "More →"}
                 </button>
               )}
             </div>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-[11px] md:text-sm">
               <thead>
-                <tr className="border-b border-slate-600 text-slate-400 text-xs uppercase bg-slate-800/50">
-                  <th className="text-left p-4 font-medium">#</th>
-                  <th className="text-left p-4 font-medium">Student Name</th>
-                  <th className="text-left p-4 font-medium">Reg No.</th>
-                  <th className="text-left p-4 font-medium">Program</th>
-                  <th className="text-left p-4 font-medium">Year/Sem</th>
-                  <th className="text-left p-4 font-medium">Action</th>
+                <tr className="border-b border-slate-600 text-slate-400 text-[10px] md:text-xs uppercase bg-slate-800/50">
+                  <th className="text-left px-2 py-1 md:p-4 font-medium">#</th>
+                  <th className="text-left px-2 py-1 md:p-4 font-medium whitespace-nowrap">
+                    Name
+                  </th>
+                  <th className="text-left px-2 py-1 md:p-4 font-medium whitespace-nowrap">
+                    Reg No.
+                  </th>
+                  <th className="text-left px-2 py-1 md:p-4 font-medium whitespace-nowrap">
+                    Program
+                  </th>
+                  <th className="text-left px-2 py-1 md:p-4 font-medium">
+                    Y/S
+                  </th>
+                  <th className="text-left px-2 py-1 md:p-4 font-medium"></th>
                 </tr>
               </thead>
               <tbody>
@@ -485,24 +526,28 @@ const Students = () => {
                     className="border-b border-slate-600 hover:bg-slate-600/30 transition cursor-pointer"
                     onClick={() => viewStudent(s)}
                   >
-                    <td className="p-4 text-slate-400 text-xs font-mono">
+                    <td className="px-2 py-1 md:p-4 text-slate-400 text-[10px] md:text-xs font-mono">
                       {index + 1}
                     </td>
-                    <td className="p-4 text-white font-medium">{s.fullName}</td>
-                    <td className="p-4 text-slate-300 font-mono text-xs">
+                    <td className="px-2 py-1 md:p-4 text-white font-medium whitespace-nowrap">
+                      {s.fullName}
+                    </td>
+                    <td className="px-2 py-1 md:p-4 text-slate-300 font-mono text-[11px] md:text-xs whitespace-nowrap">
                       {s.regNo}
                     </td>
-                    <td className="p-4 text-slate-300">{s.program?.name}</td>
-                    <td className="p-4 text-slate-300">
+                    <td className="px-2 py-1 md:p-4 text-slate-300 whitespace-nowrap">
+                      {s.program?.name}
+                    </td>
+                    <td className="px-2 py-1 md:p-4 text-slate-300 whitespace-nowrap">
                       {formatYearSem(s.studyYear, s.semester)}
                     </td>
-                    <td className="p-4">
+                    <td className="px-2 py-1 md:p-4">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           viewStudent(s);
                         }}
-                        className="text-xs px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition"
+                        className="text-[11px] md:text-xs px-2 md:px-3 py-0.5 md:py-1.5 rounded md:rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition whitespace-nowrap"
                       >
                         View
                       </button>
@@ -511,10 +556,13 @@ const Students = () => {
                 ))}
                 {displayedStudents.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="p-12 text-center text-slate-400">
-                      <div className="flex flex-col items-center gap-3">
-                        <span className="text-4xl">👤</span>
-                        <p>No students found matching your criteria</p>
+                    <td
+                      colSpan={6}
+                      className="p-6 md:p-12 text-center text-slate-400 text-[11px] md:text-sm"
+                    >
+                      <div className="flex flex-col items-center gap-1.5 md:gap-3">
+                        <span className="text-2xl md:text-4xl">👤</span>
+                        <p>No students found</p>
                       </div>
                     </td>
                   </tr>
