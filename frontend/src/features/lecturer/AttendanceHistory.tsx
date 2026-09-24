@@ -186,18 +186,25 @@ const AttendanceHistory = () => {
         </div>
 
         {/* Table (scroll horizontally on mobile) */}
+        {/* Table (no horizontal scroll on mobile) */}
         <div className="overflow-x-auto">
-          <table className="w-full text-[10px] md:text-sm">
+          <table className="w-full text-[9px] md:text-sm table-fixed md:table-auto">
             <thead>
-              <tr className="border-b border-slate-600 text-slate-400 text-[9px] md:text-xs uppercase bg-slate-800/50">
-                <th className="text-left p-1.5 md:p-4 font-medium">S/N</th>
-                <th className="text-left p-1.5 md:p-4 font-medium">Date</th>
-                <th className="text-left p-1.5 md:p-4 font-medium">Code</th>
-                <th className="text-left p-1.5 md:p-4 font-medium">Unit</th>
-                <th className="text-left p-1.5 md:p-4 font-medium">P</th>
-                <th className="text-left p-1.5 md:p-4 font-medium">A</th>
-                <th className="text-left p-1.5 md:p-4 font-medium">Rate</th>
-                <th className="text-left p-1.5 md:p-4 font-medium"></th>
+              <tr className="border-b border-slate-600 text-slate-400 text-[8px] md:text-xs uppercase bg-slate-800/50">
+                <th className="text-left px-1 py-1 md:p-4 font-medium w-8 md:w-auto">
+                  #
+                </th>
+                <th className="text-left px-1 py-1 md:p-4 font-medium">Date</th>
+                <th className="text-left px-1 py-1 md:p-4 font-medium">Code</th>
+                <th className="text-left px-1 py-1 md:p-4 font-medium">Unit</th>
+                <th className="hidden md:table-cell text-left p-4 font-medium">
+                  Present
+                </th>
+                <th className="hidden md:table-cell text-left p-4 font-medium">
+                  Absent
+                </th>
+                <th className="text-left px-1 py-1 md:p-4 font-medium">Rate</th>
+                <th className="text-left px-1 py-1 md:p-4 font-medium w-6 md:w-auto"></th>
               </tr>
             </thead>
             <tbody>
@@ -214,33 +221,36 @@ const AttendanceHistory = () => {
                     key={h.id}
                     className="border-b border-slate-600 hover:bg-slate-600/30 transition"
                   >
-                    <td className="p-1.5 md:p-4 text-slate-400 text-[9px] md:text-xs">
+                    <td className="px-1 py-1 md:p-4 text-slate-400 text-[8px] md:text-xs">
                       {i + 1}
                     </td>
-                    <td className="p-1.5 md:p-4 text-slate-300 whitespace-nowrap">
-                      {new Date(h.createdAt).toLocaleDateString()}
+                    <td className="px-1 py-1 md:p-4 text-slate-300 text-[9px] md:text-sm whitespace-nowrap">
+                      {new Date(h.createdAt).toLocaleDateString(undefined, {
+                        month: "numeric",
+                        day: "numeric",
+                      })}
                     </td>
-                    <td className="p-1.5 md:p-4 text-emerald-400 font-mono text-[9px] md:text-xs font-medium whitespace-nowrap">
+                    <td className="px-1 py-1 md:p-4 text-emerald-400 font-mono text-[9px] md:text-xs font-medium">
                       {h.unit?.code}
                     </td>
-                    <td className="p-1.5 md:p-4 text-white font-medium truncate max-w-[100px] md:max-w-none">
+                    <td className="px-1 py-1 md:p-4 text-white font-medium text-[9px] md:text-sm truncate">
                       {h.unit?.name}
                     </td>
-                    <td className="p-1.5 md:p-4 text-emerald-400 font-medium">
+                    <td className="hidden md:table-cell p-4 text-emerald-400 font-medium">
                       {present}
                     </td>
-                    <td className="p-1.5 md:p-4 text-rose-400 font-medium">
+                    <td className="hidden md:table-cell p-4 text-rose-400 font-medium">
                       {absent}
                     </td>
-                    <td className="p-1.5 md:p-4 text-[10px] md:text-sm font-bold text-blue-400">
+                    <td className="px-1 py-1 md:p-4 text-[9px] md:text-sm font-bold text-blue-400">
                       {rate}%
                     </td>
-                    <td className="p-1.5 md:p-4 relative more-modal-container">
+                    <td className="px-1 py-1 md:p-4 relative more-modal-container">
                       <button
                         onClick={() =>
                           setMoreModal(moreModal === h.id ? null : h.id)
                         }
-                        className="text-[9px] md:text-xs px-1.5 md:px-3 py-1 md:py-1.5 rounded md:rounded-lg bg-slate-600 text-slate-300 border border-slate-500 hover:bg-slate-500 transition whitespace-nowrap"
+                        className="text-[10px] md:text-xs px-1 md:px-3 py-0.5 md:py-1.5 rounded md:rounded-lg bg-slate-600 text-slate-300 border border-slate-500 hover:bg-slate-500 transition"
                       >
                         ⋯
                       </button>
