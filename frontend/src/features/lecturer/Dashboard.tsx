@@ -27,21 +27,23 @@ ChartJS.register(
 );
 
 const StatCard = ({ title, value, sub, icon, color, bg }: any) => (
-  <div className="bg-slate-700 border border-slate-600 rounded-xl md:rounded-2xl p-3 md:p-5 shadow-sm flex items-center gap-2.5 md:gap-4">
+  <div className="bg-slate-700 border border-slate-600 rounded-lg md:rounded-2xl p-2 md:p-5 shadow-sm flex items-center gap-2 md:gap-4">
     <div
-      className={`w-9 h-9 md:w-12 md:h-12 rounded-lg md:rounded-xl ${bg} flex items-center justify-center text-base md:text-xl shrink-0`}
+      className={`w-7 h-7 md:w-12 md:h-12 rounded-md md:rounded-xl ${bg} flex items-center justify-center text-xs md:text-xl shrink-0`}
     >
       {icon}
     </div>
-    <div className="min-w-0">
-      <p className="text-[10px] md:text-[11px] text-slate-400 uppercase tracking-wider font-semibold truncate">
+    <div className="min-w-0 flex-1">
+      <p className="text-[9px] md:text-[11px] text-slate-400 uppercase tracking-wide font-semibold truncate">
         {title}
       </p>
-      <p className={`text-lg md:text-2xl font-bold ${color} leading-tight`}>
+      <p
+        className={`text-sm md:text-2xl font-bold ${color} leading-tight truncate`}
+      >
         {value}
       </p>
       {sub && (
-        <p className="text-[10px] md:text-[11px] text-slate-500 mt-0.5 truncate">
+        <p className="text-[8px] md:text-[11px] text-slate-500 mt-0.5 truncate">
           {sub}
         </p>
       )}
@@ -188,42 +190,42 @@ const Dashboard = () => {
         const isExpired = licenseInfo.type === "expired";
         return (
           <div
-            className={`border rounded-xl md:rounded-2xl p-3 md:p-4 flex items-center justify-between relative ${
+            className={`border rounded-lg md:rounded-2xl px-2.5 py-1.5 md:p-4 flex items-center justify-between relative ${
               isExpired
                 ? "bg-rose-500/10 border-rose-500/30"
                 : "bg-amber-500/10 border-amber-500/30"
             }`}
           >
-            <div className="flex items-center gap-3 pr-8">
-              <span className="text-lg md:text-2xl">
+            <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+              <span className="text-sm md:text-2xl shrink-0">
                 {isExpired ? "🚫" : "⏰"}
               </span>
-              <div>
+              <div className="min-w-0 flex-1">
                 <p
-                  className={`text-sm md:text-base font-medium ${isExpired ? "text-rose-400" : "text-amber-400"}`}
+                  className={`text-[11px] md:text-base font-medium truncate ${
+                    isExpired ? "text-rose-400" : "text-amber-400"
+                  }`}
                 >
                   {isExpired ? "License Expired" : "License Expiring Soon"}
                 </p>
-                <p className="text-xs md:text-sm text-slate-400">
+                <p className="text-[10px] md:text-sm text-slate-400 truncate">
                   {licenseInfo.message}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={dismissBanner}
-                className="text-slate-400 hover:text-white transition p-1"
-                aria-label="Dismiss banner"
-              >
-                ✕
-              </button>
-            </div>
+            <button
+              onClick={dismissBanner}
+              className="text-slate-400 hover:text-white transition p-1 shrink-0 ml-2"
+              aria-label="Dismiss banner"
+            >
+              ✕
+            </button>
           </div>
         );
       })()}
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 md:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-1.5 md:gap-4">
         <StatCard
           title="Today's Classes"
           value={data?.todayClasses ?? 0}
@@ -271,32 +273,32 @@ const Dashboard = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="flex flex-wrap gap-2 md:gap-3">
+      <div className="grid grid-cols-3 gap-1.5 md:flex md:flex-wrap md:gap-3">
         <button
           onClick={() => navigate("/lecturer/start")}
-          className="px-3 py-2 md:px-5 md:py-2.5 bg-emerald-600 text-white rounded-lg md:rounded-xl text-xs md:text-sm font-medium hover:bg-emerald-500 transition shadow-sm flex items-center gap-1.5 md:gap-2"
+          className="px-2 py-1.5 md:px-5 md:py-2.5 bg-emerald-600 text-white rounded-md md:rounded-xl text-[10px] md:text-sm font-medium hover:bg-emerald-500 transition shadow-sm flex items-center justify-center md:justify-start gap-1 md:gap-2 whitespace-nowrap"
         >
-          ▶ Start Attendance
+          ▶ Start
         </button>
         <button
           onClick={() => navigate("/lecturer/reports")}
-          className="px-3 py-2 md:px-5 md:py-2.5 bg-slate-700 border border-slate-600 text-white rounded-lg md:rounded-xl text-xs md:text-sm font-medium hover:bg-slate-600 transition flex items-center gap-1.5 md:gap-2"
+          className="px-2 py-1.5 md:px-5 md:py-2.5 bg-slate-700 border border-slate-600 text-white rounded-md md:rounded-xl text-[10px] md:text-sm font-medium hover:bg-slate-600 transition flex items-center justify-center md:justify-start gap-1 md:gap-2 whitespace-nowrap"
         >
-          📄 View Reports
+          📄 Reports
         </button>
         <button
           onClick={() => navigate("/lecturer/students")}
-          className="px-3 py-2 md:px-5 md:py-2.5 bg-slate-700 border border-slate-600 text-white rounded-lg md:rounded-xl text-xs md:text-sm font-medium hover:bg-slate-600 transition flex items-center gap-1.5 md:gap-2"
+          className="px-2 py-1.5 md:px-5 md:py-2.5 bg-slate-700 border border-slate-600 text-white rounded-md md:rounded-xl text-[10px] md:text-sm font-medium hover:bg-slate-600 transition flex items-center justify-center md:justify-start gap-1 md:gap-2 whitespace-nowrap"
         >
-          ⌕ Search Student
+          ⌕ Students
         </button>
       </div>
 
       {/* Recent Sessions + Weekly Trend */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 md:gap-6">
-        <div className="bg-slate-700 border border-slate-600 rounded-xl md:rounded-2xl p-3 md:p-6 shadow-sm">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 md:gap-6">
+        <div className="bg-slate-700 border border-slate-600 rounded-lg md:rounded-2xl p-2.5 md:p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm md:text-base font-bold text-white">
+            <h3 className="text-xs md:text-base font-bold text-white">
               Recent Sessions
             </h3>
             <button
@@ -307,9 +309,9 @@ const Dashboard = () => {
             </button>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-xs md:text-sm">
+            <table className="w-full text-[10px] md:text-sm">
               <thead>
-                <tr className="text-slate-400 text-[11px] uppercase border-b border-slate-600">
+                <tr className="text-slate-400 text-[9px] md:text-[11px] uppercase border-b border-slate-600">
                   <th className="text-left pb-3 font-medium">Date</th>
                   <th className="text-left pb-3 font-medium">Unit</th>
                   <th className="text-left pb-3 font-medium">Program/Year</th>
@@ -323,18 +325,18 @@ const Dashboard = () => {
                       key={i}
                       className="border-b border-slate-600 hover:bg-slate-600/30 transition"
                     >
-                      <td className="py-3 text-slate-300 text-xs">
+                      <td className="py-1.5 md:py-3 text-slate-300 text-[10px] md:text-xs">
                         {new Date(s.date).toLocaleDateString()}
                       </td>
-                      <td className="py-3 text-white font-medium text-xs">
+                      <td className="py-1.5 md:py-3 text-white font-medium text-[10px] md:text-xs">
                         {s.unit}
                       </td>
-                      <td className="py-3 text-slate-400 text-xs">
+                      <td className="py-1.5 md:py-3 text-slate-400 text-[10px] md:text-xs">
                         {s.program} {s.studyYear}
                       </td>
-                      <td className="py-3">
+                      <td className="py-1.5 md:py-3">
                         <span
-                          className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                          className={`text-[9px] md:text-xs font-bold px-1.5 md:px-2 py-0.5 rounded-full ${
                             s.rate >= 80
                               ? "bg-emerald-900/30 text-emerald-400"
                               : s.rate >= 60
@@ -364,11 +366,14 @@ const Dashboard = () => {
 
         <div className="bg-slate-700 border border-slate-600 rounded-xl md:rounded-2xl p-3 md:p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm md:text-base font-bold text-white">
+            <h3 className="text-xs md:text-base font-bold text-white">
+              Weekly Attendance Trend
+            </h3>
+            <h3 className="text-xs md:text-base font-bold text-white">
               Weekly Attendance Trend
             </h3>
           </div>
-          <div className="h-48 md:h-64">
+          <div className="h-40 md:h-64">
             {analytics?.weekly?.length > 0 ? (
               <Line
                 data={weeklyData}
@@ -407,29 +412,29 @@ const Dashboard = () => {
         {/* My Units (Real) */}
         <div className="bg-slate-700 border border-slate-600 rounded-xl md:rounded-2xl p-3 md:p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm md:text-base font-bold text-white">
+            <h3 className="text-xs md:text-base font-bold text-white">
               My Units
             </h3>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-2 md:space-y-4">
             {myUnits.map((u: any, i: number) => (
               <div
                 key={i}
-                className="flex gap-3 pl-3 border-l-2 border-emerald-400"
+                className="flex gap-2 md:gap-3 pl-2 md:pl-3 border-l-2 border-emerald-400"
               >
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-white">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] md:text-sm font-semibold text-white truncate">
                     {u.code} — {u.name}
                   </p>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-[9px] md:text-xs text-slate-400 mt-0.5 truncate">
                     {u.program} {u.studyYear}
                   </p>
-                  <div className="flex items-center gap-2 mt-1.5">
-                    <span className="text-xs text-slate-500">
+                  <div className="flex items-center gap-1.5 md:gap-2 mt-1 md:mt-1.5 flex-wrap">
+                    <span className="text-[9px] md:text-xs text-slate-500">
                       {u.totalStudents} students
                     </span>
                     <span
-                      className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                      className={`text-[8px] md:text-[10px] px-1.5 md:px-2 py-0.5 rounded-full font-medium ${
                         parseFloat(u.avgAttendance) >= 75
                           ? "bg-emerald-900/30 text-emerald-400"
                           : "bg-amber-900/30 text-amber-400"
@@ -442,7 +447,7 @@ const Dashboard = () => {
               </div>
             ))}
             {myUnits.length === 0 && (
-              <div className="h-48 flex items-center justify-center">
+              <div className="h-28 md:h-48 flex items-center justify-center relative">
                 <p className="text-sm text-slate-400">No units assigned</p>
               </div>
             )}
@@ -452,7 +457,7 @@ const Dashboard = () => {
         {/* Attendance by Unit (Real) */}
         <div className="bg-slate-700 border border-slate-600 rounded-xl md:rounded-2xl p-3 md:p-6 shadow-sm">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm md:text-base font-bold text-white">
+            <h3 className="text-xs md:text-base font-bold text-white">
               Attendance by Unit
             </h3>
             <button
@@ -475,10 +480,10 @@ const Dashboard = () => {
                   }}
                 />
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <p className="text-lg md:text-2xl font-bold text-white">
+                  <p className="text-base md:text-2xl font-bold text-white">
                     {avgRate}%
                   </p>
-                  <p className="text-[10px] md:text-xs text-slate-400">
+                  <p className="text-[9px] md:text-xs text-slate-400">
                     Overall
                   </p>
                 </div>
@@ -488,22 +493,24 @@ const Dashboard = () => {
             )}
           </div>
           {analytics?.byUnit?.length > 0 && (
-            <div className="mt-4 space-y-2">
+            <div className="mt-2 md:mt-4 space-y-1 md:space-y-2">
               {analytics.byUnit.slice(0, 5).map((u: any, i: number) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between text-xs"
+                  className="flex items-center justify-between text-[9px] md:text-xs"
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 md:gap-2 min-w-0">
                     <span
-                      className="w-2.5 h-2.5 rounded-full"
+                      className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full shrink-0"
                       style={{
                         backgroundColor: unitColors[i % unitColors.length],
                       }}
                     />
-                    <span className="text-slate-300">{u.name}</span>
+                    <span className="text-slate-300 truncate">{u.name}</span>
                   </div>
-                  <span className="text-white font-medium">{u.rate}%</span>
+                  <span className="text-white font-medium ml-2 shrink-0">
+                    {u.rate}%
+                  </span>
                 </div>
               ))}
             </div>
@@ -512,10 +519,10 @@ const Dashboard = () => {
 
         {/* Quick Actions */}
         <div className="bg-slate-700 border border-slate-600 rounded-xl md:rounded-2xl p-3 md:p-6 shadow-sm">
-          <h3 className="text-sm md:text-base font-bold text-white mb-2 md:mb-4">
+          <h3 className="text-xs md:text-base font-bold text-white mb-2 md:mb-4">
             Quick Actions
           </h3>
-          <div className="space-y-1.5 md:space-y-3">
+          <div className="space-y-1 md:space-y-3">
             {[
               {
                 icon: "▶",
@@ -553,7 +560,7 @@ const Dashboard = () => {
               <button
                 key={i}
                 onClick={a.action}
-                className="w-full flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg md:rounded-xl hover:bg-slate-600 transition border border-transparent hover:border-slate-500 text-left group"
+                className="w-full flex items-center gap-2 md:gap-3 p-1.5 md:p-3 rounded-md md:rounded-xl hover:bg-slate-600 transition border border-transparent hover:border-slate-500 text-left group"
               >
                 <div
                   className={`w-8 h-8 md:w-10 md:h-10 rounded-md md:rounded-lg ${a.bg} ${a.color} flex items-center justify-center text-sm md:text-lg shrink-0`}
