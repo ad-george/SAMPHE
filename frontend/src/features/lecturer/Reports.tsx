@@ -68,18 +68,25 @@ const Reports = () => {
         }
         .header { text-align: center; margin-bottom: 25px; }
         .header .logo {
-          display: inline-block;
-          width: 60px;
-          height: 60px;
-          background: ${accentColor};
-          border-radius: 12px;
-          color: #fff;
-          font-size: 26px;
-          font-weight: bold;
-          line-height: 60px;
-          text-align: center;
-          margin-bottom: 8px;
-        }
+  display: inline-block;
+  width: 60px;
+  height: 60px;
+  background: ${accentColor};
+  border-radius: 12px;
+  color: #fff;
+  font-size: 26px;
+  font-weight: bold;
+  line-height: 60px;
+  text-align: center;
+  margin-bottom: 8px;
+}
+.header .logo-img {
+  display: block;
+  height: 70px;
+  width: auto;
+  margin: 0 auto 10px;
+  object-fit: contain;
+}
         .header h1 { font-size: 22px; margin: 0; color: #1e293b; }
         .header p { margin: 2px 0; color: #64748b; font-size: 13px; }
         hr { border: none; border-top: 1px solid #e2e8f0; margin: 16px 0; }
@@ -188,8 +195,12 @@ const Reports = () => {
     <body>
       <div class="outer-wrap">
 
-       <div class="header">
-  <div class="logo">${session.lecturer?.university?.name?.charAt(0) || "U"}</div>
+      <div class="header">
+  ${
+    session.lecturer?.university?.logo
+      ? `<img class="logo-img" src="${session.lecturer.university.logo}" alt="logo" />`
+      : `<div class="logo">${session.lecturer?.university?.name?.charAt(0) || "U"}</div>`
+  }
   <h1>${session.lecturer?.university?.name || "University"}</h1>
   ${
     session.lecturer?.university?.address
@@ -697,13 +708,21 @@ const Reports = () => {
               {/* Institution Header */}
               <div className="text-center mb-3 md:mb-6">
                 <div className="flex justify-center mb-1.5 md:mb-3">
-                  <div
-                    className="w-10 h-10 md:w-16 md:h-16 rounded-lg md:rounded-2xl flex items-center justify-center text-sm md:text-2xl font-bold text-white"
-                    style={{ backgroundColor: accentColor }}
-                  >
-                    {selectedReport.lecturer?.university?.name?.charAt(0) ||
-                      "U"}
-                  </div>
+                  {selectedReport.lecturer?.university?.logo ? (
+                    <img
+                      src={selectedReport.lecturer.university.logo}
+                      alt={selectedReport.lecturer.university.name}
+                      className="h-10 md:h-16 w-auto object-contain"
+                    />
+                  ) : (
+                    <div
+                      className="w-10 h-10 md:w-16 md:h-16 rounded-lg md:rounded-2xl flex items-center justify-center text-sm md:text-2xl font-bold text-white"
+                      style={{ backgroundColor: accentColor }}
+                    >
+                      {selectedReport.lecturer?.university?.name?.charAt(0) ||
+                        "U"}
+                    </div>
+                  )}
                 </div>
                 <h3 className="text-sm md:text-2xl font-bold text-slate-800">
                   {selectedReport.lecturer?.university?.name || "University"}
