@@ -37,7 +37,18 @@ export class UniversityAdminService {
   }
 
   async updateUniversityProfile(universityId: string, data: any) {
-    return prisma.university.update({ where: { id: universityId }, data });
+    // Only allow these fields — protect against arbitrary writes
+    const allowed: any = {};
+    if (data.name !== undefined) allowed.name = data.name;
+    if (data.address !== undefined) allowed.address = data.address;
+    if (data.phone !== undefined) allowed.phone = data.phone;
+    if (data.email !== undefined) allowed.email = data.email;
+    if (data.website !== undefined) allowed.website = data.website;
+
+    return prisma.university.update({
+      where: { id: universityId },
+      data: allowed,
+    });
   }
 
   // --- Faculties ---

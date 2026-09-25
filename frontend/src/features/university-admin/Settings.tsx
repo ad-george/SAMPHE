@@ -6,10 +6,11 @@ const Settings = () => {
   const [profile, setProfile] = useState<any>(null);
   const [stats, setStats] = useState<any>(null);
   const [form, setForm] = useState({
-    fullName: "",
-    email: "",
-    phone: "",
+    name: "",
     address: "",
+    phone: "",
+    email: "",
+    website: "",
   });
   const [reportSettings, setReportSettings] = useState({
     accentColor: "#10b981",
@@ -87,10 +88,11 @@ const Settings = () => {
       const data = r.data.data;
       setProfile(data);
       setForm({
-        fullName: data.name || "",
-        email: data.email || "",
-        phone: data.phone || "",
+        name: data.name || "",
         address: data.address || "",
+        phone: data.phone || "",
+        email: data.email || "",
+        website: data.website || "",
       });
       if (data.logo) setLogoPreview(data.logo);
     });
@@ -137,8 +139,17 @@ const Settings = () => {
   const saveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.put("/university-admin/profile", form);
+      await api.put("/university-admin/profile", {
+        name: form.name,
+        address: form.address,
+        phone: form.phone,
+        email: form.email,
+        website: form.website,
+      });
       toast.success("Profile updated");
+      // Refresh the profile so the preview updates
+      const r = await api.get("/university-admin/my-university");
+      setProfile(r.data.data);
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Failed");
     }
@@ -294,47 +305,64 @@ const Settings = () => {
           <form onSubmit={saveProfile} className="space-y-4">
             <div>
               <label className="block text-xs text-slate-500 uppercase tracking-wider mb-2">
-                University Name
+                Institution Name
               </label>
               <input
-                value={form.fullName}
-                onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
                 className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2.5 text-sm text-white"
+                placeholder="e.g. Mount Kenya University"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wider mb-2">
-                  Email
-                </label>
-                <input
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2.5 text-sm text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wider mb-2">
-                  Phone
-                </label>
-                <input
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2.5 text-sm text-white"
-                />
-              </div>
-            </div>
+
             <div>
               <label className="block text-xs text-slate-500 uppercase tracking-wider mb-2">
-                Physical Address
+                Postal Address
               </label>
               <textarea
                 value={form.address}
                 onChange={(e) => setForm({ ...form, address: e.target.value })}
                 className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2.5 text-sm text-white h-20 resize-none"
-                placeholder="Enter full address..."
+                placeholder="e.g. P.O. Box 123-00100, Nairobi"
               />
             </div>
+
+            <div>
+              <label className="block text-xs text-slate-500 uppercase tracking-wider mb-2">
+                Phone (comma-separated for multiple)
+              </label>
+              <input
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2.5 text-sm text-white"
+                placeholder="e.g. +254700000000, +254720111222"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs text-slate-500 uppercase tracking-wider mb-2">
+                Email (comma-separated for multiple)
+              </label>
+              <input
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2.5 text-sm text-white"
+                placeholder="e.g. info@mku.ac.ke, registrar@mku.ac.ke"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs text-slate-500 uppercase tracking-wider mb-2">
+                Website
+              </label>
+              <input
+                value={form.website}
+                onChange={(e) => setForm({ ...form, website: e.target.value })}
+                className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2.5 text-sm text-white"
+                placeholder="e.g. www.mku.ac.ke"
+              />
+            </div>
+
             <button
               type="submit"
               className="px-6 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl text-sm font-medium hover:from-cyan-500 hover:to-blue-500 transition shadow-lg shadow-cyan-500/20 text-white"

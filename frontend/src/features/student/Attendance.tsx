@@ -269,12 +269,13 @@ const StudentAttendance = () => {
             {university?.address && (
               <p className="break-words">{university.address}</p>
             )}
-            {university?.phone && <p>Tel: {university.phone}</p>}
-            <p className="break-words">
-              {university?.email && `Email: ${university.email}`}
-              {university?.email && university?.website && " | "}
-              {university?.website && `Website: ${university.website}`}
-            </p>
+            {university?.phone && <p>{university.phone}</p>}
+            {university?.email && (
+              <p className="break-words">{university.email}</p>
+            )}
+            {university?.website && (
+              <p className="break-words">{university.website}</p>
+            )}
           </div>
         </div>
 

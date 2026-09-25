@@ -188,12 +188,30 @@ const Reports = () => {
     <body>
       <div class="outer-wrap">
 
-        <div class="header">
-          <div class="logo">${session.lecturer?.university?.name?.charAt(0) || "U"}</div>
-          <h1>${session.lecturer?.university?.name || "Maseno University"}</h1>
-          <p>${session.lecturer?.university?.address || "College"}</p>
-          <p>${session.lecturer?.university?.phone || ""} • ${session.lecturer?.university?.email || ""}</p>
-        </div>
+       <div class="header">
+  <div class="logo">${session.lecturer?.university?.name?.charAt(0) || "U"}</div>
+  <h1>${session.lecturer?.university?.name || "University"}</h1>
+  ${
+    session.lecturer?.university?.address
+      ? `<p>${session.lecturer.university.address}</p>`
+      : ""
+  }
+  ${
+    session.lecturer?.university?.phone
+      ? `<p>${session.lecturer.university.phone}</p>`
+      : ""
+  }
+  ${
+    session.lecturer?.university?.email
+      ? `<p>${session.lecturer.university.email}</p>`
+      : ""
+  }
+  ${
+    session.lecturer?.university?.website
+      ? `<p>${session.lecturer.university.website}</p>`
+      : ""
+  }
+</div>
 
         <hr />
 
@@ -343,8 +361,14 @@ const Reports = () => {
         let csv = "";
 
         csv += `"${session.lecturer?.university?.name || "University"}"\n`;
-        csv += `"${session.lecturer?.university?.address || ""}"\n`;
-        csv += `"${session.lecturer?.university?.phone || ""} • ${session.lecturer?.university?.email || ""}"\n`;
+        if (session.lecturer?.university?.address)
+          csv += `"${session.lecturer.university.address}"\n`;
+        if (session.lecturer?.university?.phone)
+          csv += `"${session.lecturer.university.phone}"\n`;
+        if (session.lecturer?.university?.email)
+          csv += `"${session.lecturer.university.email}"\n`;
+        if (session.lecturer?.university?.website)
+          csv += `"${session.lecturer.university.website}"\n`;
         csv += `\n`;
 
         csv += `"ACADEMIC SESSION DETAILS"\n`;
@@ -682,19 +706,28 @@ const Reports = () => {
                   </div>
                 </div>
                 <h3 className="text-sm md:text-2xl font-bold text-slate-800">
-                  {selectedReport.lecturer?.university?.name ||
-                    "Maseno University"}
+                  {selectedReport.lecturer?.university?.name || "University"}
                 </h3>
-                <p className="text-[10px] md:text-sm text-slate-500 truncate">
-                  {selectedReport.lecturer?.university?.address || "College"}
-                </p>
-                <p className="text-[10px] md:text-sm text-slate-500 truncate">
-                  {selectedReport.lecturer?.university?.phone ||
-                    "+254704700000"}{" "}
-                  •{" "}
-                  {selectedReport.lecturer?.university?.email ||
-                    "info@maseno.ac.ke"}
-                </p>
+                {selectedReport.lecturer?.university?.address && (
+                  <p className="text-[10px] md:text-sm text-slate-500 break-words">
+                    {selectedReport.lecturer.university.address}
+                  </p>
+                )}
+                {selectedReport.lecturer?.university?.phone && (
+                  <p className="text-[10px] md:text-sm text-slate-500">
+                    {selectedReport.lecturer.university.phone}
+                  </p>
+                )}
+                {selectedReport.lecturer?.university?.email && (
+                  <p className="text-[10px] md:text-sm text-slate-500 break-words">
+                    {selectedReport.lecturer.university.email}
+                  </p>
+                )}
+                {selectedReport.lecturer?.university?.website && (
+                  <p className="text-[10px] md:text-sm text-slate-500 break-words">
+                    {selectedReport.lecturer.university.website}
+                  </p>
+                )}
               </div>
 
               <hr className="border-slate-200 my-2 md:my-4" />

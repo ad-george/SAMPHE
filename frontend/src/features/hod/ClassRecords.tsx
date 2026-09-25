@@ -375,13 +375,26 @@ const ClassRecords = () => {
                 <h3 className="text-2xl font-bold text-slate-800">
                   {selectedSession.lecturer?.university?.name || "University"}
                 </h3>
-                <p className="text-sm text-slate-500">
-                  {selectedSession.lecturer?.university?.address || ""}
-                </p>
-                <p className="text-sm text-slate-500">
-                  {selectedSession.lecturer?.university?.phone || ""} •{" "}
-                  {selectedSession.lecturer?.university?.email || ""}
-                </p>
+                {selectedSession.lecturer?.university?.address && (
+                  <p className="text-sm text-slate-500 break-words">
+                    {selectedSession.lecturer.university.address}
+                  </p>
+                )}
+                {selectedSession.lecturer?.university?.phone && (
+                  <p className="text-sm text-slate-500">
+                    {selectedSession.lecturer.university.phone}
+                  </p>
+                )}
+                {selectedSession.lecturer?.university?.email && (
+                  <p className="text-sm text-slate-500 break-words">
+                    {selectedSession.lecturer.university.email}
+                  </p>
+                )}
+                {selectedSession.lecturer?.university?.website && (
+                  <p className="text-sm text-slate-500 break-words">
+                    {selectedSession.lecturer.university.website}
+                  </p>
+                )}
               </div>
 
               <hr className="border-slate-200 my-4" />
