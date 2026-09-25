@@ -368,11 +368,11 @@ const ClassRecords = () => {
                     <img
                       src={selectedSession.lecturer.university.logo}
                       alt={selectedSession.lecturer.university.name}
-                      className="h-16 w-auto object-contain"
+                      className="h-32 w-auto object-contain"
                     />
                   ) : (
                     <div
-                      className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold text-white"
+                      className="w-32 h-32 rounded-2xl flex items-center justify-center text-4xl font-bold text-white"
                       style={{ backgroundColor: accentColor }}
                     >
                       {selectedSession.lecturer?.university?.name?.charAt(0) ||
