@@ -35,7 +35,7 @@ const LoginLecturer = () => {
       <div className="w-full max-w-md">
         <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/70 rounded-2xl p-8 shadow-2xl shadow-black/40">
           <div className="text-center mb-8">
-            <div className="w-20 h-20 bg-gradient-to-br from-green-600 to-green-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-500/30">
+            <div className="w-20 h-20 bg-gradient-to-br from-emerald-600 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-500/30">
               <span className="text-3xl">✔️</span>
             </div>
 
