@@ -398,7 +398,7 @@ export const getArchivedYears = async (
   next: NextFunction,
 ) => {
   try {
-    const data = await service.getArchivedYears();
+    const data = await service.getArchivedYears(req.user?.universityId);
     res.json({ success: true, data });
   } catch (e: any) {
     next({ statusCode: 400, message: e.message });
@@ -424,12 +424,20 @@ export const updateAcademicYear = async (
   next: NextFunction,
 ) => {
   try {
+    const universityId = req.user?.universityId;
+    if (!universityId) {
+      return next({
+        statusCode: 401,
+        message: "University context missing.",
+      });
+    }
     const { startDate, endDate, name, action } = req.body;
     const data = await service.updateAcademicYear({
       startDate: new Date(startDate),
       endDate: new Date(endDate),
       name,
       action,
+      universityId,
     });
     res.json({ success: true, data });
   } catch (e: any) {
@@ -468,10 +476,20 @@ export const createAcademicYear = async (
   next: NextFunction,
 ) => {
   try {
+    const universityId = req.user?.universityId;
+    if (!universityId) {
+      return next({
+        statusCode: 401,
+        message: "University context missing.",
+      });
+    }
     const body = req.body;
     if (body.startDate) body.startDate = new Date(body.startDate);
     if (body.endDate) body.endDate = new Date(body.endDate);
-    const data = await service.createAcademicYear(body);
+    const data = await service.createAcademicYear({
+      ...body,
+      universityId,
+    });
     res.status(201).json({ success: true, data });
   } catch (e: any) {
     next({ statusCode: 400, message: e.message });

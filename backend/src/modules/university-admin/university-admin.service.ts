@@ -361,39 +361,33 @@ export class UniversityAdminService {
   }
 
   // --- Academic Calendar ---
-
   async getAcademicYears(universityId?: string) {
-    // Get active year first
+    const scope = universityId ? { universityId } : {};
+
     const activeYear = await prisma.academicYear.findFirst({
-      where: { status: "ACTIVE", archived: false },
+      where: { ...scope, status: "ACTIVE", archived: false },
     });
 
-    // Get count of archived years
     const archivedCount = await prisma.academicYear.count({
-      where: { archived: true },
+      where: { ...scope, archived: true },
     });
 
-    // Get all non-archived years (for the list)
     const years = await prisma.academicYear.findMany({
-      where: { archived: false },
+      where: { ...scope, archived: false },
       orderBy: { createdAt: "desc" },
     });
 
-    return {
-      activeYear,
-      archivedCount,
-      years,
-    };
+    return { activeYear, archivedCount, years };
   }
-
-  async getArchivedYears() {
+  async getArchivedYears(universityId?: string) {
     const now = new Date();
     const fiveYearsAgo = new Date(now);
     fiveYearsAgo.setFullYear(fiveYearsAgo.getFullYear() - 5);
 
-    // Get archived years
     const archived = await prisma.academicYear.findMany({
-      where: { archived: true },
+      where: universityId
+        ? { archived: true, universityId }
+        : { archived: true },
       orderBy: { createdAt: "desc" },
     });
 
@@ -514,17 +508,20 @@ export class UniversityAdminService {
     endDate: Date;
     name: string;
     action: "ACCEPT_ALL" | "DONT_ARCHIVE" | "CANCEL";
+    universityId: string;
   }) {
     if (data.action === "CANCEL") {
       return { message: "No changes made" };
     }
 
-    // Get current active year
     const currentActive = await prisma.academicYear.findFirst({
-      where: { status: "ACTIVE", archived: false },
+      where: {
+        status: "ACTIVE",
+        archived: false,
+        universityId: data.universityId,
+      },
     });
 
-    // Create new academic year
     const newYear = await prisma.academicYear.create({
       data: {
         name: data.name,
@@ -532,6 +529,7 @@ export class UniversityAdminService {
         endDate: data.endDate,
         status: "ACTIVE",
         archived: false,
+        universityId: data.universityId,
       } as any,
     });
 
