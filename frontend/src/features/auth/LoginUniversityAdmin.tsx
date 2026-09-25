@@ -38,7 +38,7 @@ const LoginUniversityAdmin = () => {
       <div className="w-full max-w-md">
         <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/70 rounded-2xl p-8 shadow-2xl shadow-black/40">
           <div className="text-center mb-8">
-            <div className="w-20 h-20 bg-gradient-to-br from-green-600 to-green-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-500/30">
+            <div className="w-20 h-20 bg-gradient-to-br from-emerald-600 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-500/30">
               <span className="text-3xl">🏛️</span>
             </div>
 
@@ -95,7 +95,7 @@ const LoginUniversityAdmin = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-500 transition shadow-lg shadow-green-500/30 disabled:opacity-50"
+              className="w-full py-3 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-500 transition shadow-lg shadow-emerald-500/30 disabled:opacity-50"
             >
               {loading ? "Signing in..." : "Sign In"}
             </button>
@@ -105,7 +105,7 @@ const LoginUniversityAdmin = () => {
             Don't have an account?{" "}
             <Link
               to="/signup/university-admin"
-              className="text-green-400 font-medium hover:text-green-300 transition"
+              className="block w-full py-3 bg-emerald-600 text-white font-semibold rounded-xl text-center hover:bg-emerald-500 transition shadow-lg shadow-emerald-500/30"
             >
               Register Institution
             </Link>
