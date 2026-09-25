@@ -31,24 +31,27 @@ const LoginLecturer = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-800 p-4">
       <div className="w-full max-w-md">
-        <div className="bg-slate-900/95 backdrop-blur-xl border border-slate-700/70 rounded-2xl p-8 shadow-2xl shadow-black/40">
+        <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/70 rounded-2xl p-8 shadow-2xl shadow-black/40">
           <div className="text-center mb-8">
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/30">
+            <div className="w-20 h-20 bg-gradient-to-br from-green-600 to-green-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-500/30">
               <span className="text-3xl">✔️</span>
             </div>
+
             <h2 className="text-2xl font-bold text-white">Lecturer</h2>
-            <p className="text-slate-400 text-sm mt-1">
+
+            <p className="text-gray-400 text-sm mt-1">
               Attendance management portal
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-gray-300 mb-1">
                 Email Address
               </label>
+
               <input
                 type="email"
                 value={email}
@@ -57,15 +60,16 @@ const LoginLecturer = () => {
                   setError("");
                 }}
                 placeholder="lecturer@university.ac.ke"
-                className="w-full px-4 py-3 bg-slate-950/70 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-gray-950/70 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-gray-300 mb-1">
                 Password
               </label>
+
               <input
                 type="password"
                 value={password}
@@ -74,7 +78,7 @@ const LoginLecturer = () => {
                   setError("");
                 }}
                 placeholder="Enter your password"
-                className="w-full px-4 py-3 bg-slate-950/70 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-gray-950/70 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 required
               />
             </div>
@@ -88,7 +92,7 @@ const LoginLecturer = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-500 transition shadow-lg shadow-blue-500/30 disabled:opacity-50"
+              className="w-full py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-500 transition shadow-lg shadow-green-500/30 disabled:opacity-50"
             >
               {loading ? "Signing in..." : "Sign In"}
             </button>
