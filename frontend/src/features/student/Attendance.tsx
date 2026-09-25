@@ -252,11 +252,11 @@ const StudentAttendance = () => {
             <img
               src={university.logo}
               alt={university.name}
-              className="h-12 md:h-20 w-auto mx-auto mb-2 md:mb-4 object-contain"
+              className="h-24 md:h-40 w-auto mx-auto mb-3 md:mb-6 object-contain"
             />
           ) : (
             <div
-              className="w-12 h-12 md:w-20 md:h-20 rounded-full flex items-center justify-center mx-auto mb-2 md:mb-4"
+              className="w-24 h-24 md:w-40 md:h-40 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-6"
               style={{ backgroundColor: accentColor }}
             >
               <span className="text-xl md:text-3xl text-white">🎓</span>
