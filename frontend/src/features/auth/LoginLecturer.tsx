@@ -92,7 +92,7 @@ const LoginLecturer = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-500 transition shadow-lg shadow-green-500/30 disabled:opacity-50"
+              className="w-full py-3 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-500 transition shadow-lg shadow-emerald-500/30 disabled:opacity-50"
             >
               {loading ? "Signing in..." : "Sign In"}
             </button>
