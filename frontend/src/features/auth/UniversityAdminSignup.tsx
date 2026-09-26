@@ -229,10 +229,11 @@ const UniversityAdminSignup = () => {
 
   const renderProgress = () => {
     return (
-      <div className="flex items-center justify-center mb-5">
-        <div className="flex items-center">
+      <div className="grid grid-cols-3 text-center mb-5">
+        {/* STEP 1 */}
+        <div className="flex flex-col items-center relative">
           <div
-            className={`w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm transition-all duration-300 ${
+            className={`w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm transition-all duration-300 z-10 ${
               step >= 1
                 ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/30"
                 : "bg-gray-200 text-gray-500"
@@ -240,50 +241,7 @@ const UniversityAdminSignup = () => {
           >
             1
           </div>
-
-          <div
-            className={`w-14 sm:w-20 h-1 transition-all duration-300 ${
-              step >= 2 ? "bg-emerald-600" : "bg-gray-200"
-            }`}
-          />
-        </div>
-
-        <div className="flex items-center">
-          <div
-            className={`w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm transition-all duration-300 ${
-              step >= 2
-                ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/30"
-                : "bg-gray-200 text-gray-500"
-            }`}
-          >
-            2
-          </div>
-
-          <div
-            className={`w-14 sm:w-20 h-1 transition-all duration-300 ${
-              step >= 3 ? "bg-emerald-600" : "bg-gray-200"
-            }`}
-          />
-        </div>
-
-        <div
-          className={`w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm transition-all duration-300 ${
-            step >= 3
-              ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/30"
-              : "bg-gray-200 text-gray-500"
-          }`}
-        >
-          3
-        </div>
-      </div>
-    );
-  };
-
-  const renderStepLabels = () => {
-    return (
-      <div className="grid grid-cols-3 text-center mb-5">
-        <div>
-          <p className="text-xs sm:text-sm font-semibold text-white">
+          <p className="text-xs sm:text-sm font-semibold text-white mt-2">
             University
           </p>
           <p className="text-[10px] sm:text-xs text-white mt-0.5">
@@ -291,8 +249,18 @@ const UniversityAdminSignup = () => {
           </p>
         </div>
 
-        <div>
-          <p className="text-xs sm:text-sm font-semibold text-white">
+        {/* STEP 2 */}
+        <div className="flex flex-col items-center relative">
+          <div
+            className={`w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm transition-all duration-300 z-10 ${
+              step >= 2
+                ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/30"
+                : "bg-gray-200 text-gray-500"
+            }`}
+          >
+            2
+          </div>
+          <p className="text-xs sm:text-sm font-semibold text-white mt-2">
             Administrator
           </p>
           <p className="text-[10px] sm:text-xs text-white mt-0.5">
@@ -300,9 +268,35 @@ const UniversityAdminSignup = () => {
           </p>
         </div>
 
-        <div>
-          <p className="text-xs sm:text-sm font-semibold text-white">License</p>
+        {/* STEP 3 */}
+        <div className="flex flex-col items-center relative">
+          <div
+            className={`w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm transition-all duration-300 z-10 ${
+              step >= 3
+                ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/30"
+                : "bg-gray-200 text-gray-500"
+            }`}
+          >
+            3
+          </div>
+          <p className="text-xs sm:text-sm font-semibold text-white mt-2">
+            License
+          </p>
           <p className="text-[10px] sm:text-xs text-white mt-0.5">Activation</p>
+        </div>
+
+        {/* Connector lines — behind the circles */}
+        <div className="absolute left-0 right-0 top-[18px] flex items-center pointer-events-none px-[16.66%]">
+          <div
+            className={`flex-1 h-1 transition-all duration-300 ${
+              step >= 2 ? "bg-emerald-600" : "bg-gray-200"
+            }`}
+          />
+          <div
+            className={`flex-1 h-1 transition-all duration-300 ${
+              step >= 3 ? "bg-emerald-600" : "bg-gray-200"
+            }`}
+          />
         </div>
       </div>
     );
@@ -461,7 +455,6 @@ const UniversityAdminSignup = () => {
             </div>
 
             {renderProgress()}
-            {renderStepLabels()}
 
             {/* STEP 1 — UNIVERSITY DETAILS */}
             {step === 1 && (
