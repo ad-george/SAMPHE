@@ -229,79 +229,87 @@ const UniversityAdminSignup = () => {
 
   const renderProgress = () => {
     return (
-      <div className="grid grid-cols-3 text-center mb-5">
-        {/* STEP 1 */}
-        <div className="flex flex-col items-center relative">
-          <div
-            className={`w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm transition-all duration-300 z-10 ${
-              step >= 1
-                ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/30"
-                : "bg-gray-200 text-gray-500"
-            }`}
-          >
-            1
+      <div className="relative mb-5">
+        {/* Connector lines — behind circles */}
+        <div className="absolute left-0 right-0 top-[18px] flex items-center pointer-events-none">
+          <div className="flex-1 flex justify-center">
+            <div
+              className={`w-1/3 h-0.5 transition-all duration-300 ${
+                step >= 2 ? "bg-emerald-600" : "bg-gray-200"
+              }`}
+            />
           </div>
-          <p className="text-xs sm:text-sm font-semibold text-white mt-2">
-            University
-          </p>
-          <p className="text-[10px] sm:text-xs text-white mt-0.5">
-            Institution Details
-          </p>
+          <div className="flex-1 flex justify-center">
+            <div
+              className={`w-1/3 h-0.5 transition-all duration-300 ${
+                step >= 3 ? "bg-emerald-600" : "bg-gray-200"
+              }`}
+            />
+          </div>
         </div>
 
-        {/* STEP 2 */}
-        <div className="flex flex-col items-center relative">
-          <div
-            className={`w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm transition-all duration-300 z-10 ${
-              step >= 2
-                ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/30"
-                : "bg-gray-200 text-gray-500"
-            }`}
-          >
-            2
+        {/* Circles + labels — on top */}
+        <div className="relative grid grid-cols-3 text-center">
+          {/* STEP 1 */}
+          <div className="flex flex-col items-center">
+            <div
+              className={`w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm transition-all duration-300 z-10 ${
+                step >= 1
+                  ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/30"
+                  : "bg-gray-200 text-gray-500"
+              }`}
+            >
+              1
+            </div>
+            <p className="text-xs sm:text-sm font-semibold text-white mt-2">
+              University
+            </p>
+            <p className="text-[10px] sm:text-xs text-white mt-0.5">
+              Institution Details
+            </p>
           </div>
-          <p className="text-xs sm:text-sm font-semibold text-white mt-2">
-            Administrator
-          </p>
-          <p className="text-[10px] sm:text-xs text-white mt-0.5">
-            Admin Details
-          </p>
-        </div>
 
-        {/* STEP 3 */}
-        <div className="flex flex-col items-center relative">
-          <div
-            className={`w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm transition-all duration-300 z-10 ${
-              step >= 3
-                ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/30"
-                : "bg-gray-200 text-gray-500"
-            }`}
-          >
-            3
+          {/* STEP 2 */}
+          <div className="flex flex-col items-center">
+            <div
+              className={`w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm transition-all duration-300 z-10 ${
+                step >= 2
+                  ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/30"
+                  : "bg-gray-200 text-gray-500"
+              }`}
+            >
+              2
+            </div>
+            <p className="text-xs sm:text-sm font-semibold text-white mt-2">
+              Administrator
+            </p>
+            <p className="text-[10px] sm:text-xs text-white mt-0.5">
+              Admin Details
+            </p>
           </div>
-          <p className="text-xs sm:text-sm font-semibold text-white mt-2">
-            License
-          </p>
-          <p className="text-[10px] sm:text-xs text-white mt-0.5">Activation</p>
-        </div>
 
-        {/* Connector lines — behind the circles */}
-        <div className="absolute left-0 right-0 top-[18px] flex items-center pointer-events-none px-[16.66%]">
-          <div
-            className={`flex-1 h-1 transition-all duration-300 ${
-              step >= 2 ? "bg-emerald-600" : "bg-gray-200"
-            }`}
-          />
-          <div
-            className={`flex-1 h-1 transition-all duration-300 ${
-              step >= 3 ? "bg-emerald-600" : "bg-gray-200"
-            }`}
-          />
+          {/* STEP 3 */}
+          <div className="flex flex-col items-center">
+            <div
+              className={`w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm transition-all duration-300 z-10 ${
+                step >= 3
+                  ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/30"
+                  : "bg-gray-200 text-gray-500"
+              }`}
+            >
+              3
+            </div>
+            <p className="text-xs sm:text-sm font-semibold text-white mt-2">
+              License
+            </p>
+            <p className="text-[10px] sm:text-xs text-white mt-0.5">
+              Activation
+            </p>
+          </div>
         </div>
       </div>
     );
   };
-
   return (
     <div
       className="min-h-screen relative flex items-center justify-center p-3 sm:p-5 overflow-hidden bg-slate-950"
