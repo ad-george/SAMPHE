@@ -1871,7 +1871,7 @@ export class HodService {
         department: {
           include: { faculty: true },
         },
-        university: true,
+        University: true,
       },
     });
     if (!student) throw new Error("Student not found");
@@ -1905,7 +1905,7 @@ export class HodService {
           studyYearName: student.studyYear?.name || "",
           semesterName: student.semester?.name || "",
         },
-        university: student.university,
+        university: student.University,
         department: student.department,
         faculty: student.department?.faculty || null,
         academicYear: activeYear?.name || "",
@@ -2000,7 +2000,7 @@ export class HodService {
         studyYearName: student.studyYear?.name || "",
         semesterName: student.semester?.name || "",
       },
-      university: student.university,
+      university: student.University,
       department: student.department,
       faculty: student.department?.faculty || null,
       academicYear: activeYear?.name || "",
