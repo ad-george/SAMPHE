@@ -1682,6 +1682,335 @@ export class HodService {
     };
   }
 
+  // ============================================================
+  // STUDENT REPORT — matrix of students × units with attendance %
+  // ============================================================
+  async getStudentReportMatrix(
+    hodId: string,
+    filters: {
+      programId?: string;
+      studyYearId?: string;
+      semesterId?: string;
+    },
+  ) {
+    const hod = await prisma.hod.findUnique({ where: { id: hodId } });
+    if (!hod) throw new Error("HOD not found");
+    const deptId = hod.departmentId;
+
+    // 1. Get students matching the filters
+    const studentWhere: any = { departmentId: deptId, archived: false };
+    if (filters.programId) studentWhere.programId = filters.programId;
+    if (filters.studyYearId) studentWhere.studyYearId = filters.studyYearId;
+    if (filters.semesterId) studentWhere.semesterId = filters.semesterId;
+
+    const students = await prisma.student.findMany({
+      where: studentWhere,
+      include: {
+        program: true,
+        studyYear: true,
+        semester: true,
+      },
+      orderBy: { fullName: "asc" },
+    });
+
+    if (students.length === 0) {
+      return { students: [], units: [] };
+    }
+
+    // 2. Collect all unique units the students belong to
+    const unitKeys = new Set<string>();
+    students.forEach((s) => {
+      unitKeys.add(`${s.programId}|${s.studyYearId}|${s.semesterId}`);
+    });
+
+    const unitWhere: any = {
+      departmentId: deptId,
+      OR: Array.from(unitKeys).map((key) => {
+        const [programId, studyYearId, semesterId] = key.split("|");
+        return { programId, studyYearId, semesterId };
+      }),
+    };
+
+    const units = await prisma.unit.findMany({
+      where: unitWhere,
+      orderBy: { name: "asc" },
+    });
+
+    if (units.length === 0) {
+      return {
+        students: students.map((s) => ({
+          id: s.id,
+          fullName: s.fullName,
+          regNo: s.regNo,
+          programName: s.program?.name || "",
+          studyYearName: s.studyYear?.name || "",
+          semesterName: s.semester?.name || "",
+          attendance: {},
+          overall: 0,
+        })),
+        units: [],
+      };
+    }
+
+    // 3. Get all sessions for these units
+    const unitIds = units.map((u) => u.id);
+    const sessions = await prisma.attendanceSession.findMany({
+      where: {
+        unitId: { in: unitIds },
+        status: { not: "ACTIVE" },
+      },
+      select: { id: true, unitId: true },
+    });
+
+    // Map: unitId → array of sessionIds
+    const sessionsByUnit = new Map<string, string[]>();
+    sessions.forEach((s) => {
+      const arr = sessionsByUnit.get(s.unitId) || [];
+      arr.push(s.id);
+      sessionsByUnit.set(s.unitId, arr);
+    });
+
+    // 4. Get all attendance records for these sessions & students
+    const sessionIds = sessions.map((s) => s.id);
+    const studentIds = students.map((s) => s.id);
+
+    const records = await prisma.attendanceRecord.findMany({
+      where: {
+        sessionId: { in: sessionIds },
+        studentId: { in: studentIds },
+        status: "PRESENT",
+      },
+      select: { sessionId: true, studentId: true },
+    });
+
+    // Build: studentId → Set of sessionIds attended
+    const attendedByStudent = new Map<string, Set<string>>();
+    records.forEach((r) => {
+      const set = attendedByStudent.get(r.studentId) || new Set<string>();
+      set.add(r.sessionId);
+      attendedByStudent.set(r.studentId, set);
+    });
+
+    // 5. Build the matrix
+    const matrix = students.map((s) => {
+      const attended = attendedByStudent.get(s.id) || new Set<string>();
+
+      // Per unit: % of sessions attended
+      const attendance: Record<string, number> = {};
+      let studentTotalAttended = 0;
+      let studentTotalSessions = 0;
+
+      units.forEach((u) => {
+        // Only count if the unit matches this student's program/year/semester
+        if (
+          u.programId !== s.programId ||
+          u.studyYearId !== s.studyYearId ||
+          u.semesterId !== s.semesterId
+        ) {
+          attendance[u.id] = -1; // -1 = not applicable
+          return;
+        }
+
+        const unitSessions = sessionsByUnit.get(u.id) || [];
+        const totalSessions = unitSessions.length;
+        const attendedCount = unitSessions.filter((sid) =>
+          attended.has(sid),
+        ).length;
+
+        const pct =
+          totalSessions > 0
+            ? Math.round((attendedCount / totalSessions) * 100)
+            : 0;
+
+        attendance[u.id] = pct;
+
+        studentTotalAttended += attendedCount;
+        studentTotalSessions += totalSessions;
+      });
+
+      const overall =
+        studentTotalSessions > 0
+          ? Math.round((studentTotalAttended / studentTotalSessions) * 100)
+          : 0;
+
+      return {
+        id: s.id,
+        fullName: s.fullName,
+        regNo: s.regNo,
+        programName: s.program?.name || "",
+        studyYearName: s.studyYear?.name || "",
+        semesterName: s.semester?.name || "",
+        attendance,
+        overall,
+      };
+    });
+
+    return {
+      students: matrix,
+      units: units.map((u) => ({
+        id: u.id,
+        code: u.code,
+        name: u.name,
+      })),
+    };
+  }
+
+  // ============================================================
+  // STUDENT ATTENDANCE GRID — dates × units with ✅ / ❌
+  // ============================================================
+  async getStudentAttendanceGrid(hodId: string, studentId: string) {
+    const hod = await prisma.hod.findUnique({ where: { id: hodId } });
+    if (!hod) throw new Error("HOD not found");
+
+    const student = await prisma.student.findUnique({
+      where: { id: studentId },
+      include: {
+        program: true,
+        studyYear: true,
+        semester: true,
+        department: {
+          include: { faculty: true },
+        },
+        university: true,
+      },
+    });
+    if (!student) throw new Error("Student not found");
+
+    // Get the academic year (active one)
+    const activeYear = await prisma.academicYear.findFirst({
+      where: {
+        universityId: student.universityId,
+        status: "ACTIVE",
+        archived: false,
+      },
+    });
+
+    // Units for this student's program + year + semester
+    const units = await prisma.unit.findMany({
+      where: {
+        programId: student.programId,
+        studyYearId: student.studyYearId,
+        semesterId: student.semesterId,
+        departmentId: student.departmentId,
+      },
+      orderBy: { code: "asc" },
+    });
+
+    if (units.length === 0) {
+      return {
+        student: {
+          fullName: student.fullName,
+          regNo: student.regNo,
+          programName: student.program?.name || "",
+          studyYearName: student.studyYear?.name || "",
+          semesterName: student.semester?.name || "",
+        },
+        university: student.university,
+        department: student.department,
+        faculty: student.department?.faculty || null,
+        academicYear: activeYear?.name || "",
+        units: [],
+        dates: [],
+        grid: {},
+        summary: {
+          perUnit: [],
+          totalPresent: 0,
+          totalMissed: 0,
+        },
+      };
+    }
+
+    const unitIds = units.map((u) => u.id);
+
+    // Get all sessions for these units (non-active)
+    const sessions = await prisma.attendanceSession.findMany({
+      where: {
+        unitId: { in: unitIds },
+        status: { not: "ACTIVE" },
+      },
+      orderBy: { createdAt: "asc" },
+      select: { id: true, unitId: true, createdAt: true },
+    });
+
+    // Get student's records in these sessions
+    const sessionIds = sessions.map((s) => s.id);
+    const records = await prisma.attendanceRecord.findMany({
+      where: {
+        studentId,
+        sessionId: { in: sessionIds },
+      },
+      select: { sessionId: true, status: true },
+    });
+
+    const statusBySession = new Map<string, string>();
+    records.forEach((r) => {
+      statusBySession.set(r.sessionId, r.status);
+    });
+
+    // Build the grid: for each session (unique date + unit), mark ✅ / ❌
+    const datesSet = new Set<string>();
+    sessions.forEach((s) => {
+      const dateKey = new Date(s.createdAt).toISOString().split("T")[0];
+      datesSet.add(dateKey);
+    });
+
+    const dates = Array.from(datesSet).sort();
+
+    // grid[date][unitId] = "PRESENT" | "ABSENT" | null
+    const grid: Record<string, Record<string, string | null>> = {};
+
+    dates.forEach((date) => {
+      grid[date] = {};
+      units.forEach((u) => {
+        grid[date][u.id] = null;
+      });
+    });
+
+    sessions.forEach((s) => {
+      const dateKey = new Date(s.createdAt).toISOString().split("T")[0];
+      const status = statusBySession.get(s.id);
+      grid[dateKey][s.unitId] = status === "PRESENT" ? "PRESENT" : "ABSENT";
+    });
+
+    // Per-unit summary
+    const perUnit = units.map((u) => {
+      const unitSessions = sessions.filter((s) => s.unitId === u.id);
+      const present = unitSessions.filter(
+        (s) => statusBySession.get(s.id) === "PRESENT",
+      ).length;
+      const missed = unitSessions.length - present;
+      return {
+        unitId: u.id,
+        unitCode: u.code,
+        unitName: u.name,
+        present,
+        missed,
+        total: unitSessions.length,
+      };
+    });
+
+    const totalPresent = perUnit.reduce((sum, u) => sum + u.present, 0);
+    const totalMissed = perUnit.reduce((sum, u) => sum + u.missed, 0);
+
+    return {
+      student: {
+        fullName: student.fullName,
+        regNo: student.regNo,
+        programName: student.program?.name || "",
+        studyYearName: student.studyYear?.name || "",
+        semesterName: student.semester?.name || "",
+      },
+      university: student.university,
+      department: student.department,
+      faculty: student.department?.faculty || null,
+      academicYear: activeYear?.name || "",
+      units: units.map((u) => ({ id: u.id, code: u.code, name: u.name })),
+      dates,
+      grid,
+      summary: { perUnit, totalPresent, totalMissed },
+    };
+  }
+
   // --- Search ---
   async searchDepartment(hodId: string, query: string) {
     const hod = await prisma.hod.findUnique({ where: { id: hodId } });

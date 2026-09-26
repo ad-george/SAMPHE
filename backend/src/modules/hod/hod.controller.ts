@@ -915,3 +915,38 @@ export const unassignUnit = async (
     next({ statusCode: 400, message: e.message });
   }
 };
+
+// ==================== STUDENT REPORTS ====================
+
+export const getStudentReportMatrix = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const data = await service.getStudentReportMatrix(req.user!.id, {
+      programId: req.query.programId as string | undefined,
+      studyYearId: req.query.studyYearId as string | undefined,
+      semesterId: req.query.semesterId as string | undefined,
+    });
+    res.json({ success: true, data });
+  } catch (e: any) {
+    next({ statusCode: 400, message: e.message });
+  }
+};
+
+export const getStudentAttendanceGrid = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const data = await service.getStudentAttendanceGrid(
+      req.user!.id,
+      req.params.studentId,
+    );
+    res.json({ success: true, data });
+  } catch (e: any) {
+    next({ statusCode: 400, message: e.message });
+  }
+};

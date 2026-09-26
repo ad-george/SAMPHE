@@ -33,7 +33,6 @@ import {
   getClassRecords,
   getAnalytics,
   searchDepartment,
-  generateReport,
   importStudents,
   importUnits,
   upload,
@@ -50,6 +49,8 @@ import {
   assignUnits,
   unassignUnit,
   getLecturerAssignedUnits,
+  getStudentReportMatrix,
+  getStudentAttendanceGrid,
 } from "./hod.controller";
 import { authenticate } from "../../middleware/auth.middleware";
 import { authorize } from "../../middleware/role.middleware";
@@ -218,6 +219,18 @@ router.get("/class-records", authenticate, authorize("HOD"), getClassRecords);
 // Analytics & Search
 router.get("/analytics", authenticate, authorize("HOD"), getAnalytics);
 router.get("/search", authenticate, authorize("HOD"), searchDepartment);
-router.get("/reports/generate", authenticate, authorize("HOD"), generateReport);
+// Student Reports
+router.get(
+  "/reports/students",
+  authenticate,
+  authorize("HOD"),
+  getStudentReportMatrix,
+);
+router.get(
+  "/reports/students/:studentId/grid",
+  authenticate,
+  authorize("HOD"),
+  getStudentAttendanceGrid,
+);
 
 export default router;
