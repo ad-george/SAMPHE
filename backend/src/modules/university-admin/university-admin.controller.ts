@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { UniversityAdminService } from "./university-admin.service";
 import { PrismaClient } from "@prisma/client";
 import emailService from "../../services/email.service";
+import { supabase } from "../../config/supabase";
 
 const prisma = new PrismaClient();
 const service = new UniversityAdminService();
@@ -766,11 +767,34 @@ export const uploadLogo = async (
       return next({ statusCode: 400, message: "No file uploaded" });
     }
 
-    // Build the URL for the uploaded file
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
-    const logoUrl = `${baseUrl}/uploads/logos/${req.file.filename}`;
+    const universityId = req.user!.universityId!;
+    const file = req.file;
 
-    const data = await service.uploadLogo(req.user!.universityId!, logoUrl);
+    // Generate a unique filename
+    const ext = file.originalname.split(".").pop() || "png";
+    const filename = `${universityId}-${Date.now()}.${ext}`;
+
+    // Upload buffer to Supabase Storage (bucket: "logos")
+    const { data: uploadData, error } = await supabase.storage
+      .from("logos")
+      .upload(filename, file.buffer, {
+        contentType: file.mimetype,
+        upsert: true,
+      });
+
+    if (error) {
+      throw new Error(`Supabase upload failed: ${error.message}`);
+    }
+
+    // Get the public URL
+    const { data: urlData } = supabase.storage
+      .from("logos")
+      .getPublicUrl(uploadData.path);
+
+    const logoUrl = urlData.publicUrl;
+
+    // Save URL to DB
+    const data = await service.uploadLogo(universityId, logoUrl);
     res.json({ success: true, data });
   } catch (e: any) {
     next({ statusCode: 400, message: e.message });
