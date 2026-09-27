@@ -13,6 +13,8 @@ const StudentAttendance = () => {
   const [submitted, setSubmitted] = useState(false);
   const [expired, setExpired] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
+  const [lookupError, setLookupError] = useState("");
+  const [submitError, setSubmitError] = useState("");
   const pollInterval = useRef<any>(null);
   const timerInterval = useRef<any>(null);
 
@@ -76,6 +78,8 @@ const StudentAttendance = () => {
   }, [token]);
 
   const lookupStudent = async () => {
+    setLookupError("");
+    setSubmitError("");
     if (!regNo || !session) return;
     try {
       const res = await api.get(
@@ -86,16 +90,20 @@ const StudentAttendance = () => {
         setStudentName(student.fullName);
       } else {
         setStudentName("");
-        toast.error("Student not found or not registered for this unit");
+        setLookupError("Student not found or not registered for this unit");
       }
     } catch {
       setStudentName("");
-      toast.error("Student not found");
+      setLookupError("Student not found");
     }
   };
 
   const submit = async () => {
-    if (!studentName) return toast.error("Enter a valid registration number");
+    setSubmitError("");
+    if (!studentName) {
+      setLookupError("Enter a valid registration number");
+      return;
+    }
     setLoading(true);
 
     let googleAccountId = null;
@@ -128,16 +136,14 @@ const StudentAttendance = () => {
             setExpired(true);
             setSession(null);
           } else {
-            toast.error(err.response?.data?.message || "Submission failed", {
-              duration: 6000,
-            });
+            setSubmitError(err.response?.data?.message || "Submission failed");
           }
         } finally {
           setLoading(false);
         }
       },
       () => {
-        toast.error("Location permission is required");
+        setSubmitError("Location permission is required");
         setLoading(false);
       },
       {
@@ -361,11 +367,26 @@ const StudentAttendance = () => {
               <input
                 type="text"
                 value={regNo}
-                onChange={(e) => setRegNo(e.target.value)}
+                onChange={(e) => {
+                  setRegNo(e.target.value);
+                  setLookupError("");
+                  setSubmitError("");
+                  setStudentName("");
+                }}
                 onBlur={lookupStudent}
-                className="w-full bg-white/80 border border-slate-300 rounded-lg px-3 md:px-4 py-2.5 md:py-3 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500"
+                className={`w-full bg-white/80 border rounded-lg px-3 md:px-4 py-2.5 md:py-3 text-sm text-slate-800 placeholder-slate-400 focus:outline-none ${
+                  lookupError
+                    ? "border-rose-400 focus:border-rose-500"
+                    : "border-slate-300 focus:border-emerald-500"
+                }`}
                 placeholder="e.g. BSC/01/2023"
               />
+              {lookupError && (
+                <p className="text-rose-500 text-[11px] md:text-xs mt-1.5 flex items-start gap-1">
+                  <span>⚠</span>
+                  <span>{lookupError}</span>
+                </p>
+              )}
             </div>
 
             {studentName && (
@@ -375,6 +396,15 @@ const StudentAttendance = () => {
                 </p>
                 <p className="font-semibold text-slate-800 text-sm md:text-base">
                   {studentName}
+                </p>
+              </div>
+            )}
+
+            {submitError && (
+              <div className="bg-rose-50 border border-rose-200 rounded-lg p-2.5 md:p-3">
+                <p className="text-rose-600 text-[11px] md:text-xs flex items-start gap-1.5">
+                  <span>⚠</span>
+                  <span>{submitError}</span>
                 </p>
               </div>
             )}
