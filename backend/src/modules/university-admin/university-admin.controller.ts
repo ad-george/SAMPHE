@@ -769,6 +769,12 @@ export const uploadLogo = async (
 
     const universityId = req.user!.universityId!;
     const file = req.file;
+    console.log("Buffer check:", {
+      isBuffer: Buffer.isBuffer(file.buffer),
+      length: file.buffer?.length,
+      mimetype: file.mimetype,
+      originalname: file.originalname,
+    });
 
     // Generate a unique filename
     const ext = file.originalname.split(".").pop() || "png";
