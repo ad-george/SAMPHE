@@ -124,23 +124,6 @@ const ClassRecords = () => {
         </div>
       </div>
 
-      {/* View Toggle */}
-      <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl p-1 w-fit shadow-sm">
-        {(["lecturer", "unit", "student"] as const).map((v) => (
-          <button
-            key={v}
-            onClick={() => setViewBy(v)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-              viewBy === v
-                ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
-                : "text-slate-500 hover:text-slate-700"
-            }`}
-          >
-            By {v.charAt(0).toUpperCase() + v.slice(1)}
-          </button>
-        ))}
-      </div>
-
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
         {viewBy === "student" && (
