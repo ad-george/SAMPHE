@@ -47,6 +47,8 @@ const Lecturers = () => {
   const [showPrograms, setShowPrograms] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<any>(null);
   const [shareTarget, setShareTarget] = useState<any>(null);
+  const [sharePassword, setSharePassword] = useState<string | null>(null);
+  const [resettingPassword, setResettingPassword] = useState(false);
 
   const [assignModal, setAssignModal] = useState<any>(null);
   const [availableUnits, setAvailableUnits] = useState<any[]>([]);
@@ -148,28 +150,51 @@ const Lecturers = () => {
   // Share functions
   const shareViaWhatsApp = (target: any) => {
     const deptName = target.department?.name || "Department";
-    const hodPhone = hodProfile?.phone || "";
-    const message = `🔐 *SUAMP Lecturer Login Credentials*\n\n*Name:* ${target.fullName}\n*Email:* ${target.email || "Not Set"}\n*Password:* ${target.password || "Use existing password"}\n*Department:* ${deptName}\n\nLogin at: ${window.location.origin}/login/lecturer`;
+    const pass = sharePassword || "(reset password first)";
+    const message = `🔐 *SUAMP Lecturer Login Credentials*\n\n*Name:* ${target.fullName}\n*Email:* ${target.email || "Not Set"}\n*Password:* ${pass}\n*Department:* ${deptName}\n\nLogin at: ${window.location.origin}/login/lecturer`;
     const encoded = encodeURIComponent(message);
+    // Send to the LECTURER's phone (if available), not the HOD's
+    const targetPhone = (target.phone || "").replace(/\D/g, "");
+    window.open(`https://wa.me/${targetPhone}?text=${encoded}`, "_blank");
+  };
+
+  const shareViaEmail = (target: any) => {
+    const deptName = target.department?.name || "Department";
+    const pass = sharePassword || "(reset password first)";
+    const subject = encodeURIComponent("SUAMP Lecturer Login Credentials");
+    const body = encodeURIComponent(
+      `🔐 SUAMP Lecturer Login Credentials\n\nName: ${target.fullName}\nEmail: ${target.email || "Not Set"}\nPassword: ${pass}\nDepartment: ${deptName}\n\nLogin at: ${window.location.origin}/login/lecturer`,
+    );
+    // Send to the LECTURER's email,
+    const targetEmail = target.email || "";
+    // Open Gmail compose in a new tab, addressed to the lecturer
     window.open(
-      `https://wa.me/send?phone=${hodPhone}&text=${encoded}`,
+      `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(targetEmail)}&su=${subject}&body=${body}`,
       "_blank",
     );
   };
 
-  const shareViaEmail = (target: any) => {
-    const hodEmail = hodProfile?.email || "";
-    const deptName = target.department?.name || "Department";
-    const subject = encodeURIComponent("SUAMP Lecturer Login Credentials");
-    const body = encodeURIComponent(
-      `🔐 SUAMP Lecturer Login Credentials\n\nName: ${target.fullName}\nEmail: ${target.email || "Not Set"}\nPassword: ${target.password || "Use existing password"}\nDepartment: ${deptName}\n\nLogin at: ${window.location.origin}/login/lecturer`,
-    );
-    window.open(`mailto:${hodEmail}?subject=${subject}&body=${body}`, "_blank");
+  const resetAndShowPassword = async (lecturerId: string) => {
+    setResettingPassword(true);
+    try {
+      const newPass = generatePass();
+      await api.put(`/hod/lecturers/${lecturerId}`, {
+        password: newPass,
+      });
+      setSharePassword(newPass);
+      toast.success("Password reset — copy it now, it won't be shown again");
+      fetchLecturers();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to reset password");
+    } finally {
+      setResettingPassword(false);
+    }
   };
 
   const copyCreds = (target: any) => {
     const deptName = target.department?.name || "Department";
-    const text = `🔐 SUAMP Lecturer Login Credentials\n\nName: ${target.fullName}\nEmail: ${target.email || "Not Set"}\nPassword: ${target.password || "Use existing password"}\nDepartment: ${deptName}\n\nLogin at: ${window.location.origin}/login/lecturer`;
+    const pass = sharePassword || "(reset password first)";
+    const text = `🔐 SUAMP Lecturer Login Credentials\n\nName: ${target.fullName}\nEmail: ${target.email || "Not Set"}\nPassword: ${pass}\nDepartment: ${deptName}\n\nLogin at: ${window.location.origin}/login/lecturer`;
     navigator.clipboard.writeText(text);
     toast.success("Copied to clipboard");
   };
@@ -575,20 +600,46 @@ const Lecturers = () => {
                   {shareTarget.email || "Not Set"}
                 </span>
               </div>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm items-center">
                 <span className="text-slate-500">Password</span>
-                <span className="text-emerald-600 font-mono font-bold">
-                  {shareTarget.password || "Use existing password"}
-                </span>
+                {sharePassword ? (
+                  <span className="text-emerald-600 font-mono font-bold break-all text-right max-w-[60%]">
+                    {sharePassword}
+                  </span>
+                ) : (
+                  <span className="text-slate-400 italic text-xs">
+                    Reset to reveal
+                  </span>
+                )}
               </div>
             </div>
+
+            {!sharePassword && (
+              <button
+                onClick={() => resetAndShowPassword(shareTarget.id)}
+                disabled={resettingPassword}
+                className="w-full mb-4 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 transition text-sm font-medium text-white disabled:opacity-50"
+              >
+                {resettingPassword
+                  ? "Resetting..."
+                  : "🔑 Reset Password & Show"}
+              </button>
+            )}
+
+            {sharePassword && (
+              <p className="text-[11px] text-amber-600 bg-amber-50 border border-amber-200 rounded-lg p-2 mb-4 leading-snug">
+                ⚠ Copy this password now. Once you close this window it cannot
+                be shown again.
+              </p>
+            )}
+
             <div className="grid grid-cols-3 gap-3">
               <button
                 onClick={() => {
                   copyCreds(shareTarget);
-                  setShareTarget(null);
                 }}
-                className="py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 transition text-sm font-medium text-white flex flex-col items-center gap-1"
+                disabled={!sharePassword}
+                className="py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 transition text-sm font-medium text-white flex flex-col items-center gap-1 disabled:opacity-40"
               >
                 <span className="text-xl">📋</span>
                 Copy
@@ -596,9 +647,9 @@ const Lecturers = () => {
               <button
                 onClick={() => {
                   shareViaWhatsApp(shareTarget);
-                  setShareTarget(null);
                 }}
-                className="py-3 rounded-xl bg-green-600 hover:bg-green-500 transition text-sm font-medium text-white flex flex-col items-center gap-1"
+                disabled={!sharePassword}
+                className="py-3 rounded-xl bg-green-600 hover:bg-green-500 transition text-sm font-medium text-white flex flex-col items-center gap-1 disabled:opacity-40"
               >
                 <span className="text-xl">💬</span>
                 WhatsApp
@@ -606,16 +657,19 @@ const Lecturers = () => {
               <button
                 onClick={() => {
                   shareViaEmail(shareTarget);
-                  setShareTarget(null);
                 }}
-                className="py-3 rounded-xl bg-blue-600 hover:bg-blue-500 transition text-sm font-medium text-white flex flex-col items-center gap-1"
+                disabled={!sharePassword}
+                className="py-3 rounded-xl bg-blue-600 hover:bg-blue-500 transition text-sm font-medium text-white flex flex-col items-center gap-1 disabled:opacity-40"
               >
                 <span className="text-xl">✉️</span>
                 Email
               </button>
             </div>
             <button
-              onClick={() => setShareTarget(null)}
+              onClick={() => {
+                setShareTarget(null);
+                setSharePassword(null);
+              }}
               className="w-full mt-4 py-2.5 rounded-xl bg-slate-100 text-sm hover:bg-slate-200 transition text-slate-700"
             >
               Close
@@ -654,6 +708,7 @@ const Lecturers = () => {
               <button
                 onClick={() => {
                   setShareTarget(manageTarget);
+                  setSharePassword(null);
                   setManageTarget(null);
                 }}
                 className="w-full text-left px-4 py-3 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-100 transition text-sm font-medium flex items-center gap-3"
