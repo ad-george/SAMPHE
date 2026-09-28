@@ -1333,18 +1333,18 @@ export class LecturerService {
 
     if (!session) throw new Error("Session not found");
 
-    const total = session.records?.length || 0;
+    // Use totalStudents (enrolled) as denominator — matches the modal
+    const total = session.totalStudents || 0;
     const present =
       session.records?.filter((r: any) => r.status === "PRESENT").length || 0;
     const rate = total > 0 ? Math.round((present / total) * 100) : 0;
 
-    // Return data for the frontend to handle PDF/Excel generation
     return {
       session,
       summary: {
         total,
         present,
-        absent: total - present,
+        absent: Math.max(0, total - present),
         rate,
       },
     };
