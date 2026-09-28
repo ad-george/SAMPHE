@@ -474,11 +474,11 @@ const Reports = () => {
                     <img
                       src={gridData.university.logo}
                       alt=""
-                      className="h-20 md:h-32 w-auto mx-auto mb-2 object-contain"
+                      className="h-32 md:h-48 w-auto mx-auto mb-2 object-contain"
                     />
                   ) : (
                     <div
-                      className="w-20 h-20 md:w-32 md:h-32 rounded-2xl flex items-center justify-center text-2xl md:text-4xl font-bold text-white mx-auto mb-2"
+                      className="w-32 h-32 md:w-48 md:h-48 rounded-2xl flex items-center justify-center text-4xl md:text-5xl font-bold text-white mx-auto mb-2"
                       style={{ backgroundColor: accentColor }}
                     >
                       {(gridData.university?.name || "U").charAt(0)}
