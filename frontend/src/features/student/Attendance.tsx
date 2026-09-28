@@ -230,11 +230,11 @@ const StudentAttendance = () => {
     label: string;
     value: string | undefined;
   }) => (
-    <div className="flex items-start gap-1.5">
+    <div className="flex items-start">
       <span className="text-slate-500 text-[10px] md:text-sm w-12 md:w-16 shrink-0 leading-tight pt-[1px]">
         {label}:
       </span>
-      <span className="text-slate-800 font-medium text-[10px] md:text-xs flex-1 break-words leading-tight">
+      <span className="text-slate-800 font-medium text-[10px] md:text-xs flex-1 break-words leading-tight pl-[5px]">
         {value || "N/A"}
       </span>
     </div>
@@ -301,8 +301,8 @@ const StudentAttendance = () => {
             <InfoRow label="Stage" value={`${yearSem} / MAIN`} />
             <InfoRow label="Dept" value={department?.name} />
             <InfoRow
-              label="Date / Wk"
-              value={`${sessionDate.toLocaleDateString()} - ${weekNumber}`}
+              label="Date"
+              value={`${sessionDate.toLocaleDateString()} - Wk.${weekNumber}`}
             />
             <InfoRow label="Prog" value={program?.name} />
             <InfoRow label="Lec" value={lecturer?.fullName} />
@@ -315,7 +315,7 @@ const StudentAttendance = () => {
           </div>
         </div>
 
-        {/* Countdown Banner — now BELOW academic details */}
+        {/* Countdown Banner */}
         <div className="mb-3 md:mb-5 flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg md:rounded-xl px-3 md:px-4 py-2 md:py-3">
           <div>
             <p className="text-[9px] md:text-[10px] text-slate-500 uppercase tracking-wider font-semibold">
