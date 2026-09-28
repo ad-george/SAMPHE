@@ -150,11 +150,11 @@ const Reports = () => {
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { font-family: Arial, sans-serif; padding: 30px; color: #1e293b; }
           .header { text-align: center; margin-bottom: 20px; }
-          .logo { height: 100px; width: auto; margin-bottom: 10px; object-fit: contain; }
+          .logo { height: 180px; width: auto; margin-bottom: 15px; object-fit: contain; }
           .logo-fallback {
-            width: 80px; height: 80px; border-radius: 16px;
-            background: ${accentColor}; color: white; font-size: 36px;
-            font-weight: bold; line-height: 80px; margin: 0 auto 10px;
+            width: 160px; height: 160px; border-radius: 24px;
+            background: ${accentColor}; color: white; font-size: 72px;
+            font-weight: bold; line-height: 160px; margin: 0 auto 15px;
           }
           h1 { font-size: 22px; margin-bottom: 4px; }
           .header p { font-size: 12px; color: #64748b; margin: 1px 0; }
