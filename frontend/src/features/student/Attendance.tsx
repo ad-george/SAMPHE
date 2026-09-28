@@ -223,7 +223,6 @@ const StudentAttendance = () => {
   );
 
   // Reusable label/value row — used in academic details grid
-  // Label is fixed-narrow so values never overlap the other column
   const InfoRow = ({
     label,
     value,
@@ -231,11 +230,11 @@ const StudentAttendance = () => {
     label: string;
     value: string | undefined;
   }) => (
-    <div className="flex items-start gap-1">
-      <span className="text-slate-500 text-[10px] md:text-sm w-14 md:w-24 shrink-0 leading-tight pt-[1px]">
+    <div className="flex items-start gap-1.5">
+      <span className="text-slate-500 text-[10px] md:text-sm w-12 md:w-16 shrink-0 leading-tight pt-[1px]">
         {label}:
       </span>
-      <span className="text-slate-800 font-medium text-[11px] md:text-sm flex-1 break-words leading-tight">
+      <span className="text-slate-800 font-medium text-[10px] md:text-xs flex-1 break-words leading-tight">
         {value || "N/A"}
       </span>
     </div>
@@ -299,14 +298,14 @@ const StudentAttendance = () => {
               label="School"
               value={faculty?.name || department?.faculty?.name}
             />
-            <InfoRow label="Stage / Campus" value={`${yearSem} / MAIN`} />
-            <InfoRow label="Department" value={department?.name} />
+            <InfoRow label="Stage" value={`${yearSem} / MAIN`} />
+            <InfoRow label="Dept" value={department?.name} />
             <InfoRow
-              label="Date / Week"
-              value={`${sessionDate.toLocaleDateString()} / Week ${weekNumber}`}
+              label="Date / Wk"
+              value={`${sessionDate.toLocaleDateString()} - ${weekNumber}`}
             />
-            <InfoRow label="Programme" value={program?.name} />
-            <InfoRow label="Lecturer" value={lecturer?.fullName} />
+            <InfoRow label="Prog" value={program?.name} />
+            <InfoRow label="Lec" value={lecturer?.fullName} />
             <div className="col-span-2">
               <InfoRow
                 label="Unit"
