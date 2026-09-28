@@ -145,6 +145,71 @@ export class AuthService {
     };
   }
 
+  async forgotPassword(email: string) {
+    const lecturer = await prisma.lecturer.findUnique({
+      where: { email },
+    });
+
+    // Do not reveal whether the email exists — always return success
+    if (!lecturer) {
+      return { message: "If that email exists, a reset link has been sent." };
+    }
+
+    // Generate a secure random token
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 min
+
+    await prisma.lecturer.update({
+      where: { id: lecturer.id },
+      data: {
+        resetToken: token,
+        resetTokenExpiry: expiry,
+      },
+    });
+
+    const resetLink = `${process.env.CLIENT_URL}/reset-password/${token}`;
+
+    await emailService.sendPasswordResetEmail(
+      lecturer.email,
+      lecturer.fullName,
+      resetLink,
+    );
+
+    return {
+      message: "If that email exists, a reset link has been sent.",
+    };
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    if (!newPassword || newPassword.length < 6) {
+      throw new Error("Password must be at least 6 characters");
+    }
+
+    const lecturer = await prisma.lecturer.findFirst({
+      where: {
+        resetToken: token,
+        resetTokenExpiry: { gte: new Date() },
+      },
+    });
+
+    if (!lecturer) {
+      throw new Error("Invalid or expired reset link");
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+
+    await prisma.lecturer.update({
+      where: { id: lecturer.id },
+      data: {
+        password: hashed,
+        resetToken: null,
+        resetTokenExpiry: null,
+      },
+    });
+
+    return { message: "Password reset successfully. You can now log in." };
+  }
+
   async universityAdminLogin(email: string, password: string) {
     const admin = await prisma.universityAdmin.findUnique({ where: { email } });
     if (!admin || admin.status !== "ACTIVE")

@@ -209,6 +209,8 @@ model Lecturer {
   deanOfFaculty  Faculty? 
   createdAt    DateTime                 @default(now())
   updatedAt    DateTime                 @updatedAt
+  resetToken        String?
+  resetTokenExpiry  DateTime?
 }
 
 model Hod {

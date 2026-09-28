@@ -22,9 +22,6 @@ const LecturerLayout = () => {
     email: "",
     phone: "",
     avatar: "",
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
   });
   const searchRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -78,9 +75,6 @@ const LecturerLayout = () => {
           email: res.data.data.email,
           phone: res.data.data.phone || "",
           avatar: res.data.data.avatar || "",
-          currentPassword: "",
-          newPassword: "",
-          confirmPassword: "",
         });
     } catch {}
   };
@@ -123,24 +117,6 @@ const LecturerLayout = () => {
 
   const saveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (
-      profileForm.newPassword ||
-      profileForm.confirmPassword ||
-      profileForm.currentPassword
-    ) {
-      if (!profileForm.currentPassword) {
-        toast.error("Enter current password");
-        return;
-      }
-      if (profileForm.newPassword !== profileForm.confirmPassword) {
-        toast.error("Passwords do not match");
-        return;
-      }
-      if (profileForm.newPassword.length < 6) {
-        toast.error("Min 6 characters");
-        return;
-      }
-    }
     try {
       const payload: any = {
         fullName: profileForm.fullName,
@@ -148,10 +124,7 @@ const LecturerLayout = () => {
         phone: profileForm.phone,
       };
       if (profileForm.avatar) payload.avatar = profileForm.avatar;
-      if (profileForm.newPassword && profileForm.currentPassword) {
-        payload.currentPassword = profileForm.currentPassword;
-        payload.newPassword = profileForm.newPassword;
-      }
+
       const res = await api.put("/lecturer/me", payload);
       login(localStorage.getItem("token")!, {
         ...user!,
@@ -160,15 +133,24 @@ const LecturerLayout = () => {
       });
       toast.success("Profile updated");
       setEditProfile(false);
-      setProfileForm((prev) => ({
-        ...prev,
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      }));
       fetchProfile();
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Failed");
+    }
+  };
+
+  const requestPasswordReset = async () => {
+    try {
+      await api.post("/auth/forgot-password", {
+        email: profileForm.email,
+      });
+      toast.success(
+        "A reset link has been sent to your email. Check your inbox.",
+        { duration: 6000 },
+      );
+      setEditProfile(false);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to send reset link");
     }
   };
 
@@ -593,44 +575,19 @@ const LecturerLayout = () => {
               />
               <div className="border-t border-gray-100 pt-4">
                 <p className="text-xs text-gray-400 uppercase tracking-wider mb-3 font-medium">
-                  Change Password
+                  Password
                 </p>
-                <input
-                  placeholder="Current Password"
-                  type="password"
-                  value={profileForm.currentPassword}
-                  onChange={(e) =>
-                    setProfileForm({
-                      ...profileForm,
-                      currentPassword: e.target.value,
-                    })
-                  }
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 md:px-4 py-2.5 text-sm text-gray-800 mb-3 focus:border-emerald-400 focus:outline-none"
-                />
-                <input
-                  placeholder="New Password"
-                  type="password"
-                  value={profileForm.newPassword}
-                  onChange={(e) =>
-                    setProfileForm({
-                      ...profileForm,
-                      newPassword: e.target.value,
-                    })
-                  }
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 md:px-4 py-2.5 text-sm text-gray-800 mb-3 focus:border-emerald-400 focus:outline-none"
-                />
-                <input
-                  placeholder="Confirm New Password"
-                  type="password"
-                  value={profileForm.confirmPassword}
-                  onChange={(e) =>
-                    setProfileForm({
-                      ...profileForm,
-                      confirmPassword: e.target.value,
-                    })
-                  }
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 md:px-4 py-2.5 text-sm text-gray-800 focus:border-emerald-400 focus:outline-none"
-                />
+                <button
+                  type="button"
+                  onClick={requestPasswordReset}
+                  className="w-full py-2.5 rounded-xl border border-emerald-300 bg-emerald-50 text-emerald-700 text-sm font-medium hover:bg-emerald-100 transition"
+                >
+                  🔑 Forgot Password
+                </button>
+                <p className="text-[11px] text-gray-500 mt-2 leading-snug">
+                  A reset link will be sent to your registered email (
+                  {profileForm.email}).
+                </p>
               </div>
               <div className="flex gap-3 pt-2">
                 <button

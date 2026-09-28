@@ -178,7 +178,7 @@ const Lecturers = () => {
   const shareViaEmail = (target: any) => {
     const deptName = target.department?.name || "Department";
     const pass = sharePassword || "(reset password first)";
-    const subject = encodeURIComponent("SUAMP Lecturer Login Credentials");
+    const subject = encodeURIComponent("SAMPHE Lecturer Login Credentials");
     const body = encodeURIComponent(
       `🔐 SUAMP Lecturer Login Credentials\n\nName: ${target.fullName}\nEmail: ${target.email || "Not Set"}\nPassword: ${pass}\nDepartment: ${deptName}\n\nLogin at: ${window.location.origin}/login/lecturer`,
     );

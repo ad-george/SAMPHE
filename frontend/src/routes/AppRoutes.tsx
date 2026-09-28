@@ -8,6 +8,7 @@ import PlatformAdminSupport from "../features/platform-admin/SupportTickets";
 import PlatformAdminSystem from "../features/platform-admin/SystemHealth";
 import PlatformAdminAudit from "../features/platform-admin/AuditLogs";
 import PlatformAdminSettings from "../features/platform-admin/Settings";
+import ResetPassword from "../features/auth/ResetPassword";
 import AuthLayout from "../layouts/AuthLayout";
 import StudentAttendance from "../features/student/Attendance";
 import UniversityAdminLayout from "../layouts/UniversityAdminLayout";
@@ -114,6 +115,8 @@ const AppRoutes = () => (
       <Route path="/login/hod" element={<LoginHOD />} />
       <Route path="/login/lecturer" element={<LoginLecturer />} />
       <Route path="/attend/:token" element={<StudentAttendance />} />
+
+      <Route path="/reset-password/:token" element={<ResetPassword />} />
 
       {/* Signup */}
       <Route

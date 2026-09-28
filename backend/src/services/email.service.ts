@@ -214,6 +214,50 @@ class EmailService {
 
     await this.sendEmail({ to: email, subject, html });
   }
+
+  async sendPasswordResetEmail(
+    to: string,
+    fullName: string,
+    resetLink: string,
+  ) {
+    const subject = "Reset Your SUAMP Password";
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+        <div style="text-align: center; padding: 20px 0; border-bottom: 1px solid #e2e8f0;">
+          <h1 style="color: #1a202c; margin: 0;">SUAMP</h1>
+          <p style="color: #718096; margin: 5px 0 0;">Password Reset Request</p>
+        </div>
+        <div style="padding: 20px 0;">
+          <h2 style="color: #2d3748; font-size: 20px;">Reset Your Password</h2>
+          <p style="color: #4a5568; font-size: 16px; line-height: 1.6;">
+            Hello ${fullName},
+          </p>
+          <p style="color: #4a5568; font-size: 16px; line-height: 1.6;">
+            We received a request to reset your SUAMP password. Click the button below to create a new password.
+          </p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetLink}" style="background: #10b981; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+              Reset Password
+            </a>
+          </div>
+          <p style="color: #718096; font-size: 13px;">
+            Or copy this link: <br/>
+            <span style="word-break: break-all; color: #3182ce;">${resetLink}</span>
+          </p>
+          <div style="background: #fefcbf; border-left: 4px solid #ecc94b; padding: 12px; margin: 20px 0; border-radius: 4px;">
+            <p style="margin: 0; color: #744210; font-size: 13px;">
+              ⚠ This link expires in <strong>15 minutes</strong>. If you didn't request this, ignore this email.
+            </p>
+          </div>
+        </div>
+        <div style="text-align: center; padding-top: 20px; border-top: 1px solid #e2e8f0; color: #a0aec0; font-size: 12px;">
+          <p>© ${new Date().getFullYear()} SUAMP. All rights reserved.</p>
+        </div>
+      </div>
+    `;
+
+    await this.sendEmail({ to, subject, html });
+  }
 }
 
 export default new EmailService();
