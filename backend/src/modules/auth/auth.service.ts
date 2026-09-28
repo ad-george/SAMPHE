@@ -1,6 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../../utils/jwt";
+import crypto from "crypto";
+import emailService from "../../services/email.service";
 
 const prisma = new PrismaClient();
 
