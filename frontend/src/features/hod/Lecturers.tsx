@@ -153,9 +153,26 @@ const Lecturers = () => {
     const pass = sharePassword || "(reset password first)";
     const message = `🔐 *SUAMP Lecturer Login Credentials*\n\n*Name:* ${target.fullName}\n*Email:* ${target.email || "Not Set"}\n*Password:* ${pass}\n*Department:* ${deptName}\n\nLogin at: ${window.location.origin}/login/lecturer`;
     const encoded = encodeURIComponent(message);
-    // Send to the LECTURER's phone (if available), not the HOD's
-    const targetPhone = (target.phone || "").replace(/\D/g, "");
-    window.open(`https://wa.me/${targetPhone}?text=${encoded}`, "_blank");
+
+    // Clean phone: remove everything except digits
+    let targetPhone = (target.phone || "").replace(/\D/g, "");
+
+    // If phone starts with 0, replace with Kenya country code 254
+    if (targetPhone.startsWith("0")) {
+      targetPhone = "254" + targetPhone.substring(1);
+    }
+
+    // If phone has no country code at all (9 digits), prepend 254
+    if (targetPhone.length === 9) {
+      targetPhone = "254" + targetPhone;
+    }
+
+    // If still no phone, open WhatsApp without a specific recipient
+    const waUrl = targetPhone
+      ? `https://wa.me/${targetPhone}?text=${encoded}`
+      : `https://wa.me/?text=${encoded}`;
+
+    window.open(waUrl, "_blank");
   };
 
   const shareViaEmail = (target: any) => {
