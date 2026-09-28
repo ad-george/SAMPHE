@@ -1,5 +1,3 @@
-import nodemailer from "nodemailer";
-
 interface EmailOptions {
   to: string;
   subject: string;
@@ -7,28 +5,47 @@ interface EmailOptions {
 }
 
 class EmailService {
-  private transporter: nodemailer.Transporter;
+  private serviceId: string;
+  private templateId: string;
+  private publicKey: string;
+  private privateKey: string;
 
   constructor() {
-    this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || "smtp.gmail.com",
-      port: parseInt(process.env.SMTP_PORT || "587"),
-      secure: process.env.SMTP_SECURE === "true",
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
+    this.serviceId = process.env.EMAILJS_SERVICE_ID || "";
+    this.templateId = process.env.EMAILJS_TEMPLATE_ID || "";
+    this.publicKey = process.env.EMAILJS_PUBLIC_KEY || "";
+    this.privateKey = process.env.EMAILJS_PRIVATE_KEY || "";
   }
 
   async sendEmail(options: EmailOptions) {
     try {
-      await this.transporter.sendMail({
-        from: process.env.SMTP_FROM || "noreply@suamp.com",
-        ...options,
+      const payload = {
+        service_id: this.serviceId,
+        template_id: this.templateId,
+        user_id: this.publicKey,
+        accessToken: this.privateKey,
+        template_params: {
+          to_email: options.to,
+          subject: options.subject,
+          message: options.html,
+        },
+      };
+
+      const res = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`EmailJS failed: ${res.status} ${text}`);
+      }
+
+      console.log("✅ Email sent via EmailJS to:", options.to);
     } catch (error) {
-      console.error("Email sending failed:", error);
+      console.error("❌ EmailJS sending failed:", error);
+      throw error;
     }
   }
 
