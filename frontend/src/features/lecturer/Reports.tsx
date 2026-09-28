@@ -67,26 +67,26 @@ const Reports = () => {
           margin-bottom: 15px;
         }
         .header { text-align: center; margin-bottom: 25px; }
-        .header .logo {
+       .header .logo {
           display: inline-block;
-          width: 120px;
-          height: 120px;
+          width: 160px;
+          height: 160px;
           background: ${accentColor};
-          border-radius: 20px;
+          border-radius: 24px;
           color: #fff;
-          font-size: 52px;
+          font-size: 72px;
           font-weight: bold;
-          line-height: 120px;
+          line-height: 160px;
           text-align: center;
-          margin-bottom: 12px;
-        }
-        .header .logo-img {
-          display: block;
-          height: 140px;
-          width: auto;
-          margin: 0 auto 12px;
-          object-fit: contain;
-        }
+          margin-bottom: 15px;
+      }
+      .header .logo-img {
+        display: block;
+        height: 180px;
+        width: auto;
+        margin: 0 auto 15px;
+        object-fit: contain;
+      }
         .header h1 { font-size: 22px; margin: 0; color: #1e293b; }
         .header p { margin: 2px 0; color: #64748b; font-size: 13px; }
         hr { border: none; border-top: 1px solid #e2e8f0; margin: 16px 0; }
@@ -712,11 +712,11 @@ const Reports = () => {
                     <img
                       src={selectedReport.lecturer.university.logo}
                       alt={selectedReport.lecturer.university.name}
-                      className="h-20 md:h-32 w-auto object-contain"
+                      className="h-32 md:h-48 w-auto object-contain"
                     />
                   ) : (
                     <div
-                      className="w-20 h-20 md:w-32 md:h-32 rounded-lg md:rounded-2xl flex items-center justify-center text-2xl md:text-4xl font-bold text-white"
+                      className="w-32 h-32 md:w-48 md:h-48 rounded-lg md:rounded-2xl flex items-center justify-center text-4xl md:text-6xl font-bold text-white"
                       style={{ backgroundColor: accentColor }}
                     >
                       {selectedReport.lecturer?.university?.name?.charAt(0) ||
