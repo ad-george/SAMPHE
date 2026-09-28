@@ -250,7 +250,7 @@ const StudentAttendance = () => {
         backgroundRepeat: "no-repeat",
       }}
     >
-      <div className="bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-2xl p-3 md:p-8 max-w-2xl w-full border border-slate-200">
+      <div className="bg-white/90 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-2xl p-3 md:p-8 max-w-2xl w-full border border-slate-200">
         {/* University Header — centered */}
         <div className="text-center border-b border-slate-200 pb-3 md:pb-6 mb-3 md:mb-6">
           {university?.logo ? (

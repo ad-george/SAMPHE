@@ -339,19 +339,24 @@ export class UniversityAdminService {
       fullName?: string;
       email?: string;
       phone?: string;
-      password?: string; // Add password field
+      password?: string;
       departmentId?: string;
       status?: string;
     },
   ) {
-    const updateData: any = {
-      staffNumber: data.staffNumber,
-      fullName: data.fullName,
-      email: data.email,
-      phone: data.phone,
-      departmentId: data.departmentId,
-      status: data.status,
-    };
+    const updateData: any = {};
+
+    if (data.staffNumber !== undefined)
+      updateData.staffNumber = data.staffNumber;
+    if (data.fullName !== undefined) updateData.fullName = data.fullName;
+    if (data.email !== undefined) updateData.email = data.email;
+    if (data.phone !== undefined) updateData.phone = data.phone;
+    if (data.status !== undefined) updateData.status = data.status;
+
+    // Only touch the department if a real ID was provided
+    if (data.departmentId) {
+      updateData.department = { connect: { id: data.departmentId } };
+    }
 
     // Hash password if provided
     if (data.password) {
