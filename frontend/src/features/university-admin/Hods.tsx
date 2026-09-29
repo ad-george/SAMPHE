@@ -20,7 +20,6 @@ const Hods = () => {
   const [sharePassword, setSharePassword] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
   const [manageTarget, setManageTarget] = useState<any>(null);
-  const [viewTarget, setViewTarget] = useState<any>(null);
   const [showCount, setShowCount] = useState(10);
 
   const fetchData = () => {
@@ -309,16 +308,10 @@ const Hods = () => {
                     {h.status}
                   </span>
                 </td>
-                <td className="p-5 space-x-2">
-                  <button
-                    onClick={() => setViewTarget(h)}
-                    className="text-blue-400 hover:text-blue-300 text-xs transition"
-                  >
-                    View
-                  </button>
+                <td className="p-5">
                   <button
                     onClick={() => setManageTarget(h)}
-                    className="text-cyan-400 hover:text-cyan-300 text-xs transition"
+                    className="text-xs px-3 py-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition font-medium"
                   >
                     Manage
                   </button>
@@ -352,119 +345,6 @@ const Hods = () => {
           </div>
         )}
       </div>
-
-      {/* View Modal with Share Button */}
-      {viewTarget && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-[#131c31] border border-slate-700 rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-white">
-                {viewTarget.fullName}
-              </h2>
-              <button
-                onClick={() => setViewTarget(null)}
-                className="text-slate-400 hover:text-white text-2xl"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div className="bg-slate-800/30 rounded-xl p-4 border border-slate-700">
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">
-                    Full Name
-                  </p>
-                  <p className="text-lg font-semibold text-white mt-1">
-                    {viewTarget.fullName}
-                  </p>
-                </div>
-                <div className="bg-slate-800/30 rounded-xl p-4 border border-slate-700">
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">
-                    Staff Number
-                  </p>
-                  <p className="text-lg font-semibold text-white mt-1">
-                    {viewTarget.staffNumber}
-                  </p>
-                </div>
-                <div className="bg-slate-800/30 rounded-xl p-4 border border-slate-700">
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">
-                    Email
-                  </p>
-                  <p className="text-lg font-semibold text-white mt-1">
-                    {viewTarget.email || "Not Provided"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="bg-slate-800/30 rounded-xl p-4 border border-slate-700">
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">
-                    Phone
-                  </p>
-                  <p className="text-lg font-semibold text-white mt-1">
-                    {viewTarget.phone || "Not Provided"}
-                  </p>
-                </div>
-                <div className="bg-slate-800/30 rounded-xl p-4 border border-slate-700">
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">
-                    Department
-                  </p>
-                  <p className="text-lg font-semibold text-white mt-1">
-                    {viewTarget.department?.name || "Not Assigned"}
-                  </p>
-                </div>
-                <div className="bg-slate-800/30 rounded-xl p-4 border border-slate-700">
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">
-                    Status
-                  </p>
-                  <span
-                    className={`text-sm font-bold px-3 py-1 rounded-full inline-block mt-1 ${viewTarget.status === "ACTIVE" ? "bg-emerald-500/20 text-emerald-400" : "bg-rose-500/20 text-rose-400"}`}
-                  >
-                    {viewTarget.status}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 pt-6 border-t border-slate-700 flex gap-3 flex-wrap">
-              <button
-                onClick={() => {
-                  setEditing(viewTarget);
-                  setViewTarget(null);
-                }}
-                className="flex-1 min-w-[100px] py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-sm font-medium transition text-white"
-              >
-                Edit HOD
-              </button>
-              <button
-                onClick={() => {
-                  openShare(viewTarget);
-                  setViewTarget(null);
-                }}
-                className="flex-1 min-w-[100px] py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-sm font-medium transition text-white"
-              >
-                Share
-              </button>
-              <button
-                onClick={() => {
-                  setDeleteTarget(viewTarget);
-                  setViewTarget(null);
-                }}
-                className="flex-1 min-w-[100px] py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-sm font-medium transition text-white"
-              >
-                Delete HOD
-              </button>
-              <button
-                onClick={() => setViewTarget(null)}
-                className="flex-1 min-w-[100px] py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-sm transition text-slate-300"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Share Modal */}
       {shareTarget && (
@@ -748,31 +628,66 @@ const Hods = () => {
       {/* Manage Modal */}
       {manageTarget && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-[#131c31] border border-slate-700 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-sm font-bold border border-slate-600">
+          <div className="bg-[#131c31] border border-slate-700 rounded-2xl p-6 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-5 pb-4 border-b border-slate-800">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-base font-bold border border-slate-600 text-white">
                 {manageTarget.fullName?.charAt(0)}
               </div>
-              <div>
-                <h3 className="text-white font-semibold">
+              <div className="min-w-0 flex-1">
+                <h3 className="text-white font-semibold truncate">
                   {manageTarget.fullName}
                 </h3>
-                <p className="text-xs text-slate-500">
-                  {manageTarget.staffNumber} •{" "}
-                  {manageTarget.department?.name || "Unassigned"}
+                <p className="text-xs text-slate-500 font-mono">
+                  {manageTarget.staffNumber}
                 </p>
               </div>
             </div>
+
+            {/* Details grid */}
+            <div className="grid grid-cols-2 gap-3 mb-5">
+              <div className="bg-slate-800/30 rounded-lg p-3 border border-slate-800 col-span-2">
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">
+                  Email
+                </p>
+                <p className="text-sm text-white truncate">
+                  {manageTarget.email || "Not Provided"}
+                </p>
+              </div>
+              <div className="bg-slate-800/30 rounded-lg p-3 border border-slate-800 col-span-2">
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">
+                  Phone
+                </p>
+                <p className="text-sm text-white truncate">
+                  {manageTarget.phone || "Not Provided"}
+                </p>
+              </div>
+              <div className="bg-slate-800/30 rounded-lg p-3 border border-slate-800">
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">
+                  Department
+                </p>
+                <p className="text-sm text-white truncate">
+                  {manageTarget.department?.name || "Not Assigned"}
+                </p>
+              </div>
+              <div className="bg-slate-800/30 rounded-lg p-3 border border-slate-800">
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">
+                  Status
+                </p>
+                <span
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-block ${
+                    manageTarget.status === "ACTIVE"
+                      ? "bg-emerald-500/20 text-emerald-400"
+                      : "bg-rose-500/20 text-rose-400"
+                  }`}
+                >
+                  {manageTarget.status}
+                </span>
+              </div>
+            </div>
+
+            {/* Actions */}
             <div className="space-y-2">
-              <button
-                onClick={() => {
-                  setViewTarget(manageTarget);
-                  setManageTarget(null);
-                }}
-                className="w-full text-left px-4 py-3 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition text-sm font-medium flex items-center gap-3"
-              >
-                <span>👁</span> View Details
-              </button>
               <button
                 onClick={() => {
                   setEditing(manageTarget);
@@ -784,16 +699,6 @@ const Hods = () => {
               </button>
               <button
                 onClick={() => {
-                  toggleStatus(manageTarget);
-                  setManageTarget(null);
-                }}
-                className={`w-full text-left px-4 py-3 rounded-xl border transition text-sm font-medium flex items-center gap-3 ${manageTarget.status === "ACTIVE" ? "bg-rose-500/10 text-rose-400 border-rose-500/20 hover:bg-rose-500/20" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20"}`}
-              >
-                <span>{manageTarget.status === "ACTIVE" ? "⊘" : "✓"}</span>{" "}
-                {manageTarget.status === "ACTIVE" ? "Deactivate" : "Activate"}
-              </button>
-              <button
-                onClick={() => {
                   setSharePassword(manageTarget.plainPassword || null);
                   setShareTarget(manageTarget);
                   setManageTarget(null);
@@ -801,6 +706,22 @@ const Hods = () => {
                 className="w-full text-left px-4 py-3 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition text-sm font-medium flex items-center gap-3"
               >
                 <span>📤</span> Share Credentials
+              </button>
+              <button
+                onClick={() => {
+                  toggleStatus(manageTarget);
+                  setManageTarget(null);
+                }}
+                className={`w-full text-left px-4 py-3 rounded-xl border transition text-sm font-medium flex items-center gap-3 ${
+                  manageTarget.status === "ACTIVE"
+                    ? "bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20"
+                    : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20"
+                }`}
+              >
+                <span>{manageTarget.status === "ACTIVE" ? "⊘" : "✓"}</span>
+                {manageTarget.status === "ACTIVE"
+                  ? "Deactivate Account"
+                  : "Activate Account"}
               </button>
               <div className="border-t border-slate-800 my-2" />
               <button
@@ -813,11 +734,12 @@ const Hods = () => {
                 <span>🗑</span> Remove HOD
               </button>
             </div>
+
             <button
               onClick={() => setManageTarget(null)}
-              className="w-full mt-4 py-2.5 rounded-xl bg-white/5 text-sm hover:bg-white/10 transition"
+              className="w-full mt-4 py-2.5 rounded-xl bg-white/5 text-sm hover:bg-white/10 transition text-slate-300"
             >
-              Cancel
+              Close
             </button>
           </div>
         </div>
