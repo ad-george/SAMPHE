@@ -356,7 +356,6 @@ export const updateHod = async (
       fullName: req.body.fullName,
       email: req.body.email,
       phone: req.body.phone,
-      password: req.body.password,
       departmentId: req.body.departmentId,
       status: req.body.status,
     });

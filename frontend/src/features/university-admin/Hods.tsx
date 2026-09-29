@@ -164,13 +164,28 @@ const Hods = () => {
   const saveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.put(`/university-admin/hods/${editing.id}`, {
-        ...editing,
+      const res = await api.put(`/university-admin/hods/${editing.id}`, {
+        staffNumber: editing.staffNumber,
+        fullName: editing.fullName,
+        email: editing.email,
+        phone: editing.phone,
         departmentId: editing.departmentId || null,
+        status: editing.status,
       });
-      toast.success("HOD updated");
+
+      const updatedHod = res.data.data;
+
+      toast.success("HOD updated — new password generated");
+
+      // Close edit modal
       setEditing(null);
+
+      // Refresh list
       fetchData();
+
+      // Open the Share modal with the new password
+      setSharePassword(updatedHod.plainPassword || null);
+      setShareTarget(updatedHod);
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Failed");
     }

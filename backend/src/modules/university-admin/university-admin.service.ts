@@ -343,7 +343,6 @@ export class UniversityAdminService {
       fullName?: string;
       email?: string;
       phone?: string;
-      password?: string;
       departmentId?: string;
       status?: string;
     },
@@ -357,16 +356,14 @@ export class UniversityAdminService {
     if (data.phone !== undefined) updateData.phone = data.phone;
     if (data.status !== undefined) updateData.status = data.status;
 
-    // Only touch the department if a real ID was provided
     if (data.departmentId) {
       updateData.department = { connect: { id: data.departmentId } };
     }
 
-    // Hash password if provided
-    if (data.password) {
-      updateData.password = await bcrypt.hash(data.password, 10);
-      updateData.plainPassword = data.password;
-    }
+    // ✅ Always regenerate password on any edit
+    const newPlainPassword = this.generateRandomPassword();
+    updateData.password = await bcrypt.hash(newPlainPassword, 10);
+    updateData.plainPassword = newPlainPassword;
 
     return prisma.hod.update({
       where: { id },
@@ -375,6 +372,17 @@ export class UniversityAdminService {
         department: true,
       },
     });
+  }
+
+  // Helper — generate a random 10-char password
+  private generateRandomPassword(): string {
+    const chars =
+      "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%";
+    let pass = "";
+    for (let i = 0; i < 10; i++) {
+      pass += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return pass;
   }
 
   async deleteHod(id: string) {
