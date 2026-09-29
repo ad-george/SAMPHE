@@ -18,7 +18,6 @@ const Hods = () => {
   const [editing, setEditing] = useState<any>(null);
   const [shareTarget, setShareTarget] = useState<any>(null);
   const [sharePassword, setSharePassword] = useState<string | null>(null);
-  const [resettingPassword, setResettingPassword] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
   const [manageTarget, setManageTarget] = useState<any>(null);
   const [viewTarget, setViewTarget] = useState<any>(null);
@@ -94,7 +93,7 @@ const Hods = () => {
   };
 
   const openShare = (hod: any) => {
-    setSharePassword(null);
+    setSharePassword(hod.plainPassword || null);
     setShareTarget(hod);
   };
 
@@ -104,23 +103,6 @@ const Hods = () => {
       target.department?.name ||
       "Not Assigned"
     );
-  };
-
-  const resetAndShowPassword = async (hodId: string) => {
-    setResettingPassword(true);
-    try {
-      const newPass = generatePass();
-      await api.put(`/university-admin/hods/${hodId}`, {
-        password: newPass,
-      });
-      setSharePassword(newPass);
-      toast.success("Password reset — copy it now, it won't be shown again");
-      fetchData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to reset password");
-    } finally {
-      setResettingPassword(false);
-    }
   };
 
   const shareViaWhatsApp = (target: any) => {
@@ -525,45 +507,30 @@ const Hods = () => {
             </div>
 
             {!sharePassword && (
-              <button
-                onClick={() => resetAndShowPassword(shareTarget.id)}
-                disabled={resettingPassword}
-                className="w-full mb-4 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 transition text-sm font-medium text-white disabled:opacity-50"
-              >
-                {resettingPassword
-                  ? "Resetting..."
-                  : "🔑 Reset Password & Show"}
-              </button>
-            )}
-
-            {sharePassword && (
               <p className="text-[11px] text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-lg p-2 mb-4 leading-snug">
-                ⚠ Copy this password now. Once you close this window it cannot
-                be shown again.
+                ⚠ Password not available. The HOD may have changed it. Use "Edit
+                HOD" to set a new one if needed.
               </p>
             )}
 
             <div className="grid grid-cols-3 gap-3">
               <button
                 onClick={() => copyCreds(shareTarget)}
-                disabled={!sharePassword}
-                className="py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 transition text-sm font-medium flex flex-col items-center gap-1 disabled:opacity-40"
+                className="py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 transition text-sm font-medium flex flex-col items-center gap-1"
               >
                 <span className="text-xl">📋</span>
                 Copy
               </button>
               <button
                 onClick={() => shareViaWhatsApp(shareTarget)}
-                disabled={!sharePassword}
-                className="py-3 rounded-xl bg-green-600 hover:bg-green-500 transition text-sm font-medium flex flex-col items-center gap-1 disabled:opacity-40"
+                className="py-3 rounded-xl bg-green-600 hover:bg-green-500 transition text-sm font-medium flex flex-col items-center gap-1"
               >
                 <span className="text-xl">💬</span>
                 WhatsApp
               </button>
               <button
                 onClick={() => shareViaEmail(shareTarget)}
-                disabled={!sharePassword}
-                className="py-3 rounded-xl bg-blue-600 hover:bg-blue-500 transition text-sm font-medium flex flex-col items-center gap-1 disabled:opacity-40"
+                className="py-3 rounded-xl bg-blue-600 hover:bg-blue-500 transition text-sm font-medium flex flex-col items-center gap-1"
               >
                 <span className="text-xl">✉️</span>
                 Email
@@ -812,7 +779,7 @@ const Hods = () => {
               </button>
               <button
                 onClick={() => {
-                  setSharePassword(null);
+                  setSharePassword(manageTarget.plainPassword || null);
                   setShareTarget(manageTarget);
                   setManageTarget(null);
                 }}

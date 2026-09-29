@@ -222,6 +222,7 @@ model Hod {
   password     String?    // Changed to optional to support future University SSO integration
   status       String     @default("ACTIVE") // ACTIVE, INACTIVE, SUSPENDED
   lastLogin    DateTime?
+  plainPassword String?
   
   // Relations
   departmentId String

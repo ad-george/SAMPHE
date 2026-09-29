@@ -263,13 +263,16 @@ export class UniversityAdminService {
   // --- HODs ---
 
   async getHods(universityId: string) {
-    return prisma.hod.findMany({
+    const hods = await prisma.hod.findMany({
       where: { universityId },
       include: {
         department: true,
       },
       orderBy: { fullName: "asc" },
     });
+
+    // Strip the hashed password from the response, keep plainPassword
+    return hods.map(({ password, ...rest }) => rest);
   }
 
   async getHodById(universityId: string, hodId: string) {
@@ -322,6 +325,7 @@ export class UniversityAdminService {
         email: data.email || "",
         phone: data.phone || "",
         password: hashedPassword,
+        plainPassword: data.password || null,
         departmentId: data.departmentId,
         universityId: data.universityId,
         status: "ACTIVE",
@@ -361,6 +365,7 @@ export class UniversityAdminService {
     // Hash password if provided
     if (data.password) {
       updateData.password = await bcrypt.hash(data.password, 10);
+      updateData.plainPassword = data.password;
     }
 
     return prisma.hod.update({
