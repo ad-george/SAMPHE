@@ -753,8 +753,15 @@ export class HodService {
           continue;
         }
 
+        // Duplicate: same code AND program AND year AND semester
         const exists = await prisma.unit.findFirst({
-          where: { code: row.code.trim(), departmentId: hod.departmentId },
+          where: {
+            code: row.code.trim(),
+            programId: program.id,
+            studyYearId: studyYear.id,
+            semesterId: semester.id,
+            departmentId: hod.departmentId,
+          },
         });
         if (exists) {
           results.skipped++;
