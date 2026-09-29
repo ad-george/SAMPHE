@@ -55,6 +55,7 @@ const Lecturers = () => {
   const [assignedUnits, setAssignedUnits] = useState<any[]>([]);
   const [selectedUnits, setSelectedUnits] = useState<string[]>([]);
   const [loadingUnits, setLoadingUnits] = useState(false);
+  const [unitSearch, setUnitSearch] = useState("");
 
   // Get HOD profile for email/phone
   const [hodProfile, setHodProfile] = useState<any>(null);
@@ -292,6 +293,7 @@ const Lecturers = () => {
   const openAssignModal = (lecturer: any) => {
     setAssignModal(lecturer);
     setSelectedUnits([]);
+    setUnitSearch("");
     fetchAvailableUnits(lecturer.id);
     fetchAssignedUnits(lecturer.id);
   };
@@ -314,6 +316,17 @@ const Lecturers = () => {
     });
     return Array.from(programMap.values());
   };
+
+  const filteredAvailableUnits = availableUnits.filter((u: any) => {
+    const q = unitSearch.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      u.name?.toLowerCase().includes(q) ||
+      u.code?.toLowerCase().includes(q) ||
+      u.studyYear?.name?.toLowerCase().includes(q) ||
+      u.program?.name?.toLowerCase().includes(q)
+    );
+  });
 
   const filteredLecturers = lecturers.filter(
     (l) =>
@@ -1117,7 +1130,7 @@ const Lecturers = () => {
       {/* Assign Units Modal */}
       {assignModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[70] p-4">
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-lg shadow-2xl max-h-[90vh] flex flex-col">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-4xl shadow-2xl max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="text-lg font-bold text-slate-800">
@@ -1129,6 +1142,7 @@ const Lecturers = () => {
                 onClick={() => {
                   setAssignModal(null);
                   setSelectedUnits([]);
+                  setUnitSearch("");
                 }}
                 className="text-slate-400 hover:text-slate-700 text-xl"
               >
@@ -1136,98 +1150,114 @@ const Lecturers = () => {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-6">
-              {/* Assigned Units */}
-              <div>
-                <h4 className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                  <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 rounded-full">
-                    {assignedUnits.length}
-                  </span>
-                  Assigned Units
-                </h4>
-                {assignedUnits.length === 0 ? (
-                  <p className="text-sm text-slate-400">No units assigned</p>
-                ) : (
-                  <div className="space-y-1.5">
-                    {assignedUnits.map((a: any) => (
-                      <div
-                        key={a.id}
-                        className="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg border border-slate-100"
-                      >
-                        <div>
-                          <span className="text-sm font-medium text-slate-700">
-                            {a.unit.name}
-                          </span>
-                          <span className="text-xs text-slate-400 ml-2">
-                            {a.unit.code} • {a.unit.program?.name}
-                          </span>
-                        </div>
-                        <button
-                          onClick={() =>
-                            handleUnassignUnit(assignModal.id, a.unitId)
-                          }
-                          className="text-rose-500 hover:text-rose-700 text-sm px-2 py-1 rounded hover:bg-rose-50 transition"
+            <div className="flex-1 overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Assigned Units */}
+                <div>
+                  <h4 className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                    <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 rounded-full">
+                      {assignedUnits.length}
+                    </span>
+                    Assigned Units
+                  </h4>
+                  {assignedUnits.length === 0 ? (
+                    <p className="text-sm text-slate-400">No units assigned</p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {assignedUnits.map((a: any) => (
+                        <div
+                          key={a.id}
+                          className="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg border border-slate-100"
                         >
-                          ✕
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Available Units */}
-              <div>
-                <h4 className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                  <span className="bg-indigo-100 text-indigo-700 text-xs px-2 py-0.5 rounded-full">
-                    {availableUnits.length}
-                  </span>
-                  Available Units
-                </h4>
-                {loadingUnits ? (
-                  <p className="text-sm text-slate-400">Loading...</p>
-                ) : availableUnits.length === 0 ? (
-                  <p className="text-sm text-slate-400">
-                    No available units to assign
-                  </p>
-                ) : (
-                  <div className="space-y-1.5 max-h-48 overflow-y-auto">
-                    {availableUnits.map((unit: any) => (
-                      <label
-                        key={unit.id}
-                        className={`flex items-center gap-3 p-2.5 rounded-lg border transition cursor-pointer ${
-                          selectedUnits.includes(unit.id)
-                            ? "bg-indigo-50 border-indigo-300"
-                            : "bg-slate-50 border-slate-100 hover:bg-slate-100"
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedUnits.includes(unit.id)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedUnits([...selectedUnits, unit.id]);
-                            } else {
-                              setSelectedUnits(
-                                selectedUnits.filter((id) => id !== unit.id),
-                              );
+                          <div>
+                            <span className="text-sm font-medium text-slate-700">
+                              {a.unit.name}
+                            </span>
+                            <span className="text-xs text-slate-400 ml-2">
+                              {a.unit.code} • {a.unit.program?.name}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() =>
+                              handleUnassignUnit(assignModal.id, a.unitId)
                             }
-                          }}
-                          className="w-4 h-4 text-indigo-600 rounded"
-                        />
-                        <div>
-                          <span className="text-sm font-medium text-slate-700">
-                            {unit.name}
-                          </span>
-                          <span className="text-xs text-slate-400 ml-2">
-                            {unit.code} • {unit.program?.name} •{" "}
-                            {unit.studyYear?.name} • {unit.semester?.name}
-                          </span>
+                            className="text-rose-500 hover:text-rose-700 text-sm px-2 py-1 rounded hover:bg-rose-50 transition"
+                          >
+                            ✕
+                          </button>
                         </div>
-                      </label>
-                    ))}
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Available Units */}
+                <div>
+                  <h4 className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                    <span className="bg-indigo-100 text-indigo-700 text-xs px-2 py-0.5 rounded-full">
+                      {availableUnits.length}
+                    </span>
+                    Available Units
+                  </h4>
+
+                  {/* 🔍 Search bar */}
+                  <input
+                    type="text"
+                    placeholder="Search by name, code, year, or program..."
+                    value={unitSearch}
+                    onChange={(e) => setUnitSearch(e.target.value)}
+                    className="w-full mb-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 focus:border-indigo-400 focus:outline-none placeholder-slate-400"
+                  />
+
+                  {loadingUnits ? (
+                    <p className="text-sm text-slate-400">Loading...</p>
+                  ) : availableUnits.length === 0 ? (
+                    <p className="text-sm text-slate-400">
+                      No available units to assign
+                    </p>
+                  ) : filteredAvailableUnits.length === 0 ? (
+                    <p className="text-sm text-slate-400">
+                      No units match your search
+                    </p>
+                  ) : (
+                    <div className="space-y-1.5 max-h-[400px] overflow-y-auto">
+                      {filteredAvailableUnits.map((unit: any) => (
+                        <label
+                          key={unit.id}
+                          className={`flex items-center gap-3 p-2.5 rounded-lg border transition cursor-pointer ${
+                            selectedUnits.includes(unit.id)
+                              ? "bg-indigo-50 border-indigo-300"
+                              : "bg-slate-50 border-slate-100 hover:bg-slate-100"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedUnits.includes(unit.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedUnits([...selectedUnits, unit.id]);
+                              } else {
+                                setSelectedUnits(
+                                  selectedUnits.filter((id) => id !== unit.id),
+                                );
+                              }
+                            }}
+                            className="w-4 h-4 text-indigo-600 rounded"
+                          />
+                          <div>
+                            <span className="text-sm font-medium text-slate-700">
+                              {unit.name}
+                            </span>
+                            <span className="text-xs text-slate-400 ml-2">
+                              {unit.code} • {unit.program?.name} •{" "}
+                              {unit.studyYear?.name} • {unit.semester?.name}
+                            </span>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -1236,6 +1266,7 @@ const Lecturers = () => {
                 onClick={() => {
                   setAssignModal(null);
                   setSelectedUnits([]);
+                  setUnitSearch("");
                 }}
                 className="flex-1 py-2.5 rounded-xl bg-slate-100 text-sm hover:bg-slate-200 transition text-slate-700"
               >
