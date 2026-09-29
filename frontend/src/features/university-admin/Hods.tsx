@@ -638,6 +638,7 @@ const Hods = () => {
               </button>
               <button
                 onClick={() => {
+                  setSharePassword(credentials.password);
                   setShareTarget(credentials);
                   setCredentials(null);
                 }}
