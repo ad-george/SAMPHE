@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
-import { getSemesterWeekBuckets } from "../../utils/helpers";
 import bcrypt from "bcryptjs";
 import {
+  getSemesterWeekBuckets,
   haversineDistance,
   generateBrowserFingerprint,
 } from "../../utils/helpers";
@@ -56,9 +56,7 @@ export class LecturerService {
 
     const assignedUnitIds = lecturer.assignments.map((a) => a.unitId);
 
-    // ============================================================
     // SEMESTER RESOLUTION
-    // ============================================================
     const activeYear = await prisma.academicYear.findFirst({
       where: { status: "ACTIVE", archived: false },
     });
@@ -81,9 +79,7 @@ export class LecturerService {
         ? new Date(activeYear.endDate)
         : new Date();
 
-    // ============================================================
-    // FETCH SESSIONS (assigned units, semester-scoped, non-ACTIVE)
-    // ============================================================
+    // SESSIONS (assigned units, semester-scoped, non-ACTIVE)
     const allSessions = await prisma.attendanceSession.findMany({
       where: {
         lecturerId,
@@ -104,7 +100,7 @@ export class LecturerService {
       },
     });
 
-    // Today's sessions (based on sessionDate)
+    // Today's sessions
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
     const todayEnd = new Date();
@@ -114,7 +110,7 @@ export class LecturerService {
       return d >= todayStart && d <= todayEnd;
     });
 
-    // Active session (unchanged behavior, still real-time)
+    // Active session (real-time, unchanged)
     const activeSession = await this.getActiveSession(lecturerId);
 
     // Avg attendance = PRESENT / totalStudents across semester
@@ -129,7 +125,7 @@ export class LecturerService {
         ? ((totalPresent / totalEnrolled) * 100).toFixed(1)
         : "0.0";
 
-    // Recent sessions (5 most recent, semester-scoped)
+    // Recent sessions
     const recentSessions = allSessions.slice(0, 5).map((s) => {
       const present = s.records.filter((r) => r.status === "PRESENT").length;
       const total = s.totalStudents || 0;
@@ -280,9 +276,7 @@ export class LecturerService {
 
     const totalStudents = await prisma.student.count({
       where: {
-        registeredUnits: {
-          some: { id: data.unitId },
-        },
+        registeredUnits: { some: { id: data.unitId } },
         archived: false,
       },
     });
@@ -397,82 +391,43 @@ export class LecturerService {
             program: true,
             studyYear: true,
             semester: true,
-            department: {
-              include: {
-                faculty: true,
-              },
-            },
+            department: { include: { faculty: true } },
           },
         },
         lecturer: {
           include: {
             university: true,
-            department: {
-              include: {
-                faculty: true,
-              },
-            },
+            department: { include: { faculty: true } },
           },
         },
         records: { include: { student: true } },
       },
     });
 
-    // ❌ Session doesn't exist → return null
-    if (!session) {
-      return null;
-    }
+    if (!session) return null;
+    if (session.status !== "ACTIVE") return null;
 
-    // ❌ Session not active → return null
-    if (session.status !== "ACTIVE") {
-      return null;
-    }
-
-    // ❌ Session expired → return null
     const elapsed = Math.floor(
       (Date.now() - new Date(session.createdAt).getTime()) / 60000,
     );
-    if (elapsed > session.duration) {
-      return null;
-    }
+    if (elapsed > session.duration) return null;
 
     return session;
   }
 
   async markAttendance(token: string, data: any, req?: any) {
-    console.log("🔍 markAttendance called with:", { token, regNo: data.regNo });
-
-    // ============================================================
-    // 1. VALIDATE SESSION - IMMEDIATE 404
-    // ============================================================
-
     const session = await prisma.attendanceSession.findUnique({
       where: { token },
       include: { unit: true },
     });
 
-    // ❌ Session doesn't exist → 404
-    if (!session) {
-      throw new Error("ATTENDANCE_LINK_NOT_FOUND");
-    }
+    if (!session) throw new Error("ATTENDANCE_LINK_NOT_FOUND");
+    if (session.status !== "ACTIVE") throw new Error("ATTENDANCE_LINK_NOT_FOUND");
 
-    // ❌ Session not active → 404
-    if (session.status !== "ACTIVE") {
-      throw new Error("ATTENDANCE_LINK_NOT_FOUND");
-    }
-
-    // ❌ Session expired → 404
     const elapsed = Math.floor(
       (Date.now() - new Date(session.createdAt).getTime()) / 60000,
     );
-
-    if (elapsed > session.duration) {
-      throw new Error("ATTENDANCE_LINK_NOT_FOUND");
-    }
-
-    // ============================================================
-    // 2. VALIDATE STUDENT
-    // ============================================================
+    if (elapsed > session.duration) throw new Error("ATTENDANCE_LINK_NOT_FOUND");
 
     if (!data.regNo || data.regNo.trim() === "") {
       throw new Error("Registration number is required");
@@ -480,69 +435,38 @@ export class LecturerService {
 
     const student = await prisma.student.findFirst({
       where: {
-        regNo: {
-          equals: data.regNo.trim(),
-          mode: "insensitive",
-        },
+        regNo: { equals: data.regNo.trim(), mode: "insensitive" },
       },
     });
+    if (!student) throw new Error("Student not found");
 
-    if (!student) {
-      throw new Error("Student not found");
-    }
-
-    // Check if student is registered for this unit
     const isRegistered = await prisma.student.findFirst({
       where: {
         id: student.id,
-        registeredUnits: {
-          some: {
-            id: session.unitId,
-          },
-        },
+        registeredUnits: { some: { id: session.unitId } },
       },
     });
-
-    if (!isRegistered) {
+    if (!isRegistered)
       throw new Error("Student is not registered for this unit");
-    }
-
-    // ============================================================
-    // 3. CHECK DUPLICATE - Same Student
-    // ============================================================
 
     const existingStudent = await prisma.attendanceRecord.findFirst({
       where: { sessionId: session.id, studentId: student.id },
     });
-
-    if (existingStudent) {
-      throw new Error("You have already checked in");
-    }
-
-    // ============================================================
-    // 4. GENERATE BROWSER FINGERPRINT
-    // ============================================================
+    if (existingStudent) throw new Error("You have already checked in");
 
     let fingerprint: string | null = null;
     if (req) {
       fingerprint = generateBrowserFingerprint(req);
     }
 
-    // ============================================================
-    // 5. CHECK DEVICE - Layer 2 & 3
-    // ============================================================
-
     if (fingerprint) {
-      // ✅ Layer 2 & 3: Check if THIS device was used by ANY student
       const existingDevice = await prisma.attendanceRecord.findFirst({
         where: {
           sessionId: session.id,
           browserFingerprint: fingerprint,
         },
       });
-
       if (existingDevice) {
-        // Check if it was the SAME student
         if (existingDevice.studentId === student.id) {
           throw new Error("You have already checked in from another device");
         } else {
@@ -551,10 +475,6 @@ export class LecturerService {
       }
     }
 
-    // ============================================================
-    // 6. CHECK GOOGLE ACCOUNT - Layer 4
-    // ============================================================
-
     if (data.googleAccountId) {
       const existingAccount = await prisma.attendanceRecord.findFirst({
         where: {
@@ -562,16 +482,12 @@ export class LecturerService {
           googleAccountId: data.googleAccountId,
         },
       });
-
       if (existingAccount) {
         throw new Error(
           "This Google account has already been used for this session",
         );
       }
     }
-    // ============================================================
-    // 7. VALIDATE GPS
-    // ============================================================
 
     if (!data.studentLat || !data.studentLng) {
       throw new Error(
@@ -583,7 +499,6 @@ export class LecturerService {
       throw new Error("Lecturer's GPS location is not set for this session");
     }
 
-    // ✅ Reject weak GPS signal (tolerance scales with radius)
     const accuracyTolerance = Math.max(200, session.radius);
     if (data.studentAccuracy && data.studentAccuracy > accuracyTolerance) {
       throw new Error(
@@ -599,7 +514,6 @@ export class LecturerService {
       data.studentLng,
     );
 
-    // ✅ Enforce distance — must be within session radius
     if (distance > session.radius) {
       throw new Error(
         `You are ${Math.round(distance)}m away from the class. You must be within ${session.radius}m to mark attendance.`,
@@ -607,10 +521,6 @@ export class LecturerService {
     }
 
     const status = "PRESENT";
-
-    // ============================================================
-    // 9. CREATE AUDIT LOG
-    // ============================================================
 
     try {
       await prisma.auditLog.create({
@@ -630,10 +540,6 @@ export class LecturerService {
       console.error("Failed to create audit log:", err);
     }
 
-    // ============================================================
-    // 10. CREATE ATTENDANCE RECORD
-    // ============================================================
-
     const record = await prisma.attendanceRecord.create({
       data: {
         sessionId: session.id,
@@ -644,8 +550,6 @@ export class LecturerService {
         googleAccountId: data.googleAccountId || null,
       },
     });
-
-    console.log("🔍 Attendance record created:", record.id);
 
     return {
       ...record,
@@ -696,15 +600,8 @@ export class LecturerService {
       },
     });
 
-    // ❌ Session doesn't exist → return null
-    if (!session) {
-      return null;
-    }
-
-    // ❌ Session is not ACTIVE → return null
-    if (session.status !== "ACTIVE") {
-      return null;
-    }
+    if (!session) return null;
+    if (session.status !== "ACTIVE") return null;
 
     return session;
   }
@@ -726,13 +623,7 @@ export class LecturerService {
   async getMyStudents(lecturerId: string, programId?: string) {
     const lecturer = await prisma.lecturer.findUnique({
       where: { id: lecturerId },
-      include: {
-        assignments: {
-          include: {
-            unit: true,
-          },
-        },
-      },
+      include: { assignments: { include: { unit: true } } },
     });
     if (!lecturer) return [];
 
@@ -740,11 +631,7 @@ export class LecturerService {
 
     const students = await prisma.student.findMany({
       where: {
-        registeredUnits: {
-          some: {
-            id: { in: unitIds },
-          },
-        },
+        registeredUnits: { some: { id: { in: unitIds } } },
         archived: false,
       },
       include: {
@@ -763,7 +650,6 @@ export class LecturerService {
     return students;
   }
 
-  // --- Student Detailed Attendance (period + per-unit) ---
   async getStudentDetail(lecturerId: string, studentId: string, filters: any) {
     const student = await prisma.student.findUnique({
       where: { id: studentId },
@@ -845,7 +731,6 @@ export class LecturerService {
     };
   }
 
-  // --- Delete Session ---
   async deleteSession(lecturerId: string, sessionId: string) {
     const session = await prisma.attendanceSession.findFirst({
       where: { id: sessionId, lecturerId },
@@ -855,7 +740,6 @@ export class LecturerService {
     return prisma.attendanceSession.delete({ where: { id: sessionId } });
   }
 
-  // --- History ---
   async getHistory(lecturerId: string, filters: any) {
     const where: any = { lecturerId, status: { not: "ACTIVE" } };
     if (filters.unitId) where.unitId = filters.unitId;
@@ -876,11 +760,7 @@ export class LecturerService {
         lecturer: {
           include: {
             university: true,
-            department: {
-              include: {
-                faculty: true,
-              },
-            },
+            department: { include: { faculty: true } },
           },
         },
         records: {
@@ -899,10 +779,8 @@ export class LecturerService {
     });
   }
 
-  // --- Student Search ---
   async searchStudent(lecturerId: string, query: string) {
     const q = query.toLowerCase();
-    // Students in lecturer's units
     const lecturer = await prisma.lecturer.findUnique({
       where: { id: lecturerId },
       include: {
@@ -945,7 +823,7 @@ export class LecturerService {
       },
     });
     if (!student) throw new Error("Student not found");
-    // Filter to only this lecturer's sessions
+
     const relevant = student.records.filter(
       (r: any) => r.session.lecturerId === lecturerId,
     );
@@ -965,7 +843,7 @@ export class LecturerService {
     };
   }
 
-  // --- Analytics ---
+  // --- Analytics (student attendance) ---
   async getAnalytics(lecturerId: string) {
     const lecturer = await prisma.lecturer.findUnique({
       where: { id: lecturerId },
@@ -991,10 +869,9 @@ export class LecturerService {
 
     const assignedUnits = lecturer.assignments.map((a) => a.unit);
     const assignedUnitIds = assignedUnits.map((u) => u.id);
+    const unitById = new Map(assignedUnits.map((u) => [u.id, u]));
 
-    // ============================================================
     // SEMESTER RESOLUTION
-    // ============================================================
     const activeYear = await prisma.academicYear.findFirst({
       where: { status: "ACTIVE", archived: false },
     });
@@ -1019,9 +896,7 @@ export class LecturerService {
 
     const weekBuckets = getSemesterWeekBuckets(semesterStart, semesterEnd);
 
-    // ============================================================
-    // SESSIONS for his assigned units (semester-scoped)
-    // ============================================================
+    // SESSIONS
     const sessions = await prisma.attendanceSession.findMany({
       where: {
         lecturerId,
@@ -1038,9 +913,7 @@ export class LecturerService {
       },
     });
 
-    // ============================================================
     // WEEKLY TREND
-    // ============================================================
     const weekly = weekBuckets.map((bucket) => {
       const weekSessions = sessions.filter((s) => {
         const d = new Date(s.sessionDate);
@@ -1052,14 +925,11 @@ export class LecturerService {
         present += s.records.filter((r) => r.status === "PRESENT").length;
         expected += s.totalStudents || 0;
       });
-      const rate =
-        expected > 0 ? Math.round((present / expected) * 100) : 0;
+      const rate = expected > 0 ? Math.round((present / expected) * 100) : 0;
       return { week: bucket.label, rate };
     });
 
-    // ============================================================
-    // BY UNIT — includes ALL assigned units (even 0 sessions)
-    // ============================================================
+    // BY UNIT
     const unitAgg = new Map<
       string,
       { name: string; present: number; expected: number }
@@ -1086,9 +956,7 @@ export class LecturerService {
       };
     });
 
-    // ============================================================
-    // BY PROGRAM (program + year) — includes ALL assigned units
-    // ============================================================
+    // BY PROGRAM (program + year)
     const programAgg = new Map<
       string,
       { name: string; present: number; expected: number }
@@ -1104,7 +972,7 @@ export class LecturerService {
       }
     });
     sessions.forEach((s) => {
-      const unit = assignedUnits.find((u) => u.id === s.unitId);
+      const unit = unitById.get(s.unitId);
       if (!unit) return;
       const key = `${unit.programId}|${unit.studyYearId}`;
       const agg = programAgg.get(key);
@@ -1123,9 +991,7 @@ export class LecturerService {
       }))
       .sort((a, b) => parseFloat(b.rate) - parseFloat(a.rate));
 
-    // ============================================================
-    // OVERALL (avgRate)
-    // ============================================================
+    // OVERALL
     let totalPresent = 0;
     let totalExpected = 0;
     sessions.forEach((s) => {
@@ -1137,9 +1003,7 @@ export class LecturerService {
         ? ((totalPresent / totalExpected) * 100).toFixed(1)
         : "0.0";
 
-    // ============================================================
-    // BEST / WORST (from byUnit, full list)
-    // ============================================================
+    // BEST / WORST
     const best =
       byUnit.length > 0
         ? byUnit.reduce((a, b) =>
@@ -1153,10 +1017,7 @@ export class LecturerService {
           )
         : null;
 
-    // ============================================================
-    // INTERVENTION LIST — per-student, <75%, units he teaches
-    // ============================================================
-    // Get students registered in his units
+    // INTERVENTION LIST (per student, <75%)
     const students = await prisma.student.findMany({
       where: {
         archived: false,
@@ -1167,26 +1028,16 @@ export class LecturerService {
         fullName: true,
         regNo: true,
         program: { select: { name: true } },
+        registeredUnits: { select: { id: true } },
       },
     });
 
-    // For each student: sessions in units they're registered for AND lecturer taught
-    // Group sessions by unitId
     const sessionsByUnit = new Map<string, typeof sessions>();
     sessions.forEach((s) => {
       const arr = sessionsByUnit.get(s.unitId) || [];
       arr.push(s);
       sessionsByUnit.set(s.unitId, arr);
     });
-
-    // Get each student's registered units
-    const studentUnits = await prisma.student.findMany({
-      where: { id: { in: students.map((s) => s.id) } },
-      select: { id: true, registeredUnits: { select: { id: true } } },
-    });
-    const studentUnitsMap = new Map(
-      studentUnits.map((s) => [s.id, s.registeredUnits.map((u) => u.id)]),
-    );
 
     const presentByStudent = new Map<string, Set<string>>();
     sessions.forEach((s) => {
@@ -1200,7 +1051,7 @@ export class LecturerService {
 
     const lowAttendees = students
       .map((s) => {
-        const unitIds = studentUnitsMap.get(s.id) || [];
+        const unitIds = s.registeredUnits.map((u) => u.id);
         const relevantSessions = unitIds.flatMap(
           (uid) => sessionsByUnit.get(uid) || [],
         );
@@ -1235,7 +1086,7 @@ export class LecturerService {
     };
   }
 
-  // --- Sessions Analytics ---
+  // --- Sessions Analytics (delivery: sessions held / expected) ---
   async getSessionsAnalytics(lecturerId: string) {
     const lecturer = await prisma.lecturer.findUnique({
       where: { id: lecturerId },
@@ -1261,11 +1112,10 @@ export class LecturerService {
 
     const assignedUnits = lecturer.assignments.map((a) => a.unit);
     const assignedUnitIds = assignedUnits.map((u) => u.id);
+    const unitById = new Map(assignedUnits.map((u) => [u.id, u]));
     const totalUnits = assignedUnits.length;
 
-    // ============================================================
     // SEMESTER RESOLUTION
-    // ============================================================
     const activeYear = await prisma.academicYear.findFirst({
       where: { status: "ACTIVE", archived: false },
     });
@@ -1292,9 +1142,6 @@ export class LecturerService {
     const now = new Date();
     const weeksElapsed = weekBuckets.filter((w) => w.start <= now).length;
 
-    // ============================================================
-    // SESSIONS
-    // ============================================================
     const sessions = await prisma.attendanceSession.findMany({
       where: {
         lecturerId,
@@ -1305,9 +1152,7 @@ export class LecturerService {
       select: { id: true, unitId: true, sessionDate: true },
     });
 
-    // ============================================================
     // WEEKLY (distinct units delivered / totalUnits)
-    // ============================================================
     const weekly = weekBuckets.map((bucket) => {
       const weekSessions = sessions.filter((s) => {
         const d = new Date(s.sessionDate);
@@ -1321,9 +1166,7 @@ export class LecturerService {
       return { week: bucket.label, rate };
     });
 
-    // ============================================================
-    // BY UNIT (all assigned units; rate = held / weeksElapsed)
-    // ============================================================
+    // BY UNIT
     const unitSessionCount = new Map<string, number>();
     sessions.forEach((s) => {
       unitSessionCount.set(
@@ -1341,9 +1184,7 @@ export class LecturerService {
       return { id: u.id, name: u.name, rate };
     });
 
-    // ============================================================
-    // BY PROGRAM (programId + studyYearId, all his units)
-    // ============================================================
+    // BY PROGRAM (programId + studyYearId)
     const programAgg = new Map<
       string,
       { name: string; units: Set<string>; held: number }
@@ -1360,7 +1201,7 @@ export class LecturerService {
       programAgg.get(key)!.units.add(u.id);
     });
     sessions.forEach((s) => {
-      const unit = assignedUnits.find((u) => u.id === s.unitId);
+      const unit = unitById.get(s.unitId);
       if (!unit) return;
       const key = `${unit.programId}|${unit.studyYearId}`;
       const agg = programAgg.get(key);
@@ -1379,18 +1220,13 @@ export class LecturerService {
       })
       .sort((a, b) => b.rate - a.rate);
 
-    // ============================================================
     // OVERALL
-    // ============================================================
     const totalExpected = totalUnits * weeksElapsed;
     const avgRate =
       totalExpected > 0
         ? Math.min(100, Math.round((sessions.length / totalExpected) * 100))
         : 0;
 
-    // ============================================================
-    // BEST / WORST
-    // ============================================================
     const best =
       byUnit.length > 0
         ? byUnit.reduce((a, b) => (a.rate > b.rate ? a : b))
@@ -1400,9 +1236,6 @@ export class LecturerService {
         ? byUnit.reduce((a, b) => (a.rate < b.rate ? a : b))
         : null;
 
-    // ============================================================
-    // INTERVENTION LIST (units < 75%)
-    // ============================================================
     const lowUnits = byUnit
       .filter((u) => u.rate < 75)
       .sort((a, b) => a.rate - b.rate);
@@ -1426,10 +1259,7 @@ export class LecturerService {
     format: "pdf" | "excel",
   ) {
     const session = await prisma.attendanceSession.findFirst({
-      where: {
-        id: sessionId,
-        lecturerId,
-      },
+      where: { id: sessionId, lecturerId },
       include: {
         unit: {
           include: {
@@ -1441,24 +1271,15 @@ export class LecturerService {
         lecturer: {
           include: {
             university: true,
-            department: {
-              include: {
-                faculty: true,
-              },
-            },
+            department: { include: { faculty: true } },
           },
         },
-        records: {
-          include: {
-            student: true,
-          },
-        },
+        records: { include: { student: true } },
       },
     });
 
     if (!session) throw new Error("Session not found");
 
-    // Use totalStudents (enrolled) as denominator — matches the modal
     const total = session.totalStudents || 0;
     const present =
       session.records?.filter((r: any) => r.status === "PRESENT").length || 0;
