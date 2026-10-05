@@ -777,11 +777,7 @@ export const getClassRecords = async (
 ) => {
   try {
     const hod = await getHodContext(req);
-    const data = await service.getClassRecords(
-      hod.departmentId,
-      req.query.viewBy as string,
-      req.query,
-    );
+    const data = await service.getClassRecords(hod.departmentId, req.query);
     res.json({ success: true, data });
   } catch (e: any) {
     next({ statusCode: 400, message: e.message });

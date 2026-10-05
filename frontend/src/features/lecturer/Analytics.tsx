@@ -119,10 +119,9 @@ const Analytics = () => {
           </p>
         </div>
       </div>
-
       {/* Trends */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 md:gap-6">
-        <div className="bg-slate-700 border border-slate-600 rounded-lg md:rounded-2xl p-2.5 md:p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-2 md:gap-6">
+        <div className="lg:col-span-3 bg-slate-700 border border-slate-600 rounded-lg md:rounded-2xl p-2.5 md:p-6">
           <h3 className="text-[11px] md:text-base font-semibold text-white mb-1.5 md:mb-4">
             Weekly Trend
           </h3>
@@ -147,7 +146,7 @@ const Analytics = () => {
             />
           </div>
         </div>
-        <div className="bg-slate-700 border border-slate-600 rounded-lg md:rounded-2xl p-2.5 md:p-6">
+        <div className="lg:col-span-2 bg-slate-700 border border-slate-600 rounded-lg md:rounded-2xl p-2.5 md:p-6">
           <h3 className="text-[11px] md:text-base font-semibold text-white mb-1.5 md:mb-4">
             Attendance by Program
           </h3>
@@ -254,30 +253,30 @@ const Analytics = () => {
           Intervention Needed
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5 md:gap-4">
-          {data?.byUnit
-            ?.filter((u: any) => parseFloat(u.rate) < 60)
-            .map((u: any) => (
-              <div
-                key={u.name}
-                className="bg-rose-900/10 border border-rose-800/50 rounded-md md:rounded-xl p-2 md:p-4 flex items-center gap-2 md:gap-4"
-              >
-                <div className="w-7 h-7 md:w-10 md:h-10 rounded-full bg-rose-900/30 flex items-center justify-center text-rose-400 font-bold text-[11px] md:text-sm shrink-0">
-                  !
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[11px] md:text-sm font-medium text-white truncate">
-                    {u.name}
-                  </p>
-                  <p className="text-[9px] md:text-xs text-rose-400 truncate">
-                    At {u.rate}% — consider follow-up
-                  </p>
-                </div>
+          {data?.lowAttendees?.map((s: any) => (
+            <div
+              key={s.studentId}
+              className="bg-rose-900/10 border border-rose-800/50 rounded-md md:rounded-xl p-2 md:p-4 flex items-center gap-2 md:gap-4"
+            >
+              <div className="w-7 h-7 md:w-10 md:h-10 rounded-full bg-rose-900/30 flex items-center justify-center text-rose-400 font-bold text-[11px] md:text-sm shrink-0">
+                !
               </div>
-            ))}
-          {data?.byUnit?.filter((u: any) => parseFloat(u.rate) < 60).length ===
-            0 && (
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] md:text-sm font-medium text-white truncate">
+                  {s.name}
+                </p>
+                <p className="text-[9px] md:text-xs text-slate-400 truncate">
+                  {s.regNo} • {s.program}
+                </p>
+              </div>
+              <span className="text-rose-400 font-bold text-[11px] md:text-sm shrink-0">
+                {s.rate}%
+              </span>
+            </div>
+          ))}
+          {!data?.lowAttendees?.length && (
             <p className="text-slate-500 text-[11px] md:text-sm col-span-full">
-              All units are above intervention threshold. Great work!
+              All students are above 75%. Great work!
             </p>
           )}
         </div>

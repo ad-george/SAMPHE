@@ -2,9 +2,6 @@ import { useEffect, useState } from "react";
 import api from "../../services/api";
 
 const ClassRecords = () => {
-  const [viewBy, setViewBy] = useState<"lecturer" | "unit" | "student">(
-    "lecturer",
-  );
   const [records, setRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showCount, setShowCount] = useState(10);
@@ -13,7 +10,6 @@ const ClassRecords = () => {
     dateTo: "",
     unitId: "",
     programId: "",
-    studentRegNo: "",
   });
   const [units, setUnits] = useState<any[]>([]);
   const [programs, setPrograms] = useState<any[]>([]);
@@ -41,12 +37,12 @@ const ClassRecords = () => {
     api.get("/hod/units").then((r) => setUnits(r.data.data || []));
     api.get("/hod/programs").then((r) => setPrograms(r.data.data || []));
     fetchRecords();
-  }, [viewBy]);
+  }, []);
 
   const fetchRecords = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ viewBy, ...filters });
+      const params = new URLSearchParams(filters as any);
       const res = await api.get(`/hod/class-records?${params}`);
       setRecords(res.data.data || []);
     } catch {
@@ -56,34 +52,31 @@ const ClassRecords = () => {
     }
   };
 
-  // Calculate stats
+  // Stats
   const totalSessions = records.length;
   let totalPresent = 0;
-  let totalAbsent = 0;
-  let totalRate = 0;
+  let totalExpected = 0;
 
   records.forEach((r: any) => {
     const present =
       r.records?.filter((rec: any) => rec.status === "PRESENT").length || 0;
-    // ✅ Use totalStudents instead of records.length
     const total = r.totalStudents || 0;
     totalPresent += present;
-    totalAbsent += Math.max(0, total - present);
-    if (total > 0) {
-      totalRate += (present / total) * 100;
-    }
+    totalExpected += total;
   });
+
+  const totalAbsent = Math.max(0, totalExpected - totalPresent);
+  const avgRate =
+    totalExpected > 0
+      ? ((totalPresent / totalExpected) * 100).toFixed(1)
+      : "0.0";
 
   const viewSession = (session: any) => {
     setSelectedSession(session);
     setViewModalOpen(true);
   };
 
-  const avgRate =
-    totalSessions > 0 ? (totalRate / totalSessions).toFixed(1) : "0.0";
-
   const displayed = records.slice(0, showCount);
-  const hasMore = records.length > showCount;
 
   if (loading) {
     return (
@@ -100,7 +93,7 @@ const ClassRecords = () => {
           📊 Class Attendance Records
         </h1>
         <p className="text-slate-500 mt-1">
-          View attendance sessions across your department
+          View attendance sessions across your department (this semester)
         </p>
       </div>
 
@@ -126,16 +119,6 @@ const ClassRecords = () => {
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-        {viewBy === "student" && (
-          <input
-            placeholder="Search Reg No"
-            value={filters.studentRegNo}
-            onChange={(e) =>
-              setFilters({ ...filters, studentRegNo: e.target.value })
-            }
-            className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:border-emerald-400 focus:outline-none"
-          />
-        )}
         <select
           value={filters.unitId}
           onChange={(e) => setFilters({ ...filters, unitId: e.target.value })}
@@ -209,6 +192,7 @@ const ClassRecords = () => {
                   S/N
                 </th>
                 <th className="text-left p-3 font-medium">Date</th>
+                <th className="text-left p-3 font-medium">Week</th>
                 <th className="text-left p-3 font-medium">Unit</th>
                 <th className="text-left p-3 font-medium">Lecturer</th>
                 <th className="text-left p-3 font-medium text-center">
@@ -220,104 +204,56 @@ const ClassRecords = () => {
               </tr>
             </thead>
             <tbody>
-              {viewBy === "student"
-                ? (() => {
-                    let runningIndex = 0;
-                    return displayed.flatMap((s: any) => {
-                      return (
-                        s.records?.map((r: any) => {
-                          runningIndex++;
-                          return (
-                            <tr
-                              key={`${s.id}-${runningIndex}`}
-                              className="border-b border-slate-100 hover:bg-slate-50/50 transition"
-                            >
-                              <td className="p-3 text-slate-400 font-mono text-xs text-center">
-                                {runningIndex}
-                              </td>
-                              <td className="p-3 text-slate-700">
-                                {new Date(
-                                  r.session.sessionDate,
-                                ).toLocaleDateString()}
-                              </td>
-                              <td className="p-3 text-slate-700">
-                                {r.session.unit?.name}
-                              </td>
-                              <td className="p-3 text-slate-700">
-                                {r.session.lecturer?.fullName}
-                              </td>
-                              <td className="p-3 text-center font-medium">
-                                {r.status === "PRESENT" ? (
-                                  <span className="text-emerald-600">
-                                    ✅ Present
-                                  </span>
-                                ) : (
-                                  <span className="text-rose-500">
-                                    ❌ Absent
-                                  </span>
-                                )}
-                              </td>
-                              <td className="p-3 text-center">
-                                <button
-                                  onClick={() => viewSession(r.session)}
-                                  className="text-xs px-3 py-1.5 rounded bg-blue-900/20 text-blue-400 border border-blue-800 hover:bg-blue-900/40 transition"
-                                >
-                                  View
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        }) || []
-                      );
-                    });
-                  })()
-                : displayed.map((r: any, idx: number) => {
-                    const present =
-                      r.records?.filter((rec: any) => rec.status === "PRESENT")
-                        .length || 0;
-                    const total = r.totalStudents || 0;
-                    const rate =
-                      total > 0 ? ((present / total) * 100).toFixed(1) : "0.0";
-                    return (
-                      <tr
-                        key={r.id}
-                        className="border-b border-slate-100 hover:bg-slate-50/50 transition"
+              {displayed.map((r: any, idx: number) => {
+                const present =
+                  r.records?.filter((rec: any) => rec.status === "PRESENT")
+                    .length || 0;
+                const total = r.totalStudents || 0;
+                const rate =
+                  total > 0 ? ((present / total) * 100).toFixed(1) : "0.0";
+                return (
+                  <tr
+                    key={r.id}
+                    className="border-b border-slate-100 hover:bg-slate-50/50 transition"
+                  >
+                    <td className="p-3 text-slate-400 font-mono text-xs text-center">
+                      {idx + 1}
+                    </td>
+                    <td className="p-3 text-slate-700">
+                      {new Date(r.sessionDate).toLocaleDateString()}
+                    </td>
+                    <td className="p-3 text-slate-700">
+                      {r.weekNumber ? `Wk${r.weekNumber}` : "—"}
+                    </td>
+                    <td className="p-3 text-slate-700">{r.unit?.name}</td>
+                    <td className="p-3 text-slate-700">
+                      {r.lecturer?.fullName}
+                    </td>
+                    <td className="p-3 text-center">
+                      <span
+                        className={
+                          parseFloat(rate) >= 70
+                            ? "text-emerald-600"
+                            : "text-rose-500"
+                        }
                       >
-                        <td className="p-3 text-slate-400 font-mono text-xs text-center">
-                          {idx + 1}
-                        </td>
-                        <td className="p-3 text-slate-700">
-                          {new Date(r.sessionDate).toLocaleDateString()}
-                        </td>
-                        <td className="p-3 text-slate-700">{r.unit?.name}</td>
-                        <td className="p-3 text-slate-700">
-                          {r.lecturer?.fullName}
-                        </td>
-                        <td className="p-3 text-center">
-                          <span
-                            className={
-                              parseFloat(rate) >= 70
-                                ? "text-emerald-600"
-                                : "text-rose-500"
-                            }
-                          >
-                            {rate}%
-                          </span>
-                        </td>
-                        <td className="p-3 text-center">
-                          <button
-                            onClick={() => viewSession(r)}
-                            className="text-xs px-3 py-1.5 rounded bg-blue-900/20 text-blue-400 border border-blue-800 hover:bg-blue-900/40 transition"
-                          >
-                            View
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                        {rate}%
+                      </span>
+                    </td>
+                    <td className="p-3 text-center">
+                      <button
+                        onClick={() => viewSession(r)}
+                        className="text-xs px-3 py-1.5 rounded bg-blue-900/20 text-blue-400 border border-blue-800 hover:bg-blue-900/40 transition"
+                      >
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
               {displayed.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="p-12 text-center text-slate-400">
+                  <td colSpan={7} className="p-12 text-center text-slate-400">
                     {loading ? "Loading..." : "No records found"}
                   </td>
                 </tr>
@@ -326,6 +262,7 @@ const ClassRecords = () => {
           </table>
         </div>
       </div>
+
       {/* View Session Modal */}
       {viewModalOpen && selectedSession && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -334,7 +271,6 @@ const ClassRecords = () => {
               className="rounded-xl p-8 border-2"
               style={{ borderColor: accentColor }}
             >
-              {/* Header - Close Button */}
               <div className="flex justify-end mb-2">
                 <button
                   onClick={() => setViewModalOpen(false)}
@@ -429,7 +365,7 @@ const ClassRecords = () => {
                   <div className="flex">
                     <span className="text-slate-500 w-32">Date / Week:</span>
                     <span className="text-slate-800 font-medium">
-                      {new Date(selectedSession.createdAt).toLocaleDateString(
+                      {new Date(selectedSession.sessionDate).toLocaleDateString(
                         "en-GB",
                         {
                           day: "numeric",
@@ -437,12 +373,9 @@ const ClassRecords = () => {
                           year: "numeric",
                         },
                       )}{" "}
-                      / Week:{" "}
-                      {Math.ceil(
-                        (new Date(selectedSession.createdAt).getDate() - 1) /
-                          7 +
-                          1,
-                      ) || 1}
+                      / {selectedSession.weekNumber
+                        ? `Wk${selectedSession.weekNumber}`
+                        : "—"}
                     </span>
                   </div>
                   <div className="flex">
@@ -646,14 +579,12 @@ const ClassRecords = () => {
 
               <hr className="border-slate-200 my-4" />
 
-              {/* FOOTER */}
               <div className="text-center">
                 <p className="text-xs" style={{ color: accentColor }}>
                   Generated by SUAMP Smart Attendance System
                 </p>
               </div>
 
-              {/* Close Button */}
               <div className="mt-6 flex justify-end">
                 <button
                   onClick={() => setViewModalOpen(false)}
