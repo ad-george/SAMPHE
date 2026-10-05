@@ -32,6 +32,7 @@ const Students = () => {
 
   const [importedPreview, setImportedPreview] = useState<any[]>([]);
   const [showAllImported, setShowAllImported] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   const [form, setForm] = useState({
     regNo: "",
@@ -107,24 +108,47 @@ const Students = () => {
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    setImporting(true);
     const formData = new FormData();
     formData.append("file", file);
+
+    const toastId = toast.loading(`Importing ${file.name}… please wait`);
+
     try {
       const res = await api.post("/hod/students/import", formData, {
         headers: { "Content-Type": "multipart/form-data" },
+        timeout: 180000, // 3 minutes — import can take a few seconds
       });
+
       const payload = res.data?.data ?? res.data;
       setImportResult(payload);
+
       const newlyImported = payload?.importedStudents || [];
       setImportedPreview((prev) => [...prev, ...newlyImported]);
       setShowAllImported(false);
+
       toast.success(
-        `Created: ${payload?.created ?? 0}, Skipped: ${payload?.skipped ?? 0}, Failed: ${payload?.failed ?? 0}`,
+        `✓ Import complete — Created: ${payload?.created ?? 0}, Skipped: ${payload?.skipped ?? 0}, Failed: ${payload?.failed ?? 0}`,
+        { id: toastId, duration: 6000 },
       );
+
       fetchStudents();
       fetchArchived();
+
+      // Close the import modal on success
+      setImportOpen(false);
+      setImportResult(null);
+      setImportedPreview([]);
+      setShowAllImported(false);
+      if (fileRef.current) fileRef.current.value = "";
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Import failed");
+      toast.error(
+        err.response?.data?.message || err.message || "Import failed",
+        { id: toastId, duration: 6000 },
+      );
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -652,13 +676,21 @@ const Students = () => {
               </span>
               . Optional: phone.
             </p>
-            <input
+                       <input
               ref={fileRef}
               type="file"
               accept=".csv,.xlsx"
               onChange={handleFile}
-              className="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+              disabled={importing}
+              className="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 disabled:opacity-50"
             />
+
+            {importing && (
+              <div className="mt-4 flex items-center gap-2 text-sm text-slate-600">
+                <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                Importing… this may take a few seconds
+              </div>
+            )}
 
             {importResult && (
               <div className="mt-4 bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-1 text-sm">

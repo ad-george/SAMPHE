@@ -282,6 +282,7 @@ export class HodService {
   }
 
   // --- BULK IMPORT STUDENTS (ROBUST) ---
+   // --- BULK IMPORT STUDENTS (FAST) ---
   async bulkImportStudents(hodId: string, students: any[]) {
     const hod = await prisma.hod.findUnique({
       where: { id: hodId },
@@ -289,69 +290,68 @@ export class HodService {
     });
     if (!hod) throw new Error("HOD not found");
 
-    // Fetch all reference data once
+    // ============================================================
+    // 1. PRELOAD ALL REFERENCE DATA (one batch)
+    // ============================================================
     const [allPrograms, allYears, allSemesters] = await Promise.all([
       prisma.programme.findMany({ where: { universityId: hod.universityId } }),
       prisma.studyYear.findMany({ where: { universityId: hod.universityId } }),
       prisma.semester.findMany({ where: { universityId: hod.universityId } }),
     ]);
 
-    console.log(
-      "📚 Found years in DB:",
-      allYears.map((y) => y.name),
-    );
-    console.log(
-      "📚 Found semesters in DB:",
-      allSemesters.map((s) => s.name),
-    );
-    console.log(
-      "📚 Found programs in DB:",
-      allPrograms.map((p) => p.name),
-    );
-
-    // Improved fuzzy matcher
-    const findBest = (list: any[], search: string, key: string = "name") => {
+    const findBest = (list: any[], search: string, key = "name") => {
       const s = search?.toLowerCase().trim() || "";
       if (!s) return null;
-
-      console.log(
-        `🔍 Searching for "${s}" in`,
-        list.map((x) => x[key]),
-      );
-
-      // 1. Exact match
       let m = list.find((x) => x[key].toLowerCase() === s);
-      if (m) {
-        console.log(`✅ Exact match: ${m[key]}`);
-        return m;
-      }
-
-      // 2. Includes match
+      if (m) return m;
       m = list.find((x) => x[key].toLowerCase().includes(s));
-      if (m) {
-        console.log(`✅ Includes match: ${m[key]}`);
-        return m;
-      }
-
-      // 3. Search includes list item
+      if (m) return m;
       m = list.find((x) => s.includes(x[key].toLowerCase()));
-      if (m) {
-        console.log(`✅ Reverse includes match: ${m[key]}`);
-        return m;
-      }
-
-      // 4. Word match
+      if (m) return m;
       const words = s.split(/\s+/).filter((w) => w.length > 2);
-      m = list.find((x) => words.some((w) => x[key].toLowerCase().includes(w)));
-      if (m) {
-        console.log(`✅ Word match: ${m[key]}`);
-        return m;
-      }
-
-      console.log(`❌ No match for "${s}"`);
-      return null;
+      return (
+        list.find((x) => words.some((w) => x[key].toLowerCase().includes(w))) ||
+        null
+      );
     };
 
+    // ============================================================
+    // 2. PRELOAD EXISTING REG NUMBERS (one query)
+    // ============================================================
+    const incomingRegNos = students
+      .map((r) => r.regNo?.trim())
+      .filter(Boolean);
+
+    const existingStudents = await prisma.student.findMany({
+      where: { regNo: { in: incomingRegNos } },
+      select: { regNo: true },
+    });
+    const existingRegNos = new Set(existingStudents.map((s) => s.regNo));
+
+    // ============================================================
+    // 3. PRELOAD ALL UNITS IN DEPARTMENT (one query)
+    //    Keyed by program|year|semester
+    // ============================================================
+    const allUnits = await prisma.unit.findMany({
+      where: { departmentId: hod.departmentId },
+      select: {
+        id: true,
+        programId: true,
+        studyYearId: true,
+        semesterId: true,
+      },
+    });
+    const unitsByKey = new Map<string, string[]>();
+    allUnits.forEach((u) => {
+      const key = `${u.programId}|${u.studyYearId}|${u.semesterId}`;
+      const arr = unitsByKey.get(key) || [];
+      arr.push(u.id);
+      unitsByKey.set(key, arr);
+    });
+
+    // ============================================================
+    // 4. PREPARE ROWS (in memory)
+    // ============================================================
     const results = {
       created: 0,
       skipped: 0,
@@ -359,6 +359,21 @@ export class HodService {
       errors: [] as string[],
       importedStudents: [] as any[],
     };
+
+    const toCreate: {
+      regNo: string;
+      fullName: string;
+      email: string;
+      password: string;
+      programId: string;
+      studyYearId: string;
+      semesterId: string;
+      universityId: string;
+      departmentId: string;
+      archived: boolean;
+      admissionYear: string;
+      unitIds: string[];
+    }[] = [];
 
     for (const row of students) {
       try {
@@ -377,37 +392,17 @@ export class HodService {
           continue;
         }
 
+        const regNo = row.regNo.trim();
+
+        if (existingRegNos.has(regNo)) {
+          results.skipped++;
+          continue;
+        }
+
         const program = findBest(allPrograms, row.program);
-
-        // Convert studyYear to proper format
-        console.log(`🔍 Raw studyYear: "${row.studyYear}"`);
         let yearSearch = String(row.studyYear).trim();
-        // If it's just a number like "2", convert to "Year 2"
-        if (/^\d+$/.test(yearSearch)) {
-          yearSearch = `Year ${yearSearch}`;
-          console.log(`✅ Converted to: "${yearSearch}"`);
-        }
-        console.log(
-          `📅 Searching year: "${yearSearch}" (original: "${row.studyYear}")`,
-        );
-
-        let studyYear = findBest(allYears, yearSearch);
-
-        // If still not found, try all possible patterns
-        if (!studyYear) {
-          const patterns = [
-            `Year ${row.studyYear}`,
-            `${row.studyYear}st Year`,
-            `${row.studyYear}nd Year`,
-            `${row.studyYear}rd Year`,
-            `${row.studyYear}th Year`,
-          ];
-          for (const p of patterns) {
-            studyYear = findBest(allYears, p);
-            if (studyYear) break;
-          }
-        }
-
+        if (/^\d+$/.test(yearSearch)) yearSearch = `Year ${yearSearch}`;
+        const studyYear = findBest(allYears, yearSearch);
         const semester = findBest(allSemesters, row.semester);
 
         if (!program || !studyYear || !semester) {
@@ -420,85 +415,92 @@ export class HodService {
             .filter(Boolean)
             .join("/");
           results.errors.push(
-            `Row ${row.regNo}: ${missing} not found (program='${row.program}', year='${row.studyYear}', sem='${row.semester}')`,
+            `Row ${regNo}: ${missing} not found (program='${row.program}', year='${row.studyYear}', sem='${row.semester}')`,
           );
           continue;
         }
 
-        const exists = await prisma.student.findFirst({
-          where: { regNo: row.regNo.trim() },
-        });
-        if (exists) {
+        const unitKey = `${program.id}|${studyYear.id}|${semester.id}`;
+        const unitIds = unitsByKey.get(unitKey) || [];
+
+        // Prevent duplicate regNo within the same file
+        if (toCreate.some((s) => s.regNo === regNo)) {
           results.skipped++;
           continue;
         }
 
-        const defaultPassword = await bcrypt.hash(row.regNo.trim(), 10);
-
-        const created = await prisma.student.create({
-          data: {
-            regNo: row.regNo.trim(),
-            fullName: row.fullName.trim(),
-            email: row.email.trim(),
-            password: defaultPassword,
-            programId: program.id,
-            studyYearId: studyYear.id,
-            semesterId: semester.id,
-            universityId: hod.universityId,
-            departmentId: hod.departmentId,
-            archived: false,
-            admissionYear: new Date().getFullYear().toString(),
-          } as any,
-          include: {
-            program: true,
-            studyYear: true,
-            semester: true,
-          },
-        });
-
-        // ✅ Find all units that match this student's program, studyYear, and semester
-        const matchingUnits = await prisma.unit.findMany({
-          where: {
-            programId: program.id,
-            studyYearId: studyYear.id,
-            semesterId: semester.id,
-            departmentId: hod.departmentId,
-          },
-          select: { id: true },
-        });
-
-        // ✅ Register the student to all matching units
-        if (matchingUnits.length > 0) {
-          await prisma.student.update({
-            where: { id: created.id },
-            data: {
-              registeredUnits: {
-                connect: matchingUnits.map((u) => ({ id: u.id })),
-              },
-            },
-          });
-        }
-
-        results.created++;
-        results.importedStudents.push({
-          regNo: created.regNo,
-          fullName: created.fullName,
-          program: (created as any).program?.name,
-          studyYear: (created as any).studyYear?.name,
-          semester: (created as any).semester?.name,
-        });
-
-        results.created++;
-        results.importedStudents.push({
-          regNo: created.regNo,
-          fullName: created.fullName,
-          program: (created as any).program?.name,
-          studyYear: (created as any).studyYear?.name,
-          semester: (created as any).semester?.name,
+        toCreate.push({
+          regNo,
+          fullName: row.fullName.trim(),
+          email: row.email.trim(),
+          password: "imported-no-login", // students don't log in
+          programId: program.id,
+          studyYearId: studyYear.id,
+          semesterId: semester.id,
+          universityId: hod.universityId,
+          departmentId: hod.departmentId,
+          archived: false,
+          admissionYear: new Date().getFullYear().toString(),
+          unitIds,
         });
       } catch (err: any) {
         results.failed++;
         results.errors.push(`Row ${row.regNo || "?"}: ${err.message}`);
+      }
+    }
+
+    if (toCreate.length === 0) return results;
+
+    // ============================================================
+    // 5. BATCH CREATE STUDENTS (one query)
+    // ============================================================
+    const createData = toCreate.map(
+      ({ unitIds, ...student }) => student,
+    );
+
+    await prisma.student.createMany({ data: createData });
+
+    results.created = createData.length;
+    toCreate.forEach((s) => {
+      results.importedStudents.push({
+        regNo: s.regNo,
+        fullName: s.fullName,
+      });
+    });
+
+    // ============================================================
+    // 6. BATCH LINK STUDENTS ↔ UNITS (raw insert, one query)
+    //    Join table: _StudentUnits (implicit m2m, A=Student, B=Unit)
+    // ============================================================
+    const allPairs: { studentRegNo: string; unitId: string }[] = [];
+    toCreate.forEach((s) => {
+      s.unitIds.forEach((unitId) => {
+        allPairs.push({ studentRegNo: s.regNo, unitId });
+      });
+    });
+
+    if (allPairs.length > 0) {
+      // Fetch the newly created student IDs in one query
+      const newStudents = await prisma.student.findMany({
+        where: { regNo: { in: toCreate.map((s) => s.regNo) } },
+        select: { id: true, regNo: true },
+      });
+      const idByRegNo = new Map(newStudents.map((s) => [s.regNo, s.id]));
+
+      // Build VALUES for raw insert
+      const values = allPairs
+        .map((p) => {
+          const sid = idByRegNo.get(p.studentRegNo);
+          if (!sid) return null;
+          return `('${sid}', '${p.unitId}')`;
+        })
+        .filter(Boolean)
+        .join(",");
+
+      if (values) {
+        await prisma.$executeRawUnsafe(
+          `INSERT INTO "_StudentUnits" ("A", "B") VALUES ${values} ON CONFLICT DO NOTHING`,
+        );
       }
     }
 
@@ -1315,11 +1317,11 @@ export class HodService {
         },
       }),
       // All sessions in dept, semester-scoped, with records
-      prisma.attendanceSession.findMany({
+         prisma.attendanceSession.findMany({
         where: {
           lecturer: { departmentId: deptId },
           status: { not: "ACTIVE" },
-          createdAt: { gte: semesterStart, lte: semesterEnd },
+          sessionDate: { gte: semesterStart, lte: semesterEnd },
         },
         select: {
           id: true,
@@ -1327,7 +1329,6 @@ export class HodService {
           lecturerId: true,
           totalStudents: true,
           sessionDate: true,
-          createdAt: true,
           unit: {
             select: {
               id: true,
@@ -1346,9 +1347,9 @@ export class HodService {
         where: { departmentId: deptId },
         select: { id: true, name: true },
       }),
-      prisma.unit.findMany({
+          prisma.unit.findMany({
         where: { departmentId: deptId },
-        select: { id: true, programId: true, semesterId: true },
+        select: { id: true, programId: true, semesterId: true, studyYearId: true },
       }),
       // Students + their PRESENT records in dept sessions, semester-scoped
       prisma.student.findMany({
@@ -1406,7 +1407,7 @@ export class HodService {
       const present = c.records.filter((r) => r.status === "PRESENT").length;
       const total = c.totalStudents || 0;
       return {
-        date: c.sessionDate || c.createdAt,
+        date: c.sessionDate,
         unit: c.unit?.name || "",
         lecturer: c.lecturer?.fullName || "",
         rate: total > 0 ? Math.round((present / total) * 100) : 0,
@@ -1420,7 +1421,7 @@ export class HodService {
     // ============================================================
     const weeklyTrend = weekBuckets.map((bucket) => {
       const weekSessions = deptSessions.filter((s) => {
-        const d = new Date(s.sessionDate || s.createdAt);
+        const d = new Date(s.sessionDate);
         return d >= bucket.start && d <= bucket.end;
       });
 
@@ -1456,12 +1457,9 @@ export class HodService {
     });
 
     // Fetch studyYearId for units in one query
+       // Build unit-year map from already-fetched units
     const unitYearMap = new Map<string, string>();
-    const unitYears = await prisma.unit.findMany({
-      where: { departmentId: deptId },
-      select: { id: true, studyYearId: true },
-    });
-    unitYears.forEach((u) => unitYearMap.set(u.id, u.studyYearId));
+    units.forEach((u) => unitYearMap.set(u.id, u.studyYearId));
 
     // Build sessions-per-key
     const sessionsByKey = new Map<
