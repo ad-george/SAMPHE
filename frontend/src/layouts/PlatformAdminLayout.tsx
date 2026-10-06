@@ -3,6 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { useEffect, useState, useRef } from "react";
 import api from "../services/api";
 import toast from "react-hot-toast";
+import logo from "../../assets/logo.png";
 
 const PlatformAdminLayout = () => {
   const { user, login, logout } = useAuth();
@@ -184,37 +185,42 @@ const PlatformAdminLayout = () => {
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-gray-100 flex font-sans selection:bg-violet-500/30">
-      {/* Sidebar - sticky, does NOT scroll */}
+      {/* Sidebar */}
       <aside
-        className={`sticky top-0 h-screen ${collapsed ? "w-20" : "w-72"} transition-all duration-300 bg-[#0f0f16] border-r border-white/5 flex flex-col relative shrink-0 overflow-visible`}
+        className={`sticky top-0 h-screen ${
+          collapsed ? "w-20" : "w-72"
+        } transition-all duration-300 bg-[#0f0f16] border-r border-white/5 flex flex-col relative shrink-0 overflow-visible z-30`}
       >
-        {/* Brand - BIGGER icon and SUAMP text */}
-        <div className="p-4 border-b border-white/5 flex items-center justify-center">
-          <div className="flex items-center gap-3 bg-white/5 rounded-full px-5 py-3 border border-white/10">
-            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20 shrink-0">
-              <span className="text-2xl font-bold text-white">S</span>
-            </div>
-            {!collapsed && (
-              <div className="overflow-hidden">
-                <h1 className="font-bold text-2xl text-white tracking-tight whitespace-nowrap">
-                  SAMPHE<span className="text-violet-400">.dev</span>
-                </h1>
-                <p className="text-[10px] text-gray-500 uppercase tracking-widest whitespace-nowrap">
-                  Platform Control
-                </p>
-              </div>
-            )}
+        {/* Logo header — NEVER collapses.
+            The logo + role text sit above the collapsible nav.
+            The logo overflows visually when sidebar narrows. */}
+        <div className="relative h-24 shrink-0">
+          {/* Logo — fixed size, anchored to the sidebar's left */}
+          <div className="absolute top-3 left-3 w-20 h-20 rounded-full bg-[#1a1a2e] border border-white/10 flex items-center justify-center overflow-hidden shadow-lg shadow-violet-500/20 z-20">
+            <img
+              src={logo}
+              alt="Logo"
+              className="w-full h-full object-contain p-2"
+            />
+          </div>
+
+          {/* Role text — always visible, to the right of the logo */}
+          <div className="absolute top-6 left-24 whitespace-nowrap z-10">
+            <p className="text-sm font-semibold text-white">
+              Platform Admin
+            </p>
           </div>
         </div>
 
-        {/* Toggle - RIGHT EDGE */}
+        {/* Toggle button */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute top-24 -right-3 z-50 w-10 h-10 bg-violet-600 rounded-full flex items-center justify-center text-xs text-white hover:bg-violet-500 transition shadow-lg shadow-violet-500/30"
+          className="absolute top-[88px] -right-3 z-50 w-10 h-10 bg-violet-600 rounded-full flex items-center justify-center text-xs text-white hover:bg-violet-500 transition shadow-lg shadow-violet-500/30"
         >
           {collapsed ? "▶" : "◀"}
         </button>
 
+        {/* Nav — collapses */}
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const active = location.pathname === item.path;
@@ -230,7 +236,9 @@ const PlatformAdminLayout = () => {
                 }`}
               >
                 <span
-                  className={`text-lg ${active ? "text-white" : "text-gray-500"} shrink-0`}
+                  className={`text-lg ${
+                    active ? "text-white" : "text-gray-500"
+                  } shrink-0`}
                 >
                   {item.icon}
                 </span>
@@ -251,7 +259,7 @@ const PlatformAdminLayout = () => {
           })}
         </nav>
 
-        {/* System Status Card - above profile */}
+        {/* System Status Card */}
         {!collapsed && (
           <div className="mx-4 mb-2 p-3 rounded-xl bg-gradient-to-br from-violet-600/10 to-purple-600/10 border border-violet-500/20">
             <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">
@@ -269,7 +277,7 @@ const PlatformAdminLayout = () => {
           </div>
         )}
 
-        {/* Profile Section - BIGGER avatar */}
+        {/* Profile Section */}
         <div className="p-4 border-t border-white/5 relative" ref={profileRef}>
           <button
             onClick={() => setProfileOpen(!profileOpen)}
@@ -295,7 +303,6 @@ const PlatformAdminLayout = () => {
             )}
           </button>
 
-          {/* Profile Popup */}
           {profileOpen && (
             <div className="absolute bottom-full left-4 mb-2 w-56 bg-[#1a1a2e] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
               <button
@@ -321,7 +328,7 @@ const PlatformAdminLayout = () => {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
-        {/* Top Bar - sticky, does NOT scroll */}
+        {/* Top Bar */}
         <header className="sticky top-0 h-16 bg-[#0f0f16]/80 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-8 z-40 shrink-0">
           <div>
             <h2 className="text-lg font-semibold tracking-tight text-white">
@@ -339,7 +346,6 @@ const PlatformAdminLayout = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Search */}
             <div className="relative" ref={searchRef}>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
@@ -355,7 +361,6 @@ const PlatformAdminLayout = () => {
                 />
               </div>
 
-              {/* Search Dropdown */}
               {showSearch && searchResults && (
                 <div className="absolute top-full right-0 mt-2 w-96 bg-[#1a1a2e] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
                   {!searchResults.universities?.length && (
@@ -384,7 +389,6 @@ const PlatformAdminLayout = () => {
               )}
             </div>
 
-            {/* Notifications */}
             <button
               onClick={() => setNotifOpen(true)}
               className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition relative"
