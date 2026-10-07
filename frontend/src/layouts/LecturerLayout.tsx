@@ -3,6 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { useEffect, useState, useRef } from "react";
 import api from "../services/api";
 import toast from "react-hot-toast";
+import logo from "../assets/logo.png";
 
 const LecturerLayout = () => {
   const { user, login, logout } = useAuth();
@@ -164,296 +165,281 @@ const LecturerLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-200 text-gray-800 flex font-sans">
+    <div className="h-screen bg-gray-200 text-gray-800 font-sans flex flex-col">
       {mobileOpen && (
         <div
           onClick={() => setMobileOpen(false)}
           className="fixed inset-0 bg-black/50 z-30 md:hidden"
         />
       )}
-      {/* Sidebar */}
-      <aside
-        className={`h-[100dvh] md:h-screen flex flex-col shrink-0 z-40 transition-all duration-300 bg-gray-800
-    fixed md:!sticky top-0
-    ${collapsed ? "w-40 md:w-20" : "w-40 md:w-64"}
-    ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
-  `}
-      >
-        {/* Brand */}
-        <div className="bg-gray-800 shrink-0 flex items-center justify-center border-b border-gray-700 p-1.5 md:p-4">
-          <div className="flex items-center gap-2 md:gap-3 bg-white/10 rounded-full px-2.5 py-1.5 md:px-5 md:py-3 border border-white/10">
-            <div className="w-7 h-7 md:w-14 md:h-14 rounded-full bg-white flex items-center justify-center shadow-lg shrink-0">
-              <svg
-                className="w-4 h-4 md:w-8 md:h-8 text-gray-800"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2.5}
-                  d="M12 14l9-5-9-5-9 5 9 5z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2.5}
-                  d="M12 14l6.16-3.422A12.042 12.042 0 0112 21a12.042 12.042 0 01-6.16-10.422L12 14z"
-                />
-              </svg>
-            </div>
-            {!collapsed && (
-              <div className="overflow-hidden">
-                <h1 className="font-bold text-white text-[13px] md:text-2xl tracking-tight whitespace-nowrap">
-                  SAMPHE
-                </h1>
-                <p className="text-[9px] md:text-xs text-gray-300 font-medium whitespace-nowrap">
-                  Lecturer Portal
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
 
-        {/* Body */}
-        <div className="relative flex flex-col flex-1 bg-gray-800 overflow-visible">
-          {/* Collapse toggle — desktop only, matches HOD style */}
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="hidden md:flex absolute top-0 -right-3 z-50 w-10 h-10 bg-cyan-500 rounded-full items-center justify-center text-xs text-white hover:bg-cyan-400 transition shadow-lg"
-          >
-            {collapsed ? "▶" : "◀"}
-          </button>
+      {/* Top Bar — full width, underneath sidebar (desktop only affected) */}
+      <header className="h-12 md:h-16 bg-emerald-600 border-b border-emerald-500 flex items-center px-2.5 md:px-6 md:pl-[288px] z-30 shrink-0">
+        <button
+          onClick={() => setMobileOpen(!mobileOpen)}
+          className="md:hidden mr-2 text-white text-2xl leading-none"
+          aria-label="Toggle menu"
+        >
+          ☰
+        </button>
 
-          {/* Nav — no scroll */}
-          <nav className="p-1.5 md:p-3 space-y-0.5 md:space-y-1">
-            {navItems.map((item) => {
-              const active = location.pathname === item.path;
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-2 md:gap-3 px-2.5 py-1.5 md:py-2.5 rounded-md md:rounded-lg transition-all text-[12px] md:text-sm ${
-                    active
-                      ? "bg-emerald-600 text-white font-medium shadow-sm"
-                      : "text-gray-300 hover:text-white hover:bg-gray-700"
-                  }`}
-                >
-                  <span className="text-sm md:text-base shrink-0">
-                    {item.icon}
-                  </span>
-                  {!collapsed && (
-                    <span className="whitespace-nowrap">{item.label}</span>
-                  )}
-                </Link>
-              );
+        <div className="flex flex-col min-w-0">
+          <h2 className="text-[13px] md:text-lg font-semibold text-white leading-tight truncate">
+            {navItems.find((n) => n.path === location.pathname)?.label ||
+              "Dashboard"}
+          </h2>
+          <p className="text-[9px] md:text-xs text-emerald-100 leading-tight truncate">
+            {new Date().toLocaleDateString("en-US", {
+              weekday: "short",
+              year: "numeric",
+              month: "short",
+              day: "numeric",
             })}
-          </nav>
+          </p>
+        </div>
 
-          {/* Spacer — pushes profile to bottom */}
-          <div className="flex-1" />
-
-          {/* Profile */}
-          <div
-            className="p-1.5 md:p-3 border-t border-gray-700 relative shrink-0"
-            ref={profileRef}
-          >
-            <button
-              onClick={() => setProfileOpen(!profileOpen)}
-              className="flex items-center gap-2 md:gap-3 w-full text-left p-1.5 md:p-2 rounded-md md:rounded-lg hover:bg-gray-700 transition"
-            >
-              <div className="w-7 h-7 md:w-9 md:h-9 rounded-full bg-gray-700 flex items-center justify-center text-xs md:text-sm font-bold text-white shrink-0 overflow-hidden border border-gray-600 leading-none">
-                {profileForm.avatar ? (
-                  <img
-                    src={profileForm.avatar}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span className="leading-none">
-                    {profileForm.fullName?.charAt(0) || "L"}
-                  </span>
-                )}
-              </div>
-              {!collapsed && (
-                <div className="flex-1 min-w-0 overflow-hidden">
-                  <p className="text-[12px] md:text-sm font-medium text-white truncate">
-                    {profileForm.fullName || user?.fullName}
-                  </p>
-                  <p className="text-[9px] md:text-[10px] text-gray-400">
-                    Lecturer
-                  </p>
-                </div>
-              )}
-            </button>
-
-            {profileOpen && (
-              <div className="absolute bottom-full left-2 md:left-3 mb-2 w-52 md:w-56 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden z-50">
-                <button
-                  onClick={() => {
-                    setEditProfile(true);
-                    setProfileOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition flex items-center gap-2 text-gray-700"
-                >
-                  ✎ Edit Profile
-                </button>
-                <div className="border-t border-gray-100" />
-                <button
-                  onClick={logout}
-                  className="w-full text-left px-4 py-3 text-sm text-rose-400 hover:bg-rose-500/10 transition flex items-center gap-2"
-                >
-                  <span>→</span> Logout
-                </button>
-              </div>
-            )}
+        <div className="hidden md:flex items-center gap-4 ml-6">
+          <div className="h-10 w-px bg-emerald-300/50"></div>
+          <div className="flex flex-col">
+            <span className="text-lg font-semibold text-white leading-tight">
+              {user?.universityName || "University"}
+            </span>
+            <p className="text-xs text-emerald-100 leading-tight">
+              Department of {user?.departmentName || "Department"}
+            </p>
           </div>
         </div>
-      </aside>
-      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto bg-gray-100 relative z-0">
-        <header className="sticky top-0 bg-emerald-600 border-b border-emerald-500 z-30 shrink-0">
-          <div className="flex items-center px-2.5 md:px-6 h-12 md:h-16">
-            <button
-              onClick={() => setMobileOpen(!mobileOpen)}
-              className="md:hidden mr-2 text-white text-2xl leading-none"
-              aria-label="Toggle menu"
-            >
-              ☰
-            </button>
 
-            <div className="flex flex-col min-w-0">
-              <h2 className="text-[13px] md:text-lg font-semibold text-white leading-tight truncate">
-                {navItems.find((n) => n.path === location.pathname)?.label ||
-                  "Dashboard"}
-              </h2>
-              <p className="text-[9px] md:text-xs text-emerald-100 leading-tight truncate">
-                {new Date().toLocaleDateString("en-US", {
-                  weekday: "short",
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                })}
-              </p>
-            </div>
+        <div className="flex-1"></div>
 
-            <div className="hidden md:flex items-center gap-4 ml-6">
-              <div className="h-10 w-px bg-emerald-300/50"></div>
-              <div className="flex flex-col">
-                <span className="text-lg font-semibold text-white leading-tight">
-                  {user?.universityName || "University"}
-                </span>
-                <p className="text-xs text-emerald-100 leading-tight">
-                  Department of {user?.departmentName || "Department"}
-                </p>
-              </div>
-            </div>
+        <div className="flex items-center gap-2 md:gap-4">
+          <div className="flex items-center relative" ref={searchRef}>
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchQ}
+              onChange={(e) => handleSearch(e.target.value)}
+              onFocus={() => searchQ.length >= 2 && setShowSearch(true)}
+              className="w-20 md:w-32 lg:w-40 h-7 md:h-9 px-2 md:px-3 rounded-md md:rounded-lg bg-white/10 border border-white/20 text-white placeholder-emerald-100/70 text-[11px] md:text-sm focus:outline-none focus:bg-white/20 transition"
+            />
 
-            <div className="flex-1"></div>
-
-            <div className="flex items-center gap-2 md:gap-4">
-              <div className="flex items-center relative" ref={searchRef}>
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchQ}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  onFocus={() => searchQ.length >= 2 && setShowSearch(true)}
-                  className="w-20 md:w-32 lg:w-40 h-7 md:h-9 px-2 md:px-3 rounded-md md:rounded-lg bg-white/10 border border-white/20 text-white placeholder-emerald-100/70 text-[11px] md:text-sm focus:outline-none focus:bg-white/20 transition"
-                />
-
-                {showSearch && searchResults && (
-                  <div className="fixed md:absolute left-2 right-2 md:left-auto md:right-0 top-14 md:top-full mt-2 md:w-80 bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden z-[70] max-h-96 overflow-y-auto">
-                    {" "}
-                    {searchResults.units?.length > 0 && (
-                      <div className="p-2">
-                        <p className="text-[10px] text-gray-400 uppercase tracking-wider px-3 py-1 font-semibold">
-                          Units
+            {showSearch && searchResults && (
+              <div className="fixed md:absolute left-2 right-2 md:left-auto md:right-0 top-14 md:top-full mt-2 md:w-80 bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden z-[70] max-h-96 overflow-y-auto">
+                {searchResults.units?.length > 0 && (
+                  <div className="p-2">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wider px-3 py-1 font-semibold">
+                      Units
+                    </p>
+                    {searchResults.units.map((u: any) => (
+                      <button
+                        key={u.id}
+                        onClick={() => goToResult("unit")}
+                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 transition"
+                      >
+                        <p className="text-sm font-medium text-gray-800">
+                          {u.code} — {u.name}
                         </p>
-                        {searchResults.units.map((u: any) => (
-                          <button
-                            key={u.id}
-                            onClick={() => goToResult("unit")}
-                            className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 transition"
-                          >
-                            <p className="text-sm font-medium text-gray-800">
-                              {u.code} — {u.name}
-                            </p>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    {searchResults.students?.length > 0 && (
-                      <div className="p-2 border-t border-gray-100">
-                        <p className="text-[10px] text-gray-400 uppercase tracking-wider px-3 py-1 font-semibold">
-                          Students
-                        </p>
-                        {searchResults.students.map((s: any) => (
-                          <button
-                            key={s.id}
-                            onClick={() => goToResult("student")}
-                            className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 transition"
-                          >
-                            <p className="text-sm font-medium text-gray-800">
-                              {s.fullName}
-                            </p>
-                            <p className="text-xs text-gray-500">{s.regNo}</p>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    {searchResults.sessions?.length > 0 && (
-                      <div className="p-2 border-t border-gray-100">
-                        <p className="text-[10px] text-gray-400 uppercase tracking-wider px-3 py-1 font-semibold">
-                          Sessions
-                        </p>
-                        {searchResults.sessions.map((s: any) => (
-                          <button
-                            key={s.id}
-                            onClick={() => goToResult("record")}
-                            className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 transition"
-                          >
-                            <p className="text-sm font-medium text-gray-800">
-                              {s.unit?.code} — {s.unit?.name}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {new Date(s.createdAt).toLocaleDateString()}
-                            </p>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    {searchResults.units?.length === 0 &&
-                      searchResults.students?.length === 0 &&
-                      searchResults.sessions?.length === 0 && (
-                        <p className="p-6 text-center text-sm text-gray-500">
-                          No results
-                        </p>
-                      )}
+                      </button>
+                    ))}
                   </div>
                 )}
-              </div>
-
-              <button
-                onClick={() => setNotifOpen(true)}
-                className="w-8 h-8 md:w-9 md:h-9 rounded-md md:rounded-lg bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition relative"
-              >
-                <span className="text-white">🔔</span>
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-3.5 h-3.5 md:w-4 md:h-4 bg-rose-500 rounded-full text-[8px] md:text-[9px] text-white flex items-center justify-center font-bold">
-                    {unreadCount}
-                  </span>
+                {searchResults.students?.length > 0 && (
+                  <div className="p-2 border-t border-gray-100">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wider px-3 py-1 font-semibold">
+                      Students
+                    </p>
+                    {searchResults.students.map((s: any) => (
+                      <button
+                        key={s.id}
+                        onClick={() => goToResult("student")}
+                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 transition"
+                      >
+                        <p className="text-sm font-medium text-gray-800">
+                          {s.fullName}
+                        </p>
+                        <p className="text-xs text-gray-500">{s.regNo}</p>
+                      </button>
+                    ))}
+                  </div>
                 )}
-              </button>
+                {searchResults.sessions?.length > 0 && (
+                  <div className="p-2 border-t border-gray-100">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wider px-3 py-1 font-semibold">
+                      Sessions
+                    </p>
+                    {searchResults.sessions.map((s: any) => (
+                      <button
+                        key={s.id}
+                        onClick={() => goToResult("record")}
+                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 transition"
+                      >
+                        <p className="text-sm font-medium text-gray-800">
+                          {s.unit?.code} — {s.unit?.name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(s.createdAt).toLocaleDateString()}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {searchResults.units?.length === 0 &&
+                  searchResults.students?.length === 0 &&
+                  searchResults.sessions?.length === 0 && (
+                    <p className="p-6 text-center text-sm text-gray-500">
+                      No results
+                    </p>
+                  )}
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={() => setNotifOpen(true)}
+            className="w-8 h-8 md:w-9 md:h-9 rounded-md md:rounded-lg bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition relative"
+          >
+            <span className="text-white">🔔</span>
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 md:w-4 md:h-4 bg-rose-500 rounded-full text-[8px] md:text-[9px] text-white flex items-center justify-center font-bold">
+                {unreadCount}
+              </span>
+            )}
+          </button>
+        </div>
+      </header>
+
+      {/* Row below: sidebar + main */}
+      <div className="flex flex-1 min-h-0 overflow-visible">        {/* Sidebar */}
+        <aside
+            className={`flex flex-col shrink-0 z-40 transition-all duration-300 bg-gray-800
+            fixed md:!sticky
+            ${collapsed ? "w-40 md:w-20" : "w-40 md:w-64"}
+            ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+            top-0 md:top-0
+            h-[100dvh] md:h-screen
+            md:-mt-16
+          `}
+        >
+          {/* Logo — desktop only, straddles the top-bar boundary */}
+          <div className="hidden md:block relative h-28 shrink-0 bg-gray-800">
+            <div className="absolute top-0 left-3 w-24 h-24 z-20">
+              <img
+                src={logo}
+                alt="Logo"
+                className="w-full h-full object-contain"
+              />
+            </div>
+
+            <div className="absolute top-10 left-28 whitespace-nowrap z-10">
+              <p className="text-sm font-semibold text-white">Lecturer</p>
             </div>
           </div>
-        </header>
 
-        <div className="flex-1 p-2 md:p-6 bg-gray-100">
-          <Outlet />
-        </div>
-      </main>
+          {/* Body */}
+          <div className="relative flex flex-col flex-1 bg-gray-800 overflow-visible">
+            {/* Collapse toggle — desktop only */}
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              className="hidden md:flex absolute top-2 -right-3 z-50 w-10 h-10 bg-cyan-500 rounded-full items-center justify-center text-xs text-white hover:bg-cyan-400 transition shadow-lg"
+            >
+              {collapsed ? "▶" : "◀"}
+            </button>
 
+            {/* Nav */}
+            <nav className="p-1.5 md:p-3 space-y-0.5 md:space-y-1 overflow-y-auto">
+              {navItems.map((item) => {
+                const active = location.pathname === item.path;
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setMobileOpen(false)}
+                    className={`flex items-center gap-2 md:gap-3 px-2.5 py-1.5 md:py-2.5 rounded-md md:rounded-lg transition-all text-[12px] md:text-sm ${
+                      active
+                        ? "bg-emerald-600 text-white font-medium shadow-sm"
+                        : "text-gray-300 hover:text-white hover:bg-gray-700"
+                    }`}
+                  >
+                    <span className="text-sm md:text-base shrink-0">
+                      {item.icon}
+                    </span>
+                    {!collapsed && (
+                      <span className="whitespace-nowrap">{item.label}</span>
+                    )}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            {/* Spacer */}
+            <div className="flex-1" />
+
+            {/* Profile */}
+            <div
+              className="p-1.5 md:p-3 border-t border-gray-700 relative shrink-0"
+              ref={profileRef}
+            >
+              <button
+                onClick={() => setProfileOpen(!profileOpen)}
+                className="flex items-center gap-2 md:gap-3 w-full text-left p-1.5 md:p-2 rounded-md md:rounded-lg hover:bg-gray-700 transition"
+              >
+                <div className="w-7 h-7 md:w-9 md:h-9 rounded-full bg-gray-700 flex items-center justify-center text-xs md:text-sm font-bold text-white shrink-0 overflow-hidden border border-gray-600 leading-none">
+                  {profileForm.avatar ? (
+                    <img
+                      src={profileForm.avatar}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="leading-none">
+                      {profileForm.fullName?.charAt(0) || "L"}
+                    </span>
+                  )}
+                </div>
+                {!collapsed && (
+                  <div className="flex-1 min-w-0 overflow-hidden">
+                    <p className="text-[12px] md:text-sm font-medium text-white truncate">
+                      {profileForm.fullName || user?.fullName}
+                    </p>
+                    <p className="text-[9px] md:text-[10px] text-gray-400">
+                      Lecturer
+                    </p>
+                  </div>
+                )}
+              </button>
+
+              {profileOpen && (
+                <div className="absolute bottom-full left-2 md:left-3 mb-2 w-52 md:w-56 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden z-50">
+                  <button
+                    onClick={() => {
+                      setEditProfile(true);
+                      setProfileOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition flex items-center gap-2 text-gray-700"
+                  >
+                    ✎ Edit Profile
+                  </button>
+                  <div className="border-t border-gray-100" />
+                  <button
+                    onClick={logout}
+                    className="w-full text-left px-4 py-3 text-sm text-rose-400 hover:bg-rose-500/10 transition flex items-center gap-2"
+                  >
+                    <span>→</span> Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </aside>
+
+        {/* Main Content */}
+        <main className="flex-1 min-w-0 overflow-y-auto bg-gray-100 h-full">
+          <div className="p-2 md:p-6">
+            <Outlet />
+          </div>
+        </main>
+      </div>
+
+      {/* Notification Modal */}
       {notifOpen && (
         <div className="fixed inset-0 top-0 left-0 w-full h-full bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-3 md:p-4">
           <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
@@ -505,6 +491,7 @@ const LecturerLayout = () => {
         </div>
       )}
 
+      {/* Edit Profile Modal */}
       {editProfile && (
         <div className="fixed inset-0 top-0 left-0 w-full h-full bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-3 md:p-4 overflow-y-auto">
           <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-md p-5 md:p-6 shadow-2xl my-auto">

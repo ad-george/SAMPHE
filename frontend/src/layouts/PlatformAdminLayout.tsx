@@ -3,7 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { useEffect, useState, useRef } from "react";
 import api from "../services/api";
 import toast from "react-hot-toast";
-import logo from "../../assets/logo.png";
+import logo from "../assets/logo.png";
 
 const PlatformAdminLayout = () => {
   const { user, login, logout } = useAuth();
@@ -184,229 +184,234 @@ const PlatformAdminLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-gray-100 flex font-sans selection:bg-violet-500/30">
-      {/* Sidebar */}
-      <aside
-        className={`sticky top-0 h-screen ${
-          collapsed ? "w-20" : "w-72"
-        } transition-all duration-300 bg-[#0f0f16] border-r border-white/5 flex flex-col relative shrink-0 overflow-visible z-30`}
-      >
-        {/* Logo header — NEVER collapses.
-            The logo + role text sit above the collapsible nav.
-            The logo overflows visually when sidebar narrows. */}
-        <div className="relative h-24 shrink-0">
-          {/* Logo — fixed size, anchored to the sidebar's left */}
-          <div className="absolute top-3 left-3 w-20 h-20 rounded-full bg-[#1a1a2e] border border-white/10 flex items-center justify-center overflow-hidden shadow-lg shadow-violet-500/20 z-20">
-            <img
-              src={logo}
-              alt="Logo"
-              className="w-full h-full object-contain p-2"
-            />
-          </div>
-
-          {/* Role text — always visible, to the right of the logo */}
-          <div className="absolute top-6 left-24 whitespace-nowrap z-10">
-            <p className="text-sm font-semibold text-white">
-              Platform Admin
-            </p>
-          </div>
+    <div className="h-screen bg-[#0a0a0f] text-gray-100 font-sans selection:bg-violet-500/30 flex flex-col overflow-hidden">
+      {/* Top Bar — full width, underneath sidebar (z-30) */}
+      <header className="h-16 bg-[#0f0f16]/80 backdrop-blur-xl border-b border-white/5 flex items-center justify-between pl-[288px] pr-8 z-30 shrink-0">
+        <div>
+          <h2 className="text-lg font-semibold tracking-tight text-white">
+            {navItems.find((n) => n.path === location.pathname)?.label ||
+              "Dashboard"}
+          </h2>
+          <p className="text-xs text-gray-500">
+            {new Date().toLocaleDateString("en-US", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </p>
         </div>
 
-        {/* Toggle button */}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="absolute top-[88px] -right-3 z-50 w-10 h-10 bg-violet-600 rounded-full flex items-center justify-center text-xs text-white hover:bg-violet-500 transition shadow-lg shadow-violet-500/30"
-        >
-          {collapsed ? "▶" : "◀"}
-        </button>
-
-        {/* Nav — collapses */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {navItems.map((item) => {
-            const active = location.pathname === item.path;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                style={{ outline: "none" }}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                  active
-                    ? "bg-cyan-500/10 text-cyan-400"
-                    : "text-slate-400 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                <span
-                  className={`text-lg ${
-                    active ? "text-white" : "text-gray-500"
-                  } shrink-0`}
-                >
-                  {item.icon}
-                </span>
-                {!collapsed && (
-                  <span className="text-sm font-medium tracking-wide whitespace-nowrap">
-                    {item.label}
-                  </span>
-                )}
-                {item.path === "/platform-admin/support" &&
-                  unreadCount > 0 &&
-                  !collapsed && (
-                    <span className="ml-auto bg-rose-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                      {unreadCount}
-                    </span>
-                  )}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* System Status Card */}
-        {!collapsed && (
-          <div className="mx-4 mb-2 p-3 rounded-xl bg-gradient-to-br from-violet-600/10 to-purple-600/10 border border-violet-500/20">
-            <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">
-              System Status
-            </p>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-xs font-medium text-emerald-400">
-                All Systems Operational
+        <div className="flex items-center gap-4">
+          <div className="relative" ref={searchRef}>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                ⌕
               </span>
+              <input
+                type="text"
+                value={searchQ}
+                onChange={(e) => handleSearch(e.target.value)}
+                onFocus={() => searchQ.length >= 2 && setShowSearch(true)}
+                placeholder="Search"
+                className="bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm w-40 focus:outline-none focus:border-violet-500/50 focus:bg-white/10 text-white placeholder-gray-500 transition"
+              />
             </div>
-            <div className="mt-1 text-[10px] text-gray-600">
-              v1.0.0 • Build 2026.07
-            </div>
-          </div>
-        )}
 
-        {/* Profile Section */}
-        <div className="p-4 border-t border-white/5 relative" ref={profileRef}>
-          <button
-            onClick={() => setProfileOpen(!profileOpen)}
-            className="flex items-center gap-3 w-full text-left"
-          >
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center text-lg font-bold border border-white/10 shrink-0 overflow-hidden">
-              {profileForm.avatar ? (
-                <img
-                  src={profileForm.avatar}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                profileForm.fullName?.charAt(0) || "A"
-              )}
-            </div>
-            {!collapsed && (
-              <div className="flex-1 min-w-0 overflow-hidden">
-                <p className="text-sm font-medium text-white truncate">
-                  {profileForm.fullName || user?.fullName}
-                </p>
-                <p className="text-[10px] text-gray-500">Super Administrator</p>
+            {showSearch && searchResults && (
+              <div className="absolute top-full right-0 mt-2 w-96 bg-[#1a1a2e] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
+                {!searchResults.universities?.length && (
+                  <div className="p-4 text-sm text-gray-500 text-center">
+                    No results found
+                  </div>
+                )}
+                {searchResults.universities?.length > 0 && (
+                  <div className="p-2">
+                    <p className="text-[10px] text-gray-500 uppercase tracking-wider px-3 py-1">
+                      Institutions
+                    </p>
+                    {searchResults.universities.map((d: any) => (
+                      <button
+                        key={d.id}
+                        onClick={() => goToResult("university", d.id)}
+                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 transition"
+                      >
+                        <p className="text-sm text-white">{d.title}</p>
+                        <p className="text-xs text-gray-500">{d.subtitle}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
+          </div>
+
+          <button
+            onClick={() => setNotifOpen(true)}
+            className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition relative"
+          >
+            <span className="text-gray-400">🔔</span>
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 rounded-full text-[9px] text-white flex items-center justify-center">
+                {unreadCount}
+              </span>
+            )}
+          </button>
+        </div>
+      </header>
+
+      {/* Row below: sidebar + main */}
+      <div className="flex flex-1 min-h-0">
+        {/* Sidebar — on top of top bar (z-40) */}
+        <aside
+          className={`${
+            collapsed ? "w-20" : "w-72"
+          } transition-all duration-300 bg-[#0f0f16] border-r border-white/5 flex flex-col relative shrink-0 overflow-visible z-40 -mt-16`}
+        >
+          {/* Logo — pulled up, straddles the top-bar boundary */}
+          <div className="relative h-28 shrink-0">
+            <div className="absolute top-0 left-3 w-24 h-24 z-20">
+              <img
+                src={logo}
+                alt="Logo"
+                className="w-full h-full object-contain"
+              />
+            </div>
+
+            {/* Role text — to the right of the logo */}
+            <div className="absolute top-10 left-28 whitespace-nowrap z-10">
+              <p className="text-sm font-semibold text-white">
+                Platform Admin
+              </p>
+            </div>
+          </div>
+
+          {/* Toggle button */}
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="absolute top-[100px] -right-3 z-50 w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-xs text-white hover:bg-green-700 transition shadow-lg shadow-violet-500/30"
+          >
+            {collapsed ? "▶" : "◀"}
           </button>
 
-          {profileOpen && (
-            <div className="absolute bottom-full left-4 mb-2 w-56 bg-[#1a1a2e] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
-              <button
-                onClick={() => {
-                  setEditProfile(true);
-                  setProfileOpen(false);
-                }}
-                className="w-full text-left px-4 py-3 text-sm hover:bg-white/5 transition flex items-center gap-2 text-gray-200"
-              >
-                <span>✎</span> Edit Profile
-              </button>
-              <div className="border-t border-white/5" />
-              <button
-                onClick={logout}
-                className="w-full text-left px-4 py-3 text-sm text-rose-400 hover:bg-rose-500/10 transition flex items-center gap-2"
-              >
-                <span>→</span> Logout
-              </button>
+          {/* Nav — collapses */}
+          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+            {navItems.map((item) => {
+              const active = location.pathname === item.path;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  style={{ outline: "none" }}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                    active
+                      ? "bg-cyan-500/10 text-cyan-400"
+                      : "text-slate-400 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <span
+                    className={`text-lg ${
+                      active ? "text-white" : "text-gray-500"
+                    } shrink-0`}
+                  >
+                    {item.icon}
+                  </span>
+                  {!collapsed && (
+                    <span className="text-sm font-medium tracking-wide whitespace-nowrap">
+                      {item.label}
+                    </span>
+                  )}
+                  {item.path === "/platform-admin/support" &&
+                    unreadCount > 0 &&
+                    !collapsed && (
+                      <span className="ml-auto bg-rose-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                        {unreadCount}
+                      </span>
+                    )}
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* System Status Card */}
+          {!collapsed && (
+            <div className="mx-4 mb-2 p-3 rounded-xl bg-gradient-to-br from-violet-600/10 to-purple-600/10 border border-violet-500/20">
+              <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">
+                System Status
+              </p>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-xs font-medium text-emerald-400">
+                  All Systems Operational
+                </span>
+              </div>
+              <div className="mt-1 text-[10px] text-gray-600">
+                v1.0.0 • Build 2026.07
+              </div>
             </div>
           )}
-        </div>
-      </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
-        {/* Top Bar */}
-        <header className="sticky top-0 h-16 bg-[#0f0f16]/80 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-8 z-40 shrink-0">
-          <div>
-            <h2 className="text-lg font-semibold tracking-tight text-white">
-              {navItems.find((n) => n.path === location.pathname)?.label ||
-                "Dashboard"}
-            </h2>
-            <p className="text-xs text-gray-500">
-              {new Date().toLocaleDateString("en-US", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="relative" ref={searchRef}>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
-                  ⌕
-                </span>
-                <input
-                  type="text"
-                  value={searchQ}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  onFocus={() => searchQ.length >= 2 && setShowSearch(true)}
-                  placeholder="Search"
-                  className="bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm w-40 focus:outline-none focus:border-violet-500/50 focus:bg-white/10 text-white placeholder-gray-500 transition"
-                />
+          {/* Profile Section */}
+          <div
+            className="p-4 border-t border-white/5 relative"
+            ref={profileRef}
+          >
+            <button
+              onClick={() => setProfileOpen(!profileOpen)}
+              className="flex items-center gap-3 w-full text-left"
+            >
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center text-lg font-bold border border-white/10 shrink-0 overflow-hidden">
+                {profileForm.avatar ? (
+                  <img
+                    src={profileForm.avatar}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  profileForm.fullName?.charAt(0) || "A"
+                )}
               </div>
-
-              {showSearch && searchResults && (
-                <div className="absolute top-full right-0 mt-2 w-96 bg-[#1a1a2e] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
-                  {!searchResults.universities?.length && (
-                    <div className="p-4 text-sm text-gray-500 text-center">
-                      No results found
-                    </div>
-                  )}
-                  {searchResults.universities?.length > 0 && (
-                    <div className="p-2">
-                      <p className="text-[10px] text-gray-500 uppercase tracking-wider px-3 py-1">
-                        Institutions
-                      </p>
-                      {searchResults.universities.map((d: any) => (
-                        <button
-                          key={d.id}
-                          onClick={() => goToResult("university", d.id)}
-                          className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 transition"
-                        >
-                          <p className="text-sm text-white">{d.title}</p>
-                          <p className="text-xs text-gray-500">{d.subtitle}</p>
-                        </button>
-                      ))}
-                    </div>
-                  )}
+              {!collapsed && (
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <p className="text-sm font-medium text-white truncate">
+                    {profileForm.fullName || user?.fullName}
+                  </p>
+                  <p className="text-[10px] text-gray-500">
+                    Super Administrator
+                  </p>
                 </div>
               )}
-            </div>
-
-            <button
-              onClick={() => setNotifOpen(true)}
-              className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition relative"
-            >
-              <span className="text-gray-400">🔔</span>
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 rounded-full text-[9px] text-white flex items-center justify-center">
-                  {unreadCount}
-                </span>
-              )}
             </button>
-          </div>
-        </header>
 
-        <div className="flex-1 overflow-auto p-8">
-          <Outlet />
-        </div>
-      </main>
+            {profileOpen && (
+              <div className="absolute bottom-full left-4 mb-2 w-56 bg-[#1a1a2e] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
+                <button
+                  onClick={() => {
+                    setEditProfile(true);
+                    setProfileOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-3 text-sm hover:bg-white/5 transition flex items-center gap-2 text-gray-200"
+                >
+                  <span>✎</span> Edit Profile
+                </button>
+                <div className="border-t border-white/5" />
+                <button
+                  onClick={logout}
+                  className="w-full text-left px-4 py-3 text-sm text-rose-400 hover:bg-rose-500/10 transition flex items-center gap-2"
+                >
+                  <span>→</span> Logout
+                </button>
+              </div>
+            )}
+          </div>
+        </aside>
+
+        {/* Main Content */}
+        <main className="flex-1 min-w-0 overflow-y-auto">
+          <div className="p-8">
+            <Outlet />
+          </div>
+        </main>
+      </div>
 
       {/* Notification Modal */}
       {notifOpen && (

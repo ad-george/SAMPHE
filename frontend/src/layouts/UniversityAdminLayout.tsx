@@ -1,9 +1,9 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-// import { useEffect, useState, useRef } from "react";
 import api from "../services/api";
 import toast from "react-hot-toast";
 import React, { useEffect, useState, useRef, useMemo } from "react";
+import logo from "../assets/logo.png";
 
 const UniversityAdminLayout = () => {
   const { user, login, logout } = useAuth();
@@ -78,23 +78,17 @@ const UniversityAdminLayout = () => {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  // Add this near line 60, after the other useEffect hooks
-
-  // Create license expiry notifications
   useEffect(() => {
     const createLicenseNotification = async () => {
       try {
         const res = await api.get("/university-admin/license/status");
         const data = res.data.data;
-
         if (!data) return;
 
-        // Check if notification already exists
         const existingNotif = notifications.find(
           (n) => n.type === "LICENSE_EXPIRY" && !n.isRead,
         );
 
-        // EXPIRING SOON (30, 15, 7, 3, 1 days)
         if (
           data.status === "EXPIRING_SOON" &&
           data.daysLeft &&
@@ -104,7 +98,6 @@ const UniversityAdminLayout = () => {
           const message = `Your ${data.isTrial ? "trial" : "subscription"} license will expire on ${new Date(data.expiryDate).toLocaleDateString()}. Renew now to avoid interruption.`;
 
           if (!existingNotif) {
-            // Add to notifications
             const newNotif = {
               id: `license-expiry-${Date.now()}`,
               title,
@@ -115,7 +108,6 @@ const UniversityAdminLayout = () => {
             };
             setNotifications((prev) => [newNotif, ...prev]);
 
-            // Also save to backend if you want persistence
             try {
               await api.post("/notifications", {
                 title,
@@ -126,13 +118,10 @@ const UniversityAdminLayout = () => {
                   expiryDate: data.expiryDate,
                 },
               });
-            } catch (err) {
-              // Silent fail - notification already shown locally
-            }
+            } catch {}
           }
         }
 
-        // EXPIRED
         if (data.status === "EXPIRED") {
           const title = "License Expired";
           const message =
@@ -156,13 +145,10 @@ const UniversityAdminLayout = () => {
                 type: "LICENSE_EXPIRY",
                 metadata: { status: "EXPIRED" },
               });
-            } catch (err) {
-              // Silent fail
-            }
+            } catch {}
           }
         }
 
-        // GRACE PERIOD
         if (data.status === "GRACE_PERIOD" && data.daysLeft) {
           const title = `Grace Period: ${data.daysLeft} days remaining`;
           const message = `Your license has been revoked. You have ${data.daysLeft} days to resolve this before access is permanently blocked.`;
@@ -185,21 +171,16 @@ const UniversityAdminLayout = () => {
                 type: "LICENSE_EXPIRY",
                 metadata: { daysLeft: data.daysLeft },
               });
-            } catch (err) {
-              // Silent fail
-            }
+            } catch {}
           }
         }
-      } catch (err) {
-        // Silent fail
-      }
+      } catch {}
     };
 
-    // Only run if user is logged in
     if (user) {
       createLicenseNotification();
     }
-  }, [user]); // Re-run when user changes (login/refresh)
+  }, [user]);
 
   const fetchNotifications = async () => {
     try {
@@ -227,7 +208,6 @@ const UniversityAdminLayout = () => {
   };
 
   const handleNotificationClick = async (n: any) => {
-    // Mark as read
     if (!n.isRead) {
       try {
         await api.patch(`/notifications/${n.id}/read`);
@@ -239,15 +219,12 @@ const UniversityAdminLayout = () => {
       } catch {}
     }
 
-    // Open details modal
     setSelectedNotification(n);
     setNotifDetailsOpen(true);
   };
 
-  const unreadCount = React.useMemo(() => {
-    const count = notifications.filter((n) => !n.isRead).length;
-    console.log("Unread count:", count, notifications);
-    return count;
+  const unreadCount = useMemo(() => {
+    return notifications.filter((n) => !n.isRead).length;
   }, [notifications]);
 
   const handleSearch = async (q: string) => {
@@ -341,279 +318,261 @@ const UniversityAdminLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b1120] text-slate-200 flex font-sans">
-      {/* Sidebar - sticky, does NOT scroll */}
-      <aside
-        className={`sticky top-0 h-screen ${collapsed ? "w-20" : "w-72"} bg-[#0f172a] border-r border-slate-800/60 flex flex-col transition-all duration-300 relative shrink-0 overflow-visible`}
-      >
-        {/* Brand - matching HOD layout style */}
-        <div className="p-4 border-b border-slate-800/60 flex items-center justify-center">
-          <div className="flex items-center gap-3 bg-white/5 rounded-full px-5 py-3 border border-white/10">
-            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 shrink-0">
-              <svg
-                className="w-8 h-8 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2.5}
-                  d="M12 14l9-5-9-5-9 5 9 5z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2.5}
-                  d="M12 14l6.16-3.422A12.042 12.042 0 0112 21a12.042 12.042 0 01-6.16-10.422L12 14z"
-                />
-              </svg>
+    <div className="h-screen bg-[#0b1120] text-slate-200 font-sans flex flex-col overflow-hidden">
+      {/* Top Bar — full width, underneath sidebar */}
+      <header className="h-16 bg-[#0f172a]/80 backdrop-blur border-b border-slate-800/60 flex items-center justify-between pl-[288px] pr-6 z-30 shrink-0">
+        <div className="flex items-center gap-4">
+          <div>
+            <div className="flex items-baseline gap-3">
+              <h2 className="text-lg font-semibold text-white whitespace-nowrap">
+                {navItems.find((n) => n.path === location.pathname)?.label ||
+                  "Dashboard"}
+              </h2>
             </div>
-            {!collapsed && (
-              <div className="overflow-hidden">
-                <h1 className="font-bold text-xl text-white tracking-tight whitespace-nowrap">
-                  SAMPHE
-                </h1>
-                <p className="text-[10px] text-slate-400 uppercase tracking-widest whitespace-nowrap">
-                  Admin Portal
-                </p>
-              </div>
-            )}
+            <div className="flex items-baseline gap-3">
+              <p className="text-xs text-slate-300 whitespace-nowrap">
+                {new Date().toLocaleDateString("en-US", {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center h-full py-1">
+            <div className="h-full w-px bg-slate-600/50"></div>
+          </div>
+
+          <div>
+            <div className="flex items-baseline">
+              <span className="text-lg font-semibold text-cyan-400 whitespace-nowrap">
+                <span className="text-slate-600 font-light text-lg">| </span>
+                {user?.universityName || "University"}
+              </span>
+            </div>
+            <div className="h-[20px]"></div>
           </div>
         </div>
 
-        {/* Toggle - RIGHT EDGE */}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="absolute top-24 -right-3 z-50 w-10 h-10 bg-cyan-600 rounded-full flex items-center justify-center text-xs text-white hover:bg-cyan-500 transition shadow-lg"
-        >
-          {collapsed ? "▶" : "◀"}
-        </button>
-
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {navItems.map((item) => {
-            const active = location.pathname === item.path;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                style={{ outline: "none" }}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                  active
-                    ? "bg-cyan-500/10 text-cyan-400"
-                    : "text-slate-400 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                <span className="text-lg shrink-0">{item.icon}</span>
-                {!collapsed && (
-                  <span className="text-sm font-medium whitespace-nowrap">
-                    {item.label}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Profile Section */}
-        <div
-          className="p-4 border-t border-slate-800/60 relative"
-          ref={profileRef}
-        >
-          <button
-            onClick={() => setProfileOpen(!profileOpen)}
-            className="flex items-center gap-3 w-full text-left"
-          >
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-sm font-bold border border-slate-600 shrink-0 overflow-hidden">
-              {profileForm.avatar ? (
-                <img
-                  src={profileForm.avatar}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                profileForm.fullName?.charAt(0) || "A"
-              )}
+        <div className="flex items-center gap-4">
+          <div className="relative" ref={searchRef}>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white">
+                ⌕
+              </span>
+              <input
+                type="text"
+                value={searchQ}
+                onChange={(e) => handleSearch(e.target.value)}
+                onFocus={() => searchQ.length >= 2 && setShowSearch(true)}
+                placeholder="Search"
+                className="bg-transparent border border-white/40 rounded-lg pl-10 pr-4 py-2 text-sm w-40 focus:outline-none focus:border-white text-white placeholder-white/60"
+              />
             </div>
-            {!collapsed && (
-              <div className="flex-1 min-w-0 overflow-hidden">
-                <p className="text-sm font-medium text-white truncate">
-                  {profileForm.fullName || user?.fullName}
-                </p>
-                <p className="text-[10px] text-slate-500">University Admin</p>
+
+            {showSearch && searchResults && (
+              <div className="absolute top-full right-0 mt-2 w-96 bg-[#131c31] border border-slate-700 rounded-xl shadow-2xl overflow-hidden z-50">
+                {!searchResults.departments?.length &&
+                  !searchResults.hods?.length &&
+                  !searchResults.faculties?.length && (
+                    <div className="p-4 text-sm text-slate-500 text-center">
+                      No results found
+                    </div>
+                  )}
+                {searchResults.departments?.length > 0 && (
+                  <div className="p-2">
+                    <p className="text-[10px] text-slate-500 uppercase tracking-wider px-3 py-1">
+                      Departments
+                    </p>
+                    {searchResults.departments.map((d: any) => (
+                      <button
+                        key={d.id}
+                        onClick={() => goToResult("department", d.id)}
+                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 transition"
+                      >
+                        <p className="text-sm text-white">{d.title}</p>
+                        <p className="text-xs text-slate-500">
+                          {d.subtitle} • HOD: {d.meta || "None"}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {searchResults.hods?.length > 0 && (
+                  <div className="p-2 border-t border-slate-800">
+                    <p className="text-[10px] text-slate-500 uppercase tracking-wider px-3 py-1">
+                      HODs
+                    </p>
+                    {searchResults.hods.map((h: any) => (
+                      <button
+                        key={h.id}
+                        onClick={() => goToResult("hod", h.id)}
+                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 transition"
+                      >
+                        <p className="text-sm text-white">{h.title}</p>
+                        <p className="text-xs text-slate-500">
+                          {h.subtitle} • {h.meta}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {searchResults.faculties?.length > 0 && (
+                  <div className="p-2 border-t border-slate-800">
+                    <p className="text-[10px] text-slate-500 uppercase tracking-wider px-3 py-1">
+                      Faculties
+                    </p>
+                    {searchResults.faculties.map((f: any) => (
+                      <button
+                        key={f.id}
+                        onClick={() => goToResult("faculty", f.id)}
+                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 transition"
+                      >
+                        <p className="text-sm text-white">{f.title}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
+            )}
+          </div>
+
+          <button
+            onClick={() => setNotifOpen(true)}
+            className="w-9 h-9 rounded-lg bg-transparent border border-white/40 flex items-center justify-center hover:bg-white/5 transition relative"
+          >
+            <span className="text-white">🔔</span>
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 rounded-full text-[9px] text-white flex items-center justify-center font-bold">
+                {unreadCount}
+              </span>
             )}
           </button>
-
-          {/* Profile Popup */}
-          {profileOpen && (
-            <div className="absolute bottom-full left-4 mb-2 w-56 bg-[#131c31] border border-slate-700 rounded-xl shadow-2xl overflow-hidden z-50">
-              <button
-                onClick={() => {
-                  setEditProfile(true);
-                  setProfileOpen(false);
-                }}
-                className="w-full text-left px-4 py-3 text-sm hover:bg-white/5 transition flex items-center gap-2"
-              >
-                <span>✎</span> Edit Profile
-              </button>
-              <div className="border-t border-slate-800" />
-              <button
-                onClick={logout}
-                className="w-full text-left px-4 py-3 text-sm text-rose-400 hover:bg-rose-500/10 transition flex items-center gap-2"
-              >
-                <span>→</span> Logout
-              </button>
-            </div>
-          )}
         </div>
-      </aside>
+      </header>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
-        <header className="sticky top-0 h-16 bg-[#0f172a]/80 backdrop-blur border-b border-slate-800/60 flex items-center justify-between px-6 z-40 shrink-0">
-          <div className="flex items-center gap-4">
-            <div>
-              <div className="flex items-baseline gap-3">
-                <h2 className="text-lg font-semibold text-white whitespace-nowrap">
-                  {navItems.find((n) => n.path === location.pathname)?.label ||
-                    "Dashboard"}
-                </h2>
-              </div>
-              <div className="flex items-baseline gap-3">
-                <p className="text-xs text-slate-300 whitespace-nowrap">
-                  {new Date().toLocaleDateString("en-US", {
-                    weekday: "long",
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </p>
-              </div>
+      {/* Row below: sidebar + main */}
+      <div className="flex flex-1 min-h-0">
+        {/* Sidebar — on top of top bar */}
+        <aside
+          className={`${
+            collapsed ? "w-20" : "w-72"
+          } bg-[#0f172a] border-r border-slate-800/60 flex flex-col transition-all duration-300 relative shrink-0 overflow-visible z-40 -mt-16`}
+        >
+          {/* Logo — pulled up, straddles the top-bar boundary */}
+          <div className="relative h-28 shrink-0">
+            <div className="absolute top-0 left-3 w-24 h-24 z-20">
+              <img
+                src={logo}
+                alt="Logo"
+                className="w-full h-full object-contain"
+              />
             </div>
 
-            {/* Tall Separator - spans both rows */}
-            <div className="flex flex-col items-center h-full py-1">
-              <div className="h-full w-px bg-slate-600/50"></div>
-            </div>
-
-            {/* Right side: Institution Name */}
-            <div>
-              <div className="flex items-baseline">
-                <span className="text-lg font-semibold text-cyan-400 whitespace-nowrap">
-                  <span className="text-slate-600 font-light text-lg">| </span>
-                  {user?.universityName || "University"}
-                </span>
-              </div>
-              {/* Empty spacer to match date row height */}
-              <div className="h-[20px]"></div>
+            {/* Role text */}
+            <div className="absolute top-10 left-28 whitespace-nowrap z-10">
+              <p className="text-sm font-semibold text-white">
+                University Admin
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            {/* Search - white border, white text, dark background */}
-            <div className="relative" ref={searchRef}>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white">
-                  ⌕
-                </span>
-                <input
-                  type="text"
-                  value={searchQ}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  onFocus={() => searchQ.length >= 2 && setShowSearch(true)}
-                  placeholder="Search"
-                  className="bg-transparent border border-white/40 rounded-lg pl-10 pr-4 py-2 text-sm w-40 focus:outline-none focus:border-white text-white placeholder-white/60"
-                />
-              </div>
+          {/* Toggle */}
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="absolute top-[100px] -right-3 z-50 w-10 h-10 bg-cyan-600 rounded-full flex items-center justify-center text-xs text-white hover:bg-cyan-500 transition shadow-lg"
+          >
+            {collapsed ? "▶" : "◀"}
+          </button>
 
-              {/* Search Dropdown */}
-              {showSearch && searchResults && (
-                <div className="absolute top-full right-0 mt-2 w-96 bg-[#131c31] border border-slate-700 rounded-xl shadow-2xl overflow-hidden z-50">
-                  {!searchResults.departments?.length &&
-                    !searchResults.hods?.length &&
-                    !searchResults.faculties?.length && (
-                      <div className="p-4 text-sm text-slate-500 text-center">
-                        No results found
-                      </div>
-                    )}
-                  {searchResults.departments?.length > 0 && (
-                    <div className="p-2">
-                      <p className="text-[10px] text-slate-500 uppercase tracking-wider px-3 py-1">
-                        Departments
-                      </p>
-                      {searchResults.departments.map((d: any) => (
-                        <button
-                          key={d.id}
-                          onClick={() => goToResult("department", d.id)}
-                          className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 transition"
-                        >
-                          <p className="text-sm text-white">{d.title}</p>
-                          <p className="text-xs text-slate-500">
-                            {d.subtitle} • HOD: {d.meta || "None"}
-                          </p>
-                        </button>
-                      ))}
-                    </div>
+          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+            {navItems.map((item) => {
+              const active = location.pathname === item.path;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  style={{ outline: "none" }}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                    active
+                      ? "bg-cyan-500/10 text-cyan-400"
+                      : "text-slate-400 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <span className="text-lg shrink-0">{item.icon}</span>
+                  {!collapsed && (
+                    <span className="text-sm font-medium whitespace-nowrap">
+                      {item.label}
+                    </span>
                   )}
-                  {searchResults.hods?.length > 0 && (
-                    <div className="p-2 border-t border-slate-800">
-                      <p className="text-[10px] text-slate-500 uppercase tracking-wider px-3 py-1">
-                        HODs
-                      </p>
-                      {searchResults.hods.map((h: any) => (
-                        <button
-                          key={h.id}
-                          onClick={() => goToResult("hod", h.id)}
-                          className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 transition"
-                        >
-                          <p className="text-sm text-white">{h.title}</p>
-                          <p className="text-xs text-slate-500">
-                            {h.subtitle} • {h.meta}
-                          </p>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  {searchResults.faculties?.length > 0 && (
-                    <div className="p-2 border-t border-slate-800">
-                      <p className="text-[10px] text-slate-500 uppercase tracking-wider px-3 py-1">
-                        Faculties
-                      </p>
-                      {searchResults.faculties.map((f: any) => (
-                        <button
-                          key={f.id}
-                          onClick={() => goToResult("faculty", f.id)}
-                          className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 transition"
-                        >
-                          <p className="text-sm text-white">{f.title}</p>
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Profile Section */}
+          <div
+            className="p-4 border-t border-slate-800/60 relative"
+            ref={profileRef}
+          >
+            <button
+              onClick={() => setProfileOpen(!profileOpen)}
+              className="flex items-center gap-3 w-full text-left"
+            >
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-sm font-bold border border-slate-600 shrink-0 overflow-hidden">
+                {profileForm.avatar ? (
+                  <img
+                    src={profileForm.avatar}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  profileForm.fullName?.charAt(0) || "A"
+                )}
+              </div>
+              {!collapsed && (
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <p className="text-sm font-medium text-white truncate">
+                    {profileForm.fullName || user?.fullName}
+                  </p>
+                  <p className="text-[10px] text-slate-500">
+                    University Admin
+                  </p>
                 </div>
               )}
-            </div>
-
-            {/* Notifications - no white background */}
-            <button
-              onClick={() => setNotifOpen(true)}
-              className="w-9 h-9 rounded-lg bg-transparent border border-white/40 flex items-center justify-center hover:bg-white/5 transition relative"
-            >
-              <span className="text-white">🔔</span>
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 rounded-full text-[9px] text-white flex items-center justify-center font-bold">
-                  {unreadCount}
-                </span>
-              )}
             </button>
-          </div>
-        </header>
 
-        <div className="flex-1 overflow-auto p-8">
-          <Outlet />
-        </div>
-      </main>
+            {profileOpen && (
+              <div className="absolute bottom-full left-4 mb-2 w-56 bg-[#131c31] border border-slate-700 rounded-xl shadow-2xl overflow-hidden z-50">
+                <button
+                  onClick={() => {
+                    setEditProfile(true);
+                    setProfileOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-3 text-sm hover:bg-white/5 transition flex items-center gap-2"
+                >
+                  <span>✎</span> Edit Profile
+                </button>
+                <div className="border-t border-slate-800" />
+                <button
+                  onClick={logout}
+                  className="w-full text-left px-4 py-3 text-sm text-rose-400 hover:bg-rose-500/10 transition flex items-center gap-2"
+                >
+                  <span>→</span> Logout
+                </button>
+              </div>
+            )}
+          </div>
+        </aside>
+
+        {/* Main Content */}
+        <main className="flex-1 min-w-0 overflow-y-auto">
+          <div className="p-8">
+            <Outlet />
+          </div>
+        </main>
+      </div>
 
       {/* Notification Modal */}
       {notifOpen && (
