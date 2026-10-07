@@ -320,9 +320,9 @@ const LecturerLayout = () => {
             md:-mt-16
           `}
         >
-          {/* Logo — desktop only, straddles the top-bar boundary */}
-          <div className="hidden md:block relative h-28 shrink-0 bg-gray-800">
-            <div className="absolute top-0 left-3 w-24 h-24 z-20">
+                 {/* Logo — mobile + desktop */}
+          <div className="relative h-24 md:h-28 shrink-0 bg-gray-800">
+            <div className="absolute top-2 left-3 w-16 h-16 md:top-0 md:w-24 md:h-24 z-20">
               <img
                 src={logo}
                 alt="Logo"
@@ -330,8 +330,10 @@ const LecturerLayout = () => {
               />
             </div>
 
-            <div className="absolute top-10 left-28 whitespace-nowrap z-10">
-              <p className="text-sm font-semibold text-white">Lecturer</p>
+            <div className="absolute top-10 left-20 md:top-16 md:left-28 whitespace-nowrap z-10">
+              <p className="text-xs md:text-sm font-semibold text-white">
+                Lecturer
+              </p>
             </div>
           </div>
 
