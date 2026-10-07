@@ -330,7 +330,7 @@ const LecturerLayout = () => {
               />
             </div>
 
-            <div className="absolute top-10 left-20 md:top-16 md:left-28 whitespace-nowrap z-10">
+            <div className="absolute top-10 left-20 md:top-10 md:left-28 whitespace-nowrap z-10">
               <p className="text-xs md:text-sm font-semibold text-white">
                 Lecturer
               </p>
