@@ -4,6 +4,7 @@ import api from "../../services/api";
 import toast from "react-hot-toast";
 import backgroundImage from "../../assets/background.png";
 import { useAuth } from "../../context/AuthContext";
+import logo from "../../assets/logo.png";
 
 type Step = 1 | 2 | 3;
 
@@ -331,39 +332,12 @@ const UniversityAdminSignup = () => {
           {/* LEFT BRANDING PANEL */}
           <div className="hidden lg:flex lg:col-span-2 bg-emerald-700/60 text-white p-5 flex-col justify-between">
             <div>
-              <div className="p-4 border-b border-slate-800/60 flex items-center justify-center">
-                <div className="flex items-center gap-3 bg-white/5 rounded-full px-5 py-3 border border-white/10">
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 shrink-0">
-                    <svg
-                      className="w-8 h-8 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2.5}
-                        d="M12 14l9-5-9-5-9 5 9 5z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2.5}
-                        d="M12 14l6.16-3.422A12.042 12.042 0 0112 21a12.042 12.042 0 01-6.16-10.422L12 14z"
-                      />
-                    </svg>
-                  </div>
-
-                  <div className="overflow-hidden">
-                    <h1 className="font-bold text-xl text-white tracking-tight whitespace-nowrap">
-                      SUAMP
-                    </h1>
-                    <p className="text-[10px] text-slate-300 uppercase tracking-widest whitespace-nowrap">
-                      Registration
-                    </p>
-                  </div>
-                </div>
+                            <div className="px-4 pt-0 pb-0 border-b border-slate-800/60 flex items-center justify-center relative">
+                <img
+                  src={logo}
+                  alt="SAMPHE"
+                  className="w-40 h-40 object-contain -mt-4"
+                />
               </div>
 
               <h1 className="text-3xl font-bold leading-tight">
@@ -419,41 +393,12 @@ const UniversityAdminSignup = () => {
 
           {/* RIGHT FORM PANEL */}
           <div className="lg:col-span-3 p-5 sm:p-7 flex flex-col justify-center">
-            <div className="lg:hidden text-center mb-5">
-              <div className="flex items-center justify-center mb-3">
-                <div className="flex items-center gap-3 bg-emerald-50 rounded-full px-4 py-2 border border-emerald-100">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-md">
-                    <svg
-                      className="w-6 h-6 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2.5}
-                        d="M12 14l9-5-9-5-9 5 9 5z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2.5}
-                        d="M12 14l6.16-3.422A12.042 12.042 0 0112 21a12.042 12.042 0 01-6.16-10.422L12 14z"
-                      />
-                    </svg>
-                  </div>
-
-                  <div className="text-left">
-                    <h1 className="font-bold text-lg text-gray-800 tracking-tight">
-                      SUAMP
-                    </h1>
-                    <p className="text-[9px] text-gray-400 uppercase tracking-widest">
-                      Registration
-                    </p>
-                  </div>
-                </div>
-              </div>
+                     <div className="lg:hidden text-center mb-5">
+              <img
+                src={logo}
+                alt="SAMPHE"
+                className="w-24 h-24 object-contain mx-auto mb-3"
+              />
 
               <p className="text-sm text-gray-500">
                 Create your institution account

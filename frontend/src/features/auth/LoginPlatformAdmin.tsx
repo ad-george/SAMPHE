@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
+import logo from "../../assets/logo.png";
 
 const LoginPlatformAdmin = () => {
   const [email, setEmail] = useState("");
@@ -36,10 +37,12 @@ const LoginPlatformAdmin = () => {
     <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4">
       <div className="w-full max-w-md">
         <div className="bg-slate-900/95 backdrop-blur-xl border border-slate-700/70 rounded-2xl p-8 shadow-2xl shadow-black/40">
-          <div className="text-center mb-8">
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/30">
-              <span className="text-3xl">⚙️</span>
-            </div>
+                   <div className="text-center mb-8">
+            <img
+              src={logo}
+              alt="SAMPHE"
+              className="w-32 h-32 object-contain mx-auto mb-4"
+            />
 
             <h2 className="text-2xl font-bold text-white">Platform Admin</h2>
 
