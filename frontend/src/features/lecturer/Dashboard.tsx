@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import api from "../../services/api";
 import { useNavigate } from "react-router-dom";
+import { Line, Doughnut } from "react-chartjs-2";
+import { useTerminology } from "../../hooks/useTerminology";
+import { pluralize } from "../../utils/terminology";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -13,7 +16,6 @@ import {
   Filler,
   Legend,
 } from "chart.js";
-import { Line, Doughnut } from "react-chartjs-2";
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -52,6 +54,7 @@ const StatCard = ({ title, value, sub, icon, color, bg }: any) => (
 );
 
 const Dashboard = () => {
+  const terms = useTerminology();
   const [data, setData] = useState<any>(null);
   const [analytics, setAnalytics] = useState<any>(null);
   const [myUnits, setMyUnits] = useState<any[]>([]);
@@ -229,7 +232,7 @@ const Dashboard = () => {
         <StatCard
           title="Today's Classes"
           value={data?.todayClasses ?? 0}
-          sub="All units"
+          sub={`All ${pluralize(terms.unit).toLowerCase()}`}
           icon="📅"
           color="text-white"
           bg="bg-blue-900/30"
@@ -247,9 +250,9 @@ const Dashboard = () => {
           bg="bg-emerald-900/30"
         />
         <StatCard
-          title="Total Units"
+          title={`Total ${pluralize(terms.unit)}`}
           value={data?.totalUnits ?? 0}
-          sub="This semester"
+          sub={`This ${terms.timeUnit.toLowerCase()}`}
           icon="📖"
           color="text-white"
           bg="bg-violet-900/30"
@@ -257,7 +260,7 @@ const Dashboard = () => {
         <StatCard
           title="Avg Attendance"
           value={`${data?.avgAttendance ?? 0}%`}
-          sub="Across all units"
+          sub={`Across all ${pluralize(terms.unit).toLowerCase()}`}
           icon="📈"
           color="text-white"
           bg="bg-orange-900/30"
@@ -265,7 +268,7 @@ const Dashboard = () => {
         <StatCard
           title="Sessions Conducted"
           value={data?.sessionsConducted ?? 0}
-          sub="This semester"
+          sub={`This ${terms.timeUnit.toLowerCase()}`}
           icon="👥"
           color="text-white"
           bg="bg-teal-900/30"
@@ -314,7 +317,9 @@ const Dashboard = () => {
                 <tr className="text-slate-400 text-[9px] md:text-[11px] uppercase border-b border-slate-600">
                   <th className="text-left pb-3 font-medium">Date</th>
                   <th className="text-left pb-3 font-medium">Unit</th>
-                  <th className="text-left pb-3 font-medium">Program/Year</th>
+                  <th className="text-left pb-3 font-medium">
+                    {terms.program}/{terms.year}
+                  </th>
                   <th className="text-left pb-3 font-medium">Attendance</th>
                 </tr>
               </thead>
@@ -369,9 +374,6 @@ const Dashboard = () => {
             <h3 className="text-xs md:text-base font-bold text-white">
               Weekly Attendance Trend
             </h3>
-            <h3 className="text-xs md:text-base font-bold text-white">
-              Weekly Attendance Trend
-            </h3>
           </div>
           <div className="h-40 md:h-64">
             {analytics?.weekly?.length > 0 ? (
@@ -413,7 +415,7 @@ const Dashboard = () => {
         <div className="bg-slate-700 border border-slate-600 rounded-xl md:rounded-2xl p-3 md:p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xs md:text-base font-bold text-white">
-              My Units
+              My {pluralize(terms.unit)}
             </h3>
           </div>
           <div className="space-y-2 md:space-y-4">
@@ -431,7 +433,8 @@ const Dashboard = () => {
                   </p>
                   <div className="flex items-center gap-1.5 md:gap-2 mt-1 md:mt-1.5 flex-wrap">
                     <span className="text-[9px] md:text-xs text-slate-500">
-                      {u.totalStudents} students
+                      {u.totalStudents}{" "}
+                      {pluralize(terms.student).toLowerCase()}
                     </span>
                     <span
                       className={`text-[8px] md:text-[10px] px-1.5 md:px-2 py-0.5 rounded-full font-medium ${
@@ -448,7 +451,9 @@ const Dashboard = () => {
             ))}
             {myUnits.length === 0 && (
               <div className="h-28 md:h-48 flex items-center justify-center relative">
-                <p className="text-sm text-slate-400">No units assigned</p>
+                <p className="text-sm text-slate-400">
+                  No {pluralize(terms.unit).toLowerCase()} assigned
+                </p>
               </div>
             )}
           </div>
@@ -458,7 +463,7 @@ const Dashboard = () => {
         <div className="bg-slate-700 border border-slate-600 rounded-xl md:rounded-2xl p-3 md:p-6 shadow-sm">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-xs md:text-base font-bold text-white">
-              Attendance by Unit
+              Attendance by {terms.unit}
             </h3>
             <button
               onClick={() => navigate("/lecturer/analytics")}
@@ -489,7 +494,9 @@ const Dashboard = () => {
                 </div>
               </>
             ) : (
-              <p className="text-sm text-slate-400">No unit data</p>
+              <p className="text-sm text-slate-400">
+                No {terms.unit.toLowerCase()} data
+              </p>
             )}
           </div>
           {analytics?.byUnit?.length > 0 && (

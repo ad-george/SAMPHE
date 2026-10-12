@@ -1,8 +1,11 @@
 import { useEffect, useState, useRef } from "react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
+import { useTerminology } from "../../hooks/useTerminology";
+import { pluralize } from "../../utils/terminology";
 
 const Units = () => {
+  const terms = useTerminology();
   const [units, setUnits] = useState<any[]>([]);
   const [programs, setPrograms] = useState<any[]>([]);
   const [studyYears, setStudyYears] = useState<any[]>([]);
@@ -127,11 +130,12 @@ const Units = () => {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
-            Units
+           <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
+            {pluralize(terms.unit)}
           </h1>
           <p className="text-slate-500 mt-1">
-            Manage all units in your department
+            Manage all {pluralize(terms.unit).toLowerCase()} in your
+            department
           </p>
         </div>
         <div className="flex gap-2">
@@ -145,7 +149,7 @@ const Units = () => {
             onClick={() => setAddOpen(true)}
             className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm font-medium transition text-white shadow-lg shadow-emerald-500/20"
           >
-            + Add Unit
+           + Add {terms.unit}
           </button>
         </div>
       </div>
@@ -153,12 +157,14 @@ const Units = () => {
       {/* Stats + Search Row */}
       <div className="flex flex-wrap items-center gap-4">
         <div className="bg-white border border-slate-200 rounded-2xl px-5 py-3 shadow-sm shrink-0">
-          <p className="text-xs text-slate-500">Total Units</p>
+          <p className="text-xs text-slate-500">
+            Total {pluralize(terms.unit)}
+          </p>         
           <p className="text-xl font-bold text-emerald-600">{units.length}</p>
         </div>
         <div className="flex-1 flex items-center gap-2 bg-white border border-slate-200 rounded-2xl px-3 py-2 shadow-sm min-w-[200px]">
           <input
-            placeholder="Search by code or name..."
+            placeholder={`Search by ${terms.unit.toLowerCase()} code or name...`}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-700 focus:border-emerald-400 focus:outline-none placeholder-slate-400"
@@ -197,10 +203,16 @@ const Units = () => {
                 {/* All header alignments updated to text-left */}
                 <th className="text-left p-3 font-medium w-12">S/N</th>
                 <th className="text-left p-3 font-medium w-24">Code</th>
-                <th className="text-left p-3 font-medium w-64">Unit Name</th>
-                <th className="text-left p-3 font-medium w-48">Program</th>
+                <th className="text-left p-3 font-medium w-64">
+                  {terms.unit} Name
+                </th>
+                <th className="text-left p-3 font-medium w-48">
+                  {terms.program}
+                </th>
+                <th className="text-left p-3 font-medium w-24">
+                  {terms.timeUnit}
+                </th>
                 <th className="text-left p-3 font-medium w-20">Year</th>
-                <th className="text-left p-3 font-medium w-24">Semester</th>
                 <th className="text-left p-3 font-medium w-28">Actions</th>
               </tr>
             </thead>
@@ -268,7 +280,7 @@ const Units = () => {
               {filtered.length === 0 && (
                 <tr>
                   <td colSpan={7} className="p-12 text-center text-slate-400">
-                    No units found
+                  No {pluralize(terms.unit).toLowerCase()} found
                   </td>
                 </tr>
               )}
@@ -282,8 +294,8 @@ const Units = () => {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
           <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-md p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-slate-800">
-                Bulk Import Units
+                 <h3 className="text-lg font-bold text-slate-800">
+                Bulk Import {pluralize(terms.unit)}
               </h3>
               <button
                 onClick={() => {
@@ -339,8 +351,10 @@ const Units = () => {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
           <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-slate-800">Add Unit</h3>
-              <button
+              <h3 className="text-lg font-bold text-slate-800">
+                Add {terms.unit}
+              </h3>
+                <button
                 onClick={() => setAddOpen(false)}
                 className="text-slate-400 hover:text-slate-700 text-xl"
               >
@@ -349,15 +363,15 @@ const Units = () => {
             </div>
             <form onSubmit={addUnit} className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
-                <input
-                  placeholder="Unit Code *"
+               <input
+                  placeholder={`${terms.unit} Code *`}
                   value={form.code}
                   onChange={(e) => setForm({ ...form, code: e.target.value })}
                   className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-800 focus:border-emerald-400 focus:outline-none"
                   required
                 />
                 <input
-                  placeholder="Unit Name *"
+                  placeholder={`${terms.unit} Name *`}
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-800 focus:border-emerald-400 focus:outline-none"
@@ -373,7 +387,7 @@ const Units = () => {
                   className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-700 focus:border-emerald-400 focus:outline-none"
                   required
                 >
-                  <option value="">Program *</option>
+                  <option value="">{terms.program} *</option>
                   {programs.map((p: any) => (
                     <option key={p.id} value={p.id}>
                       {p.name}
@@ -403,7 +417,7 @@ const Units = () => {
                   className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-700 focus:border-emerald-400 focus:outline-none"
                   required
                 >
-                  <option value="">Semester *</option>
+                 <option value="">{terms.timeUnit} *</option>
                   {semesters.map((s: any) => (
                     <option key={s.id} value={s.id}>
                       {s.name}
@@ -423,7 +437,7 @@ const Units = () => {
                   type="submit"
                   className="flex-1 py-2.5 rounded-xl bg-emerald-600 text-sm font-medium hover:bg-emerald-500 transition text-white"
                 >
-                  Save Unit
+                Save {terms.unit}
                 </button>
               </div>
             </form>
@@ -436,8 +450,10 @@ const Units = () => {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
           <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-slate-800">Edit Unit</h3>
-              <button
+              <h3 className="text-lg font-bold text-slate-800">
+                Edit {terms.unit}
+              </h3>
+                 <button
                 onClick={() => {
                   setEditOpen(false);
                   setEditing(null);
@@ -450,7 +466,7 @@ const Units = () => {
             <form onSubmit={saveEdit} className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <input
-                  placeholder="Unit Code *"
+                  placeholder={`${terms.unit} Code *`}
                   value={editing.code}
                   onChange={(e) =>
                     setEditing({ ...editing, code: e.target.value })
@@ -459,7 +475,7 @@ const Units = () => {
                   required
                 />
                 <input
-                  placeholder="Unit Name *"
+                   placeholder={`${terms.unit} Name *`}
                   value={editing.name}
                   onChange={(e) =>
                     setEditing({ ...editing, name: e.target.value })
@@ -477,7 +493,7 @@ const Units = () => {
                   className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-700 focus:border-emerald-400 focus:outline-none"
                   required
                 >
-                  <option value="">Program *</option>
+                  <option value="">{terms.program} *</option>
                   {programs.map((p: any) => (
                     <option key={p.id} value={p.id}>
                       {p.name}
@@ -507,7 +523,7 @@ const Units = () => {
                   className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-700 focus:border-emerald-400 focus:outline-none"
                   required
                 >
-                  <option value="">Semester *</option>
+                <option value="">{terms.timeUnit} *</option>
                   {semesters.map((s: any) => (
                     <option key={s.id} value={s.id}>
                       {s.name}
@@ -543,7 +559,7 @@ const Units = () => {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
           <div className="bg-white border border-rose-200 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
             <h3 className="text-lg font-bold text-rose-600 mb-2">
-              Remove Unit?
+               Remove {terms.unit}?
             </h3>
             <p className="text-sm text-slate-500 mb-6">
               Permanently delete{" "}

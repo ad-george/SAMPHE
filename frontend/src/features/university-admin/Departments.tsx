@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
-
+import { useTerminology } from "../../hooks/useTerminology";
+import { pluralize } from "../../utils/terminology";
 const Departments = () => {
   const [depts, setDepts] = useState<any[]>([]);
   const [faculties, setFaculties] = useState<any[]>([]);
@@ -12,7 +13,7 @@ const Departments = () => {
   const [search, setSearch] = useState("");
   const [viewing, setViewing] = useState<any>(null);
   const [viewingLoading, setViewingLoading] = useState(false);
-
+  const terms = useTerminology();
   const fetchDepartments = () => {
     const params = search ? `?search=${encodeURIComponent(search)}` : "";
     api
@@ -32,11 +33,28 @@ const Departments = () => {
       .then((r) => setFaculties(r.data.data || []));
   };
 
-  useEffect(() => {
+    useEffect(() => {
     fetchDepartments();
     fetchStats();
     fetchFaculties();
   }, [search]);
+
+  // Auto-select the "General" faculty for non-faculty institutions
+  useEffect(() => {
+    if (!terms.faculty && faculties.length > 0 && !facultyId) {
+      // Prefer a faculty literally named "General", else the first one
+      const general =
+        faculties.find((f: any) => f.name === "General") || faculties[0];
+      setFacultyId(general.id);
+    }
+  }, [faculties, terms.faculty, facultyId]);
+
+  // Auto-select the "General" faculty for non-faculty institutions
+  useEffect(() => {
+    if (!terms.faculty && faculties.length === 1 && !facultyId) {
+      setFacultyId(faculties[0].id);
+    }
+  }, [faculties, terms.faculty, facultyId]);
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,21 +114,23 @@ const Departments = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-6">
       {/* Header */}
-      <h1 className="text-3xl font-bold text-white tracking-tight">
-        Departments
+           <h1 className="text-3xl font-bold text-white tracking-tight">
+        {pluralize(terms.department)}
       </h1>
 
       {/* Stats Cards*/}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-[#131c31] border border-slate-800 rounded-2xl p-6">
-          <p className="text-sm text-slate-500 mb-1">Total Departments</p>
-          <p className="text-3xl font-bold text-cyan-400">
+          <p className="text-sm text-slate-500 mb-1">
+            Total {pluralize(terms.department)}
+          </p>          <p className="text-3xl font-bold text-cyan-400">
             {stats?.totalDepartments || 0}
           </p>
         </div>
         <div className="bg-[#131c31] border border-slate-800 rounded-2xl p-6">
-          <p className="text-sm text-slate-500 mb-1">Total Programmes</p>
-          <p className="text-3xl font-bold text-emerald-400">
+          <p className="text-sm text-slate-500 mb-1">
+            Total {pluralize(terms.program)}
+          </p>          <p className="text-3xl font-bold text-emerald-400">
             {stats?.totalProgrammes || 0}
           </p>
         </div>
@@ -122,38 +142,39 @@ const Departments = () => {
         className="bg-[#131c31] border border-slate-800 rounded-2xl p-6 grid grid-cols-1 md:grid-cols-3 gap-4"
       >
         <input
-          placeholder="Department Name"
+          placeholder={`${terms.department} Name`}
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2.5 text-sm text-white placeholder-slate-600"
           required
         />
-        <select
-          value={facultyId}
-          onChange={(e) => setFacultyId(e.target.value)}
-          className="bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2.5 text-sm text-white"
-          required
-        >
-          <option value="">Select Faculty</option>
-          {faculties.map((f) => (
-            <option key={f.id} value={f.id}>
-              {f.name}
-            </option>
-          ))}
-        </select>
+               {terms.faculty && (
+          <select
+            value={facultyId}
+            onChange={(e) => setFacultyId(e.target.value)}
+            className="bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2.5 text-sm text-white"
+            required
+          >
+            <option value="">Select {terms.faculty}</option>
+            {faculties.map((f) => (
+              <option key={f.id} value={f.id}>
+                {f.name}
+              </option>
+            ))}
+          </select>
+        )}
         <button
           type="submit"
           className="bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl text-sm font-medium hover:from-cyan-500 hover:to-blue-500 transition shadow-lg shadow-cyan-500/20"
         >
-          Add Department
+          Add {terms.department}
         </button>
       </form>
 
       {/* Search */}
       <div className="bg-[#131c31] border border-slate-800 rounded-2xl p-4">
         <input
-          placeholder="Search by department name, faculty, or HOD..."
-          value={search}
+          placeholder={`Search by ${terms.department.toLowerCase()} name, ${terms.faculty ? terms.faculty.toLowerCase() : "HOD"}, or HOD...`}          value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2.5 text-sm text-white placeholder-slate-600"
         />
@@ -165,10 +186,16 @@ const Departments = () => {
           <thead>
             <tr className="border-b border-slate-800 text-slate-500 text-xs uppercase">
               <th className="text-left p-5 font-medium">S/N</th>
-              <th className="text-left p-5 font-medium">Department Name</th>
-              <th className="text-left p-5 font-medium">Faculty</th>
-              <th className="text-left p-5 font-medium">Programmes</th>
-              <th className="text-left p-5 font-medium">HOD</th>
+                          <th className="text-left p-5 font-medium">
+                {terms.department} Name
+              </th>
+              {terms.faculty && (
+                <th className="text-left p-5 font-medium">{terms.faculty}</th>
+              )}
+              <th className="text-left p-5 font-medium">
+                {pluralize(terms.program)}
+              </th>
+              <th className="text-left p-5 font-medium">{terms.hod}</th>
               <th className="text-left p-5 font-medium">Actions</th>
             </tr>
           </thead>
@@ -182,7 +209,11 @@ const Departments = () => {
                   {idx + 1}
                 </td>
                 <td className="p-5 text-white font-semibold">{d.name}</td>
-                <td className="p-5 text-slate-400">{d.faculty?.name || "-"}</td>
+                {terms.faculty && (
+                  <td className="p-5 text-slate-400">
+                    {d.faculty?.name || "-"}
+                  </td>
+                )}
                 <td className="p-5 text-slate-400">
                   {d._count?.programmes || 0}
                 </td>
@@ -218,10 +249,10 @@ const Departments = () => {
             {depts.length === 0 && (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={terms.faculty ? 6 : 5}
                   className="p-12 text-center text-slate-500 text-sm"
                 >
-                  No departments found
+                  No {pluralize(terms.department).toLowerCase()} found
                 </td>
               </tr>
             )}

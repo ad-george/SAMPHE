@@ -4,7 +4,8 @@ import { useEffect, useState, useRef } from "react";
 import api from "../services/api";
 import toast from "react-hot-toast";
 import logo from "../assets/logo.png";
-
+import { useTerminology } from "../hooks/useTerminology";
+import { pluralize } from "../utils/terminology";
 const HodLayout = () => {
   const { user, login, logout } = useAuth();
   const location = useLocation();
@@ -29,13 +30,14 @@ const HodLayout = () => {
   const [deptName, setDeptName] = useState("Department");
   const searchRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+  const terms = useTerminology();
 
-  const navItems = [
+   const navItems = [
     { path: "/hod", label: "Dashboard", icon: "◈" },
-    { path: "/hod/lecturers", label: "Lecturers", icon: "◊" },
-    { path: "/hod/students", label: "Students", icon: "◎" },
-    { path: "/hod/programmes", label: "Programs", icon: "▣" },
-    { path: "/hod/units", label: "Units", icon: "◉" },
+    { path: "/hod/lecturers", label: pluralize(terms.lecturer), icon: "◊" },
+    { path: "/hod/students", label: pluralize(terms.student), icon: "◎" },
+    { path: "/hod/programmes", label: pluralize(terms.program), icon: "▣" },
+    { path: "/hod/units", label: pluralize(terms.unit), icon: "◉" },
     { path: "/hod/academic-structure", label: "Academic Structure", icon: "◫" },
     { path: "/hod/class-records", label: "Attendance Records", icon: "⊞" },
     { path: "/hod/reports", label: "Reports", icon: "◧" },

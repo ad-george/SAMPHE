@@ -4,6 +4,8 @@ import { useEffect, useState, useRef } from "react";
 import api from "../services/api";
 import toast from "react-hot-toast";
 import logo from "../assets/logo.png";
+import { useTerminology } from "../hooks/useTerminology";
+import { pluralize } from "../utils/terminology";
 
 const LecturerLayout = () => {
   const { user, login, logout } = useAuth();
@@ -26,14 +28,15 @@ const LecturerLayout = () => {
   });
   const searchRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+  const terms = useTerminology();
 
   const navItems = [
     { path: "/lecturer", label: "Dashboard", icon: "◯" },
-    { path: "/lecturer/units", label: "My Units", icon: "◯" },
+    { path: "/lecturer/units", label: `My ${pluralize(terms.unit)}`, icon: "◯" },
     { path: "/lecturer/start", label: "Start Attendance", icon: "▶" },
     { path: "/lecturer/live", label: "Live Session", icon: "◉" },
     { path: "/lecturer/history", label: "History", icon: "◯" },
-    { path: "/lecturer/students", label: "Students", icon: "◯" },
+    { path: "/lecturer/students", label: pluralize(terms.student), icon: "◯" },
     { path: "/lecturer/reports", label: "Reports", icon: "◯" },
     { path: "/lecturer/analytics", label: "Attendance", icon: "◯" },
     { path: "/lecturer/sessions-analytics", label: "Sessions", icon: "◯" },
@@ -330,9 +333,9 @@ const LecturerLayout = () => {
               />
             </div>
 
-            <div className="absolute top-10 left-20 md:top-10 md:left-28 whitespace-nowrap z-10">
+              <div className="absolute top-10 left-20 md:top-10 md:left-28 whitespace-nowrap z-10">
               <p className="text-xs md:text-sm font-semibold text-white">
-                Lecturer
+                {terms.lecturer}
               </p>
             </div>
           </div>
@@ -402,8 +405,8 @@ const LecturerLayout = () => {
                     <p className="text-[12px] md:text-sm font-medium text-white truncate">
                       {profileForm.fullName || user?.fullName}
                     </p>
-                    <p className="text-[9px] md:text-[10px] text-gray-400">
-                      Lecturer
+                     <p className="text-[9px] md:text-[10px] text-gray-400">
+                      {terms.lecturer}
                     </p>
                   </div>
                 )}

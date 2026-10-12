@@ -6,6 +6,31 @@ import emailService from "../../services/email.service";
 
 const prisma = new PrismaClient();
 
+// Institution-type aware structure defaults
+const defaultStructureFor = (institutionType: string) => {
+  const t = (institutionType || "UNIVERSITY").toUpperCase();
+
+  if (t === "UNIVERSITY") {
+    return { years: 6, timeUnits: ["Semester 1", "Semester 2"] };
+  }
+  if (t === "KMTC") {
+    return { years: 3, timeUnits: ["Semester 1", "Semester 2"] };
+  }
+  if (t === "TTC") {
+    return { years: 3, timeUnits: ["Term 1", "Term 2", "Term 3"] };
+  }
+  if (t === "NATIONAL_POLYTECHNIC" || t === "TTI") {
+    return { years: 3, timeUnits: ["Term 1", "Term 2", "Term 3"] };
+  }
+  // Fallback
+  return { years: 6, timeUnits: ["Semester 1", "Semester 2"] };
+};
+
+const isFacultyBased = (institutionType: string) => {
+  const t = (institutionType || "UNIVERSITY").toUpperCase();
+  return t === "UNIVERSITY" || t === "KMTC";
+};
+
 export class AuthService {
   async platformAdminLogin(email: string, password: string) {
     const admin = await prisma.platformAdmin.findUnique({ where: { email } });
@@ -73,10 +98,10 @@ export class AuthService {
       universityId: hod.universityId,
     });
     // Get university and department names
-    const [university, department] = await Promise.all([
+      const [university, department] = await Promise.all([
       prisma.university.findUnique({
         where: { id: hod.universityId },
-        select: { name: true },
+        select: { name: true, category: true },
       }),
       prisma.department.findUnique({
         where: { id: hod.departmentId },
@@ -95,6 +120,7 @@ export class AuthService {
         departmentId: hod.departmentId,
         universityName: university?.name || "University",
         departmentName: department?.name || "Department",
+        institutionType: university?.category || "UNIVERSITY",
       },
     };
   }
@@ -114,10 +140,10 @@ export class AuthService {
     });
 
     // Get university and department names
-    const [university, department] = await Promise.all([
+       const [university, department] = await Promise.all([
       prisma.university.findUnique({
         where: { id: lecturer.universityId },
-        select: { name: true },
+        select: { name: true, category: true },
       }),
       prisma.department.findUnique({
         where: { id: lecturer.departmentId },
@@ -142,7 +168,8 @@ export class AuthService {
         universityId: lecturer.universityId,
         departmentId: lecturer.departmentId,
         universityName: university?.name || "University",
-        departmentName: department?.name || "Department", // ✅ Add this
+        departmentName: department?.name || "Department", 
+        institutionType: university?.category || "UNIVERSITY",
       },
     };
   }
@@ -235,7 +262,7 @@ export class AuthService {
     // Get university name
     const university = await prisma.university.findUnique({
       where: { id: admin.universityId },
-      select: { name: true },
+      select: { name: true, category: true },
     });
 
     return {
@@ -247,11 +274,12 @@ export class AuthService {
         role: "UNIVERSITY_ADMIN",
         universityId: admin.universityId,
         universityName: university?.name || "University",
+        institutionType: university?.category || "UNIVERSITY",
       },
     };
   }
 
-  async universityAdminSignup(data: {
+   async universityAdminSignup(data: {
     institutionType: string;
     institutionName: string;
     institutionEmail: string;
@@ -262,65 +290,66 @@ export class AuthService {
     adminPhone: string;
     adminPassword: string;
   }) {
-    // Check if admin already exists
     const existing = await prisma.universityAdmin.findUnique({
       where: { email: data.adminEmail },
     });
     if (existing) throw new Error("Admin email already registered");
 
-    // ✅ Validate password
     if (!data.adminPassword || data.adminPassword.length < 6) {
       throw new Error("Password must be at least 6 characters");
     }
 
-    // Create university
+    const institutionType = (data.institutionType || "UNIVERSITY").toUpperCase();
+
+    // Create university with proper category
     const university = await prisma.university.create({
       data: {
         name: data.institutionName,
         email: data.institutionEmail,
         phone: data.institutionPhone,
-        address: data.institutionType,
+        category: institutionType, // ← proper field
         status: "PENDING",
       },
     });
 
-    // ✅ AUTO-CREATE STUDY YEARS (Year 1 - 6)
-    const studyYearNames = [
-      "Year 1",
-      "Year 2",
-      "Year 3",
-      "Year 4",
-      "Year 5",
-      "Year 6",
-    ];
-    let firstStudyYearId: string | null = null;
-    for (const name of studyYearNames) {
-      const created = await prisma.studyYear.create({
+    // Create "General" faculty for non-faculty institutions (hidden on UI)
+    if (!isFacultyBased(institutionType)) {
+      await prisma.faculty.create({
         data: {
-          name,
-          description: `${name} of study`,
+          name: "General",
           universityId: university.id,
-        },
-      });
-      if (name === "Year 1") firstStudyYearId = created.id;
-    }
-
-    // ✅ AUTO-CREATE SEMESTERS (Semester 1 - 3)
-    const semesterNames = ["Semester 1", "Semester 2", "Semester 3"];
-    for (const name of semesterNames) {
-      await prisma.semester.create({
-        data: {
-          name,
-          universityId: university.id,
-          studyYearId: firstStudyYearId!,
         },
       });
     }
 
-    // Hash password
+    // Auto-create study years + time units
+    const { years, timeUnits } = defaultStructureFor(institutionType);
+
+    const yearIds: string[] = [];
+    for (let i = 1; i <= years; i++) {
+      const y = await prisma.studyYear.create({
+        data: {
+          name: `Year ${i}`,
+          description: `Year ${i} of study`,
+          universityId: university.id,
+        },
+      });
+      yearIds.push(y.id);
+
+      // Create time units for this year
+      for (const unitName of timeUnits) {
+        await prisma.semester.create({
+          data: {
+            name: unitName,
+            universityId: university.id,
+            studyYearId: y.id,
+          },
+        });
+      }
+    }
+
     const hashedPassword = await bcrypt.hash(data.adminPassword, 10);
 
-    // Create university admin
     const admin = await prisma.universityAdmin.create({
       data: {
         fullName: data.adminFullName,
@@ -328,6 +357,7 @@ export class AuthService {
         phone: data.adminPhone,
         password: hashedPassword,
         universityId: university.id,
+        category: institutionType,
         status: "PENDING",
       },
     });

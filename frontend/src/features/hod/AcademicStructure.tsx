@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import api from "../../services/api";
+import { useTerminology } from "../../hooks/useTerminology";
+import { pluralize } from "../../utils/terminology";
 
 const AcademicStructure = () => {
+  const terms = useTerminology();
   const [studyYears, setStudyYears] = useState<any[]>([]);
   const [semesters, setSemesters] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,14 +38,18 @@ const AcademicStructure = () => {
           🏛️ Academic Structure
         </h1>
         <p className="text-slate-500 mt-1">
-          Pre-defined study years and semesters used across all programs
+          Pre-defined study {pluralize(terms.year).toLowerCase()} and{" "}
+          {pluralize(terms.timeUnit).toLowerCase()} used across all{" "}
+          {pluralize(terms.program).toLowerCase()}
         </p>
       </div>
 
       {/* Study Years */}
       <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-slate-700">Study Years</h2>
+          <h2 className="text-sm font-semibold text-slate-700">
+            Study {pluralize(terms.year)}
+          </h2>
           <span className="text-xs bg-slate-100 text-slate-500 px-2 py-1 rounded-full">
             {studyYears.length}
           </span>
@@ -61,18 +68,23 @@ const AcademicStructure = () => {
             </span>
           ))}
           {studyYears.length === 0 && (
-            <p className="text-slate-400 text-sm">No study years found</p>
+            <p className="text-slate-400 text-sm">
+              No study {pluralize(terms.year).toLowerCase()} found
+            </p>
           )}
         </div>
         <p className="text-xs text-slate-400 mt-3">
-          Used to group students by academic level
+          Used to group {pluralize(terms.student).toLowerCase()} by academic
+          level
         </p>
       </div>
 
       {/* Semesters */}
       <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-slate-700">Semesters</h2>
+          <h2 className="text-sm font-semibold text-slate-700">
+            {pluralize(terms.timeUnit)}
+          </h2>
           <span className="text-xs bg-slate-100 text-slate-500 px-2 py-1 rounded-full">
             {semesters.length}
           </span>
@@ -91,11 +103,13 @@ const AcademicStructure = () => {
             </span>
           ))}
           {semesters.length === 0 && (
-            <p className="text-slate-400 text-sm">No semesters found</p>
+            <p className="text-slate-400 text-sm">
+              No {pluralize(terms.timeUnit).toLowerCase()} found
+            </p>
           )}
         </div>
         <p className="text-xs text-slate-400 mt-3">
-          Used to define academic periods within each year
+          Used to define academic periods within each {terms.year.toLowerCase()}
         </p>
       </div>
     </div>

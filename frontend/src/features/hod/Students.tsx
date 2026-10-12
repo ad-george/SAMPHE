@@ -1,8 +1,14 @@
 import { useEffect, useState, useRef } from "react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
+import { useTerminology } from "../../hooks/useTerminology";
+import { pluralize } from "../../utils/terminology";
+import { useAuth } from "../../context/AuthContext";
 
 const Students = () => {
+  const terms = useTerminology();
+  const { user } = useAuth();
+  const usesLevel = (user?.institutionType || "UNIVERSITY") !== "UNIVERSITY";
   const [students, setStudents] = useState<any[]>([]);
   const [archived, setArchived] = useState<any[]>([]);
   const [programs, setPrograms] = useState<any[]>([]);
@@ -311,7 +317,7 @@ const Students = () => {
           }
           className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-700 focus:border-emerald-400 focus:outline-none"
         >
-          <option value="">All Programs</option>
+          <option value="">All {pluralize(terms.program)}</option>
           {programs.map((p: any) => (
             <option key={p.id} value={p.id}>
               {p.name}
@@ -325,7 +331,7 @@ const Students = () => {
           }
           className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-700 focus:border-emerald-400 focus:outline-none"
         >
-          <option value="">All Years</option>
+          <option value="">All {pluralize(terms.year)}</option>
           {studyYears.map((y: any) => (
             <option key={y.id} value={y.id}>
               {y.name}
@@ -339,7 +345,7 @@ const Students = () => {
           }
           className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-700 focus:border-emerald-400 focus:outline-none"
         >
-          <option value="">All Semesters</option>
+          <option value="">All {pluralize(terms.timeUnit)}</option>
           {semesters.map((s: any) => (
             <option key={s.id} value={s.id}>
               {s.name}
@@ -382,7 +388,7 @@ const Students = () => {
                   onClick={() => setPromoteModal("selected_semester")}
                   className="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition"
                 >
-                  → To Semester
+                  → To {terms.timeUnit}
                 </button>
                 <button
                   onClick={() => setPromoteModal("selected_year")}
@@ -403,7 +409,7 @@ const Students = () => {
                   onClick={() => setPromoteModal("all_semester")}
                   className="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition"
                 >
-                  → To Semester
+                  → To {terms.timeUnit}
                 </button>
                 <button
                   onClick={() => setPromoteModal("all_year")}
@@ -468,9 +474,16 @@ const Students = () => {
                 )}
                 <th className="text-left p-4 font-medium">Reg No</th>
                 <th className="text-left p-4 font-medium">Name</th>
-                <th className="text-left p-4 font-medium">Program</th>
-                <th className="text-left p-4 font-medium">Year</th>
-                <th className="text-left p-4 font-medium">Semester</th>
+                {usesLevel && (
+                  <th className="text-left p-4 font-medium">Level</th>
+                )}
+                <th className="text-left p-4 font-medium">
+                  {terms.program}
+                </th>
+                <th className="text-left p-4 font-medium">{terms.year}</th>
+                <th className="text-left p-4 font-medium">
+                  {terms.timeUnit}
+                </th>
                 <th className="text-left p-4 font-medium">Email</th>
                 {view === "archived" && (
                   <>
@@ -504,6 +517,11 @@ const Students = () => {
                   <td className="p-4 text-slate-800 font-medium">
                     {s.fullName}
                   </td>
+                  {usesLevel && (
+                    <td className="p-4 text-slate-600 text-xs font-medium">
+                      {s.program?.level ? `L${s.program.level}` : "—"}
+                    </td>
+                  )}
                   <td className="p-4 text-slate-500 text-xs">
                     {s.program?.name}
                   </td>
@@ -542,7 +560,9 @@ const Students = () => {
               {data.length === 0 && (
                 <tr>
                   <td
-                    colSpan={view === "archived" ? 9 : 8}
+                    colSpan={
+                      (view === "archived" ? 9 : 8) + (usesLevel ? 1 : 0)
+                    }
                     className="p-12 text-center text-slate-400"
                   >
                     No students found
@@ -567,9 +587,9 @@ const Students = () => {
             </h3>
             <p className="text-sm text-slate-500 mb-6">
               To{" "}
-              {promoteModal.includes("semester")
-                ? "Next Semester"
-                : "Next Study Year"}
+               {promoteModal.includes("semester")
+                ? `Next ${terms.timeUnit}`
+                : `Next Study ${terms.year}`}
               ?
             </p>
             <div className="flex gap-3">
@@ -611,9 +631,13 @@ const Students = () => {
                   <tr className="border-b border-slate-100 text-slate-500 text-xs uppercase">
                     <th className="text-left p-3 font-medium">Reg No</th>
                     <th className="text-left p-3 font-medium">Name</th>
-                    <th className="text-left p-3 font-medium">Program</th>
-                    <th className="text-left p-3 font-medium">Year</th>
-                    <th className="text-left p-3 font-medium">Semester</th>
+                    <th className="text-left p-3 font-medium">
+                      {terms.program}
+                    </th>
+                    <th className="text-left p-3 font-medium">{terms.year}</th>
+                    <th className="text-left p-3 font-medium">
+                      {terms.timeUnit}
+                    </th>
                     <th className="text-left p-3 font-medium">Promoted</th>
                   </tr>
                 </thead>
@@ -672,7 +696,8 @@ const Students = () => {
             <p className="text-xs text-slate-500 mb-4">
               Upload Excel (.xlsx) or CSV. Columns:{" "}
               <span className="font-medium text-slate-700">
-                regNo, fullName, email, program, studyYear, semester
+                regNo, fullName, email, {terms.program.toLowerCase()},{" "}
+                {terms.year.toLowerCase()}, {terms.timeUnit.toLowerCase()}
               </span>
               . Optional: phone.
             </p>
@@ -732,7 +757,7 @@ const Students = () => {
                               Name
                             </th>
                             <th className="text-left p-2 font-medium text-slate-600">
-                              Program
+                              {terms.program}
                             </th>
                           </tr>
                         </thead>
@@ -826,7 +851,7 @@ const Students = () => {
                   className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-700 focus:border-emerald-400 focus:outline-none"
                   required
                 >
-                  <option value="">Program</option>
+                  <option value="">{terms.program}</option>
                   {programs.map((p: any) => (
                     <option key={p.id} value={p.id}>
                       {p.name}
@@ -841,7 +866,7 @@ const Students = () => {
                   className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-700 focus:border-emerald-400 focus:outline-none"
                   required
                 >
-                  <option value="">Year</option>
+                  <option value="">{terms.year}</option>
                   {studyYears.map((y: any) => (
                     <option key={y.id} value={y.id}>
                       {y.name}
@@ -856,7 +881,7 @@ const Students = () => {
                   className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-700 focus:border-emerald-400 focus:outline-none"
                   required
                 >
-                  <option value="">Semester</option>
+                  <option value="">{terms.timeUnit}</option>
                   {semesters.map((s: any) => (
                     <option key={s.id} value={s.id}>
                       {s.name}

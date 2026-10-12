@@ -16,6 +16,7 @@ interface User {
   departmentId?: string;
   universityName?: string;
   departmentName?: string;
+  institutionType?: string;
 }
 
 interface AuthContextType {

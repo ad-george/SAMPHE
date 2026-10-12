@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+import { useTerminology } from "../../hooks/useTerminology";
+import { pluralize } from "../../utils/terminology";
 
 const Faculties = () => {
   const [faculties, setFaculties] = useState<any[]>([]);
@@ -10,7 +13,14 @@ const Faculties = () => {
   const [editing, setEditing] = useState<any>(null);
   const [search, setSearch] = useState("");
   const [viewing, setViewing] = useState<any>(null);
+  const terms = useTerminology();
+  const navigate = useNavigate();
 
+  // Redirect away if this institution type has no faculties
+  useEffect(() => {
+    if (!terms.faculty) navigate("/university-admin");
+  }, [terms.faculty, navigate]);
+  
   const fetchFaculties = () => {
     const params = search ? `?search=${encodeURIComponent(search)}` : "";
     api
@@ -79,7 +89,7 @@ const Faculties = () => {
     <div className="space-y-6 max-w-7xl mx-auto px-6">
       {/* Header */}
       <h1 className="text-3xl font-bold text-white tracking-tight">
-        Faculties
+        {terms.faculty}
       </h1>
 
       {/* Stats Card */}
@@ -120,7 +130,7 @@ const Faculties = () => {
           type="submit"
           className="bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl text-sm font-medium hover:from-cyan-500 hover:to-blue-500 transition shadow-lg shadow-cyan-500/20"
         >
-          Add Faculty
+          Add {terms.faculty}
         </button>
       </form>
 
@@ -140,7 +150,7 @@ const Faculties = () => {
           <thead>
             <tr className="border-b border-slate-800 text-slate-500 text-xs uppercase">
               <th className="text-left p-5 font-medium">S/N</th>
-              <th className="text-left p-5 font-medium">Faculty Name</th>
+              <th className="text-left p-5 font-medium">{terms.faculty} Name</th>
               <th className="text-left p-5 font-medium">Dean</th>
               <th className="text-left p-5 font-medium">Departments</th>
               <th className="text-left p-5 font-medium">Actions</th>
@@ -188,7 +198,7 @@ const Faculties = () => {
                   colSpan={5}
                   className="p-12 text-center text-slate-500 text-sm"
                 >
-                  No faculties found
+                  No {terms.faculty?.toLowerCase() || "faculties"} found
                 </td>
               </tr>
             )}

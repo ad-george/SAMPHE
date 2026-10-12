@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
+import { useTerminology } from "../../hooks/useTerminology";
+import { pluralize } from "../../utils/terminology";
 
 const AttendanceHistory = () => {
+  const terms = useTerminology();
   const [history, setHistory] = useState<any[]>([]);
   const [archived, setArchived] = useState<any[]>([]);
   const [units, setUnits] = useState<any[]>([]);
@@ -133,7 +136,7 @@ const AttendanceHistory = () => {
         <div className="flex flex-wrap items-end gap-1.5 md:gap-3">
           <div className="flex flex-col gap-0.5">
             <label className="text-[9px] md:text-[10px] text-slate-400 uppercase tracking-wide font-semibold">
-              Unit
+              {terms.unit}
             </label>
             <select
               value={filters.unitId}
@@ -142,7 +145,7 @@ const AttendanceHistory = () => {
               }
               className="bg-slate-600 border border-slate-500 rounded-md md:rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-[11px] md:text-sm text-white focus:border-emerald-400 focus:outline-none"
             >
-              <option value="">All Units</option>
+              <option value="">All {pluralize(terms.unit)}</option>
               {units.map((u: any) => (
                 <option key={u.id} value={u.id}>
                   {u.code}
@@ -220,7 +223,7 @@ const AttendanceHistory = () => {
                   Code
                 </th>
                 <th className="text-left px-2 py-1 md:p-4 font-medium whitespace-nowrap">
-                  Unit
+                  {terms.unit}
                 </th>
                 <th className="hidden md:table-cell text-left p-4 font-medium">
                   Present
@@ -391,7 +394,9 @@ const AttendanceHistory = () => {
                 <thead className="sticky top-0 bg-slate-600">
                   <tr className="border-b border-slate-500 text-slate-400 text-[9px] md:text-xs uppercase">
                     <th className="text-left p-2 md:p-4 font-medium">Date</th>
-                    <th className="text-left p-2 md:p-4 font-medium">Unit</th>
+                    <th className="text-left p-2 md:p-4 font-medium">
+                      {terms.unit}
+                    </th>
                     <th className="text-left p-2 md:p-4 font-medium">
                       Actions
                     </th>

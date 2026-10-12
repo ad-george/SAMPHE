@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
+import { Line } from "react-chartjs-2";
+import { useTerminology } from "../../hooks/useTerminology";
+import { pluralize } from "../../utils/terminology";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,7 +15,6 @@ import {
   Legend,
   Filler,
 } from "chart.js";
-import { Line } from "react-chartjs-2";
 
 ChartJS.register(
   CategoryScale,
@@ -26,6 +28,7 @@ ChartJS.register(
 );
 
 const Lecturers = () => {
+  const terms = useTerminology();
   const [lecturers, setLecturers] = useState<any[]>([]);
   const [showCount, setShowCount] = useState(10);
   const [search, setSearch] = useState("");
@@ -92,7 +95,7 @@ const Lecturers = () => {
     const pass = generatePass();
     try {
       await api.post("/hod/lecturers", { ...form, password: pass });
-      toast.success("Lecturer created");
+       toast.success(`${terms.lecturer} created`);
       setCredentials({ ...form, password: pass });
       setForm({
         staffNumber: "",
@@ -112,8 +115,8 @@ const Lecturers = () => {
     const next = lec.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
     try {
       await api.put(`/hod/lecturers/${lec.id}`, { status: next });
-      toast.success(
-        `Lecturer ${next === "ACTIVE" ? "activated" : "deactivated"}`,
+     toast.success(
+        `${terms.lecturer} ${next === "ACTIVE" ? "activated" : "deactivated"}`,
       );
       fetchLecturers();
     } catch {
@@ -364,11 +367,12 @@ const Lecturers = () => {
     <div className="space-y-6 max-w-5xl mx-auto px-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800 tracking-tight">
-            Lecturer Management
+           <h1 className="text-3xl font-bold text-slate-800 tracking-tight">
+            {terms.lecturer} Management
           </h1>
           <p className="text-slate-500 mt-1">
-            Manage all lecturers in your department
+            Manage all {pluralize(terms.lecturer).toLowerCase()} in your
+            department
           </p>
         </div>
       </div>
@@ -389,7 +393,7 @@ const Lecturers = () => {
           onClick={() => setShowAddModal(true)}
           className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm font-medium transition text-white shadow-lg shadow-emerald-500/20"
         >
-          + Add Lecturer
+           + Add {terms.lecturer}
         </button>
         {filteredLecturers.length > 10 && (
           <button
@@ -480,7 +484,7 @@ const Lecturers = () => {
               {filteredLecturers.length === 0 && (
                 <tr>
                   <td colSpan={6} className="p-12 text-center text-slate-400">
-                    No lecturers found
+                     No {pluralize(terms.lecturer).toLowerCase()} found
                   </td>
                 </tr>
               )}
@@ -494,7 +498,9 @@ const Lecturers = () => {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
           <div className="bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-md shadow-2xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-slate-800">Add Lecturer</h3>
+              <h3 className="text-xl font-bold text-slate-800">
+                Add {terms.lecturer}
+              </h3>
               <button
                 onClick={() => setShowAddModal(false)}
                 className="text-slate-400 hover:text-slate-700 text-xl"
@@ -544,7 +550,7 @@ const Lecturers = () => {
                   type="submit"
                   className="flex-1 py-2.5 rounded-xl bg-emerald-600 text-sm font-medium hover:bg-emerald-500 transition text-white"
                 >
-                  Create Lecturer
+                  Create {terms.lecturer}
                 </button>
               </div>
             </form>
@@ -561,7 +567,7 @@ const Lecturers = () => {
                 ✉
               </div>
               <h3 className="text-xl font-bold text-slate-800">
-                Lecturer Credentials
+                {terms.lecturer} Credentials
               </h3>
             </div>
             <div className="bg-slate-50 rounded-xl p-4 space-y-3 border border-slate-100 mb-6">
@@ -614,8 +620,9 @@ const Lecturers = () => {
                 Share Credentials
               </h3>
               <p className="text-sm text-slate-500 mt-1">
-                Share login details with the lecturer
-              </p>
+                Share login details with the{" "}
+                {terms.lecturer.toLowerCase()}
+                </p>
             </div>
             <div className="bg-slate-50 rounded-xl p-4 space-y-3 border border-slate-100 mb-6">
               <div className="flex justify-between text-sm">
@@ -753,7 +760,7 @@ const Lecturers = () => {
                 }}
                 className="w-full text-left px-4 py-3 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 hover:bg-indigo-100 transition text-sm font-medium flex items-center gap-3"
               >
-                📋 Assign/Unassign Units
+                📋 Assign/Unassign {pluralize(terms.unit)}
               </button>
               <button
                 onClick={() => {
@@ -778,7 +785,7 @@ const Lecturers = () => {
                 }}
                 className="w-full text-left px-4 py-3 rounded-xl bg-rose-50 text-rose-600 border border-rose-100 hover:bg-rose-100 transition text-sm font-medium flex items-center gap-3"
               >
-                🗑 Remove Lecturer
+               🗑 Remove {terms.lecturer}
               </button>
             </div>
             <button
@@ -841,7 +848,9 @@ const Lecturers = () => {
                   </p>
                 </div>
                 <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                  <p className="text-xs text-slate-500 mb-1">Total Units</p>
+                  <p className="text-xs text-slate-500 mb-1">
+                    Total {pluralize(terms.unit)}
+                  </p>
                   <p className="text-xl font-bold text-slate-800">
                     {tracking?.lecturer?.units?.length || 0}
                   </p>
@@ -861,7 +870,9 @@ const Lecturers = () => {
                   </span>
                 </div>
                 <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                  <p className="text-xs text-slate-500 mb-1">Programs</p>
+                  <p className="text-xs text-slate-500 mb-1">
+                    {pluralize(terms.program)}
+                  </p>
                   <button
                     onClick={() => setShowPrograms(!showPrograms)}
                     className="text-xl font-bold text-emerald-600 hover:text-emerald-500 transition"
@@ -879,7 +890,7 @@ const Lecturers = () => {
                 <div className="mb-6 border border-slate-200 rounded-xl overflow-hidden">
                   <div className="p-4 bg-slate-50 border-b border-slate-200">
                     <h4 className="text-sm font-semibold text-slate-700">
-                      Programs Teaching
+                      {pluralize(terms.program)} Teaching
                     </h4>
                   </div>
                   <div className="p-4">
@@ -947,7 +958,7 @@ const Lecturers = () => {
                       <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 rounded-full">
                         {assignedUnits.length}
                       </span>
-                      Assigned Units
+                      Assigned {pluralize(terms.unit)}
                     </h4>
                   </div>
                   <div className="p-4">
@@ -1042,7 +1053,7 @@ const Lecturers = () => {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
           <div className="bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-md shadow-2xl">
             <h3 className="text-lg font-bold text-slate-800 mb-4">
-              Edit Lecturer
+             Edit {terms.lecturer}
             </h3>
             <form onSubmit={saveEdit} className="space-y-4">
               <input
@@ -1100,7 +1111,7 @@ const Lecturers = () => {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
           <div className="bg-white border border-rose-200 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
             <h3 className="text-lg font-bold text-rose-600 mb-2">
-              Remove Lecturer?
+               Remove {terms.lecturer}?
             </h3>
             <p className="text-sm text-slate-500 mb-6">
               Permanently delete{" "}
@@ -1158,7 +1169,7 @@ const Lecturers = () => {
                     <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 rounded-full">
                       {assignedUnits.length}
                     </span>
-                    Assigned Units
+                    Assigned {pluralize(terms.unit)}
                   </h4>
                   {assignedUnits.length === 0 ? (
                     <p className="text-sm text-slate-400">No units assigned</p>
@@ -1197,13 +1208,13 @@ const Lecturers = () => {
                     <span className="bg-indigo-100 text-indigo-700 text-xs px-2 py-0.5 rounded-full">
                       {availableUnits.length}
                     </span>
-                    Available Units
+                    Available {pluralize(terms.unit)}
                   </h4>
 
                   {/* 🔍 Search bar */}
                   <input
                     type="text"
-                    placeholder="Search by name, code, year, or program..."
+                    placeholder={`Search by name, code, year, or ${terms.program.toLowerCase()}...`}
                     value={unitSearch}
                     onChange={(e) => setUnitSearch(e.target.value)}
                     className="w-full mb-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 focus:border-indigo-400 focus:outline-none placeholder-slate-400"
@@ -1277,7 +1288,7 @@ const Lecturers = () => {
                 disabled={selectedUnits.length === 0 || loadingUnits}
                 className="flex-1 py-2.5 rounded-xl bg-indigo-600 text-sm font-medium hover:bg-indigo-500 transition text-white disabled:opacity-50"
               >
-                Assign {selectedUnits.length} Unit(s)
+                Assign {selectedUnits.length} {terms.unit}(s)
               </button>
             </div>
           </div>

@@ -1,12 +1,23 @@
 import { useEffect, useState } from "react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
+import { useTerminology } from "../../hooks/useTerminology";
+import { pluralize } from "../../utils/terminology";
+import { useAuth } from "../../context/AuthContext";
 
 const Programmes = () => {
+  const terms = useTerminology();
+  const { user } = useAuth();
+  const usesLevel = (user?.institutionType || "UNIVERSITY") !== "UNIVERSITY";
   const [programmes, setProgrammes] = useState<any[]>([]);
   const [showCount, setShowCount] = useState(10);
   const [search, setSearch] = useState("");
-  const [form, setForm] = useState({ name: "", code: "", duration: 4 });
+  const [form, setForm] = useState({
+    name: "",
+    code: "",
+    duration: 4,
+    level: "" as number | "",
+  });
   const [editing, setEditing] = useState<any>(null);
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -21,8 +32,8 @@ const Programmes = () => {
     e.preventDefault();
     try {
       await api.post("/hod/programs", form);
-      toast.success("Program added");
-      setForm({ name: "", code: "", duration: 4 });
+      toast.success(`${terms.program} added`);
+      setForm({ name: "", code: "", duration: 4, level: "" });
       setShowAddModal(false);
       fetch();
     } catch (err: any) {
@@ -68,11 +79,12 @@ const Programmes = () => {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
-            Programs
+           <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
+            {pluralize(terms.program)}
           </h1>
           <p className="text-slate-500 mt-1">
-            Manage all academic programs in your department
+            Manage all academic {pluralize(terms.program).toLowerCase()} in
+            your department
           </p>
         </div>
       </div>
@@ -80,8 +92,9 @@ const Programmes = () => {
       {/* Stats + Search - Side by Side */}
       <div className="flex items-center gap-4">
         <div className="bg-white border border-slate-200 rounded-2xl px-5 py-3 shadow-sm shrink-0">
-          <p className="text-xs text-slate-500">Total Programs</p>
-          <p className="text-xl font-bold text-emerald-600">
+          <p className="text-xs text-slate-500">
+            Total {pluralize(terms.program)}
+          </p>          <p className="text-xl font-bold text-emerald-600">
             {programmes.length}
           </p>
         </div>
@@ -107,7 +120,7 @@ const Programmes = () => {
           onClick={() => setShowAddModal(true)}
           className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm font-medium transition text-white shadow-lg shadow-emerald-500/20"
         >
-          + Add Program
+         + Add {terms.program}
         </button>
         {hasMore && (
           <button
@@ -133,11 +146,14 @@ const Programmes = () => {
                 <th className="text-left p-3 font-medium w-12">S/N</th>
 
                 {/* Explicitly defined width added to stop expansion */}
-                <th className="text-left p-3 font-medium w-64">
-                  Programme Name
+                 <th className="text-left p-3 font-medium w-64">
+                  {terms.program} Name
                 </th>
 
                 <th className="text-left p-3 font-medium w-28">Code</th>
+                {usesLevel && (
+                  <th className="text-left p-3 font-medium w-20">Level</th>
+                )}
                 <th className="text-left p-3 font-medium w-28">Actions</th>
               </tr>
             </thead>
@@ -164,6 +180,12 @@ const Programmes = () => {
                     {p.code || "-"}
                   </td>
 
+                  {usesLevel && (
+                    <td className="p-3 text-slate-500 text-xs text-left">
+                      {p.level ? `L${p.level}` : "—"}
+                    </td>
+                  )}
+
                   {/* Left-aligned actions buttons */}
                   <td className="p-3 text-left">
                     <div className="flex items-center justify-left gap-2">
@@ -185,8 +207,11 @@ const Programmes = () => {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="p-12 text-center text-slate-400">
-                    No programmes found
+                  <td
+                    colSpan={usesLevel ? 5 : 4}
+                    className="p-12 text-center text-slate-400"
+                  >
+                    No {pluralize(terms.program).toLowerCase()} found
                   </td>
                 </tr>
               )}
@@ -201,7 +226,7 @@ const Programmes = () => {
           <div className="bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-md shadow-2xl">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-slate-800">
-                Add Programme
+                Add {terms.program}
               </h3>
               <button
                 onClick={() => setShowAddModal(false)}
@@ -212,7 +237,7 @@ const Programmes = () => {
             </div>
             <form onSubmit={create} className="space-y-4">
               <input
-                placeholder="Programme Name *"
+                placeholder={`${terms.program} Name *`}
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-800 focus:border-emerald-400 focus:outline-none"
@@ -237,7 +262,26 @@ const Programmes = () => {
                 className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-800 focus:border-emerald-400 focus:outline-none"
                 required
               />
-              <div className="flex gap-3 pt-2"></div>
+              {usesLevel && (
+                <select
+                  value={form.level}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      level: e.target.value
+                        ? parseInt(e.target.value)
+                        : ("" as any),
+                    })
+                  }
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-800 focus:border-emerald-400 focus:outline-none"
+                >
+                  <option value="">KNQF Level (optional)</option>
+                  <option value="3">Level 3 — Artisan Certificate</option>
+                  <option value="4">Level 4 — Craft Certificate</option>
+                  <option value="5">Level 5 — Diploma</option>
+                  <option value="6">Level 6 — Higher Diploma</option>
+                </select>
+              )}
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
@@ -250,7 +294,7 @@ const Programmes = () => {
                   type="submit"
                   className="flex-1 py-2.5 rounded-xl bg-emerald-600 text-sm font-medium hover:bg-emerald-500 transition text-white"
                 >
-                  Add Programme
+                 Add {terms.program}
                 </button>
               </div>
             </form>
@@ -263,7 +307,7 @@ const Programmes = () => {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-md shadow-2xl">
             <h3 className="text-lg font-bold text-slate-800 mb-4">
-              Edit Programme
+               Edit {terms.program}
             </h3>
             <form onSubmit={saveEdit} className="space-y-4">
               <input
@@ -296,7 +340,26 @@ const Programmes = () => {
                 max={6}
                 className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-800 focus:border-emerald-400 focus:outline-none"
               />
-              <div className="flex gap-3"></div>
+              {usesLevel && (
+                <select
+                  value={editing.level || ""}
+                  onChange={(e) =>
+                    setEditing({
+                      ...editing,
+                      level: e.target.value
+                        ? parseInt(e.target.value)
+                        : null,
+                    })
+                  }
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-800 focus:border-emerald-400 focus:outline-none"
+                >
+                  <option value="">KNQF Level (optional)</option>
+                  <option value="3">Level 3 — Artisan Certificate</option>
+                  <option value="4">Level 4 — Craft Certificate</option>
+                  <option value="5">Level 5 — Diploma</option>
+                  <option value="6">Level 6 — Higher Diploma</option>
+                </select>
+              )}
               <div className="flex gap-3">
                 <button
                   type="button"
@@ -322,8 +385,8 @@ const Programmes = () => {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white border border-rose-200 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
             <h3 className="text-lg font-bold text-rose-600 mb-2">
-              Remove Programme?
-            </h3>
+              Remove {terms.program}?
+             </h3>
             <p className="text-sm text-slate-500 mb-6">
               Delete{" "}
               <span className="text-slate-800 font-medium">

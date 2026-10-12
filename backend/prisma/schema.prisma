@@ -95,6 +95,7 @@ model Programme {
   id           String     @id @default(uuid())
   name         String
   code         String?
+  level        Int?
   duration     Int
   departmentId String
   department   Department @relation(fields: [departmentId], references: [id])

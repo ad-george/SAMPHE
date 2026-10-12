@@ -4,6 +4,8 @@ import api from "../services/api";
 import toast from "react-hot-toast";
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import logo from "../assets/logo.png";
+import { useTerminology } from "../hooks/useTerminology";
+import { pluralize } from "../utils/terminology";
 
 const UniversityAdminLayout = () => {
   const { user, login, logout } = useAuth();
@@ -31,12 +33,25 @@ const UniversityAdminLayout = () => {
   });
   const searchRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+  const terms = useTerminology();
 
   const navItems = [
     { path: "/university-admin", label: "Overview", icon: "◈" },
-    { path: "/university-admin/faculties", label: "Faculties", icon: "▣" },
-    { path: "/university-admin/departments", label: "Departments", icon: "◉" },
-    { path: "/university-admin/hods", label: "HODs", icon: "◊" },
+    ...(terms.faculty
+      ? [
+          {
+            path: "/university-admin/faculties",
+            label: pluralize(terms.faculty),
+            icon: "▣",
+          },
+        ]
+      : []),
+    {
+      path: "/university-admin/departments",
+      label: pluralize(terms.department),
+      icon: "◉",
+    },
+    { path: "/university-admin/hods", label: pluralize(terms.hod), icon: "◊" },
     {
       path: "/university-admin/academic-calendar",
       label: "Academic Calendar",

@@ -33,12 +33,12 @@ const UniversityAdminSignup = () => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const institutionTypes = [
-    "University",
-    "College",
-    "TVET",
-    "KMTC",
-    "Polytechnic",
+   const institutionTypes = [
+    { label: "University", value: "UNIVERSITY" },
+    { label: "Technical Training Institute", value: "TTI" },
+    { label: "National Polytechnic", value: "NATIONAL_POLYTECHNIC" },
+    { label: "Teachers Training College", value: "TTC" },
+    { label: "Medical Training College", value: "KMTC" },
   ];
 
   const licenseTypes = ["SUBSCRIPTION", "PERPETUAL", "TRIAL"];
@@ -285,7 +285,7 @@ const UniversityAdminSignup = () => {
       <div className="grid grid-cols-3 text-center mb-5">
         <div>
           <p className="text-xs sm:text-sm font-semibold text-white">
-            University
+            Institution
           </p>
           <p className="text-[10px] sm:text-xs text-white mt-0.5">
             Institution Details
@@ -348,7 +348,7 @@ const UniversityAdminSignup = () => {
 
               <p className="text-emerald-100 mt-3 leading-relaxed text-sm">
                 Create your institution account and set up your administrator
-                access to the Smart University Attendance Management Platform.
+                access to the Smart Attendance Management Platform for Higher Education.
               </p>
             </div>
 
@@ -408,12 +408,12 @@ const UniversityAdminSignup = () => {
             {renderProgress()}
             {renderStepLabels()}
 
-            {/* STEP 1 — UNIVERSITY DETAILS */}
+            {/* STEP 1 — INSTITUTION DETAILS */}
             {step === 1 && (
               <div>
                 <div className="mb-4">
                   <h2 className="text-2xl font-bold text-gray-800">
-                    University Details
+                    Institution Details
                   </h2>
                   <p className="text-sm text-white mt-1">
                     Enter the basic information about your institution.
@@ -437,9 +437,9 @@ const UniversityAdminSignup = () => {
                         }`}
                       >
                         <option value="">Select type...</option>
-                        {institutionTypes.map((type) => (
-                          <option key={type} value={type}>
-                            {type}
+                       {institutionTypes.map((type) => (
+                          <option key={type.value} value={type.value}>
+                            {type.label}
                           </option>
                         ))}
                       </select>

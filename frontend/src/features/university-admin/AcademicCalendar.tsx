@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
+import { useTerminology } from "../../hooks/useTerminology";
+import { pluralize } from "../../utils/terminology";
 
 const AcademicCalendar = () => {
   const [activeYear, setActiveYear] = useState<any>(null);
@@ -23,6 +25,7 @@ const AcademicCalendar = () => {
     startDate: "",
     endDate: "",
   });
+  const terms = useTerminology();
 
   const fetchData = async () => {
     try {
@@ -153,8 +156,8 @@ const AcademicCalendar = () => {
       const semStart = new Date(semesterForm.startDate);
       const semEnd = new Date(semesterForm.endDate);
 
-      if (semStart < yearStart || semEnd > yearEnd) {
-        toast.error("Semester dates must be within the academic year");
+           if (semStart < yearStart || semEnd > yearEnd) {
+        toast.error(`${terms.timeUnit} dates must be within the academic year`);
         return;
       }
     }
@@ -172,10 +175,9 @@ const AcademicCalendar = () => {
           `/university-admin/semesters/${editingSemester.id}`,
           payload,
         );
-        toast.success("Semester updated successfully!");
-      } else {
+        toast.success(`${terms.timeUnit} updated successfully!`);      } else {
         await api.post("/university-admin/semesters", payload);
-        toast.success("Semester created successfully!");
+        toast.success(`${terms.timeUnit} created successfully!`);
       }
 
       setShowSemesterModal(false);
@@ -183,17 +185,21 @@ const AcademicCalendar = () => {
       setSemesterForm({ name: "", startDate: "", endDate: "" });
       fetchSemesters();
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to save semester");
-    } finally {
+      toast.error(
+        err.response?.data?.message ||
+          `Failed to save ${terms.timeUnit.toLowerCase()}`,
+      );    } finally {
       setLoading(false);
     }
   };
 
   const deleteSemester = async (id: string) => {
-    if (!confirm("Delete this semester? This cannot be undone.")) return;
+    if (!confirm(`Delete this ${terms.timeUnit}? This cannot be undone.`
+
+    )) return;
     try {
       await api.delete(`/university-admin/semesters/${id}`);
-      toast.success("Semester deleted");
+      toast.success(`${terms.timeUnit} deleted`);
       fetchSemesters();
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Failed to delete");
@@ -310,11 +316,11 @@ const AcademicCalendar = () => {
       <div className="bg-[#131c31] border border-slate-800 rounded-2xl p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">
-              Current Semester
+           <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">
+              Current {terms.timeUnit}
             </p>
             <h3 className="text-2xl font-bold text-white">
-              {currentSemester?.name || "No active semester"}
+              {currentSemester?.name || `No active ${terms.timeUnit.toLowerCase()}`}
             </h3>
             {currentSemester && (
               <p className="text-sm text-slate-400 mt-1">
@@ -327,7 +333,7 @@ const AcademicCalendar = () => {
             onClick={openAddSemester}
             className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-sm font-medium transition text-white"
           >
-            + Add Semester
+           + Add {terms.timeUnit}
           </button>
         </div>
       </div>
@@ -335,17 +341,19 @@ const AcademicCalendar = () => {
       {/* Semester List */}
       <div className="bg-[#131c31] border border-slate-800 rounded-2xl overflow-hidden">
         <div className="p-5 border-b border-slate-800 flex items-center justify-between">
-          <h3 className="font-semibold text-white">All Semesters</h3>
-          <span className="text-xs text-slate-500">
-            {semesters.length} semesters
+          <h3 className="font-semibold text-white">
+            All {pluralize(terms.timeUnit)}
+          </h3>          <span className="text-xs text-slate-500">
+            {semesters.length} {pluralize(terms.timeUnit)}
           </span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-800 text-slate-500 text-xs uppercase">
-                <th className="text-left p-4 font-medium">Semester</th>
-                <th className="text-left p-4 font-medium">Start Date</th>
+                <th className="text-left p-4 font-medium">
+                  {terms.timeUnit}
+                </th>                <th className="text-left p-4 font-medium">Start Date</th>
                 <th className="text-left p-4 font-medium">End Date</th>
                 <th className="text-left p-4 font-medium">Status</th>
                 <th className="text-left p-4 font-medium">Actions</th>
@@ -355,7 +363,7 @@ const AcademicCalendar = () => {
               {semesters.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="p-8 text-center text-slate-500">
-                    No semesters created yet
+                     No {pluralize(terms.timeUnit).toLowerCase()} created yet
                   </td>
                 </tr>
               ) : (
@@ -551,13 +559,15 @@ const AcademicCalendar = () => {
               <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center text-3xl mx-auto mb-3 border border-emerald-500/30">
                 📚
               </div>
-              <h3 className="text-2xl font-bold text-white">
-                {editingSemester ? "Edit Semester" : "Add Semester"}
+                <h3 className="text-2xl font-bold text-white">
+                {editingSemester
+                  ? `Edit ${terms.timeUnit}`
+                  : `Add ${terms.timeUnit}`}
               </h3>
               <p className="text-sm text-slate-500 mt-1">
-                {editingSemester
-                  ? "Update semester dates"
-                  : "Create a new semester"}
+                 {editingSemester
+                  ? `Update ${terms.timeUnit.toLowerCase()} dates`
+                  : `Create a new ${terms.timeUnit.toLowerCase()}`}
               </p>
               {activeYear && (
                 <p className="text-xs text-cyan-400 mt-2">
@@ -571,7 +581,7 @@ const AcademicCalendar = () => {
             <form onSubmit={handleSemesterSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-400 mb-1.5">
-                  Semester Name
+                {terms.timeUnit} Name
                 </label>
                 <input
                   type="text"
@@ -580,7 +590,7 @@ const AcademicCalendar = () => {
                     setSemesterForm({ ...semesterForm, name: e.target.value })
                   }
                   className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 transition"
-                  placeholder="e.g., Semester 1"
+                    placeholder={`e.g., ${terms.timeUnit} 1`}
                   required
                 />
               </div>
@@ -624,7 +634,7 @@ const AcademicCalendar = () => {
 
               <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
                 <p className="text-xs text-amber-400">
-                  ⚠️ Semester dates must be within the academic year range
+                  ⚠️ {terms.timeUnit} dates must be within the academic year range
                 </p>
               </div>
 
@@ -637,8 +647,8 @@ const AcademicCalendar = () => {
                   {loading
                     ? "Saving..."
                     : editingSemester
-                      ? "Update"
-                      : "Create"}
+                      ? `Update ${terms.timeUnit}`
+                      : `Create ${terms.timeUnit}`}
                 </button>
                 <button
                   type="button"

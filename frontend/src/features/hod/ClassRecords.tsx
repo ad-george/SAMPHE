@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import api from "../../services/api";
+import { useTerminology } from "../../hooks/useTerminology";
+import { pluralize } from "../../utils/terminology";
 
 const ClassRecords = () => {
+  const terms = useTerminology();
   const [records, setRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showCount, setShowCount] = useState(10);
@@ -93,7 +96,8 @@ const ClassRecords = () => {
           📊 Class Attendance Records
         </h1>
         <p className="text-slate-500 mt-1">
-          View attendance sessions across your department (this semester)
+          View attendance sessions across your department (this{" "}
+          {terms.timeUnit.toLowerCase()})
         </p>
       </div>
 
@@ -138,7 +142,7 @@ const ClassRecords = () => {
           }
           className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:border-emerald-400 focus:outline-none"
         >
-          <option value="">All Programs</option>
+          <option value="">All {pluralize(terms.program)}</option>
           {programs.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}
@@ -194,7 +198,9 @@ const ClassRecords = () => {
                 <th className="text-left p-3 font-medium">Date</th>
                 <th className="text-left p-3 font-medium">Week</th>
                 <th className="text-left p-3 font-medium">Unit</th>
-                <th className="text-left p-3 font-medium">Lecturer</th>
+                <th className="text-left p-3 font-medium">
+                  {terms.lecturer}
+                </th>
                 <th className="text-left p-3 font-medium text-center">
                   Status
                 </th>
@@ -379,19 +385,25 @@ const ClassRecords = () => {
                     </span>
                   </div>
                   <div className="flex">
-                    <span className="text-slate-500 w-32">Programme:</span>
+                    <span className="text-slate-500 w-32">
+                      {terms.program}:
+                    </span>
                     <span className="text-slate-800 font-medium">
                       {selectedSession.unit?.program?.name || "N/A"}
                     </span>
                   </div>
                   <div className="flex">
-                    <span className="text-slate-500 w-32">Lecturer:</span>
+                    <span className="text-slate-500 w-32">
+                      {terms.lecturer}:
+                    </span>
                     <span className="text-slate-800 font-medium">
                       {selectedSession.lecturer?.fullName || "N/A"}
                     </span>
                   </div>
                   <div className="flex col-span-2">
-                    <span className="text-slate-500 w-32">Unit:</span>
+                    <span className="text-slate-500 w-32">
+                      {terms.unit}:
+                    </span>
                     <span className="text-slate-800 font-medium">
                       {selectedSession.unit?.code} -{" "}
                       {selectedSession.unit?.name}
@@ -503,7 +515,7 @@ const ClassRecords = () => {
                           Registration No.
                         </th>
                         <th className="text-left p-3 font-medium text-slate-600">
-                          Student Name
+                          {terms.student} Name
                         </th>
                         <th className="text-left p-3 font-medium text-slate-600">
                           Status

@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import { Doughnut, Chart } from "react-chartjs-2";
+import { useTerminology } from "../../hooks/useTerminology";
+import { pluralize } from "../../utils/terminology";
 import api from "../../services/api";
 import {
   Chart as ChartJS,
@@ -13,7 +16,6 @@ import {
   Legend,
   Filler,
 } from "chart.js";
-import { Doughnut, Chart } from "react-chartjs-2";
 
 ChartJS.register(
   CategoryScale,
@@ -48,6 +50,7 @@ const StatCard = ({ title, value, sub, icon, color }: any) => (
 );
 
 const Dashboard = () => {
+  const terms = useTerminology();
   const [data, setData] = useState<any>(null);
   const [licenseStatus, setLicenseStatus] = useState<any>(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
@@ -168,26 +171,26 @@ const Dashboard = () => {
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <StatCard
-          title="Programs"
+              <StatCard
+          title={pluralize(terms.program)}
           value={stats.programs || 0}
           icon="🎯"
           color="bg-cyan-100 text-cyan-600"
         />
         <StatCard
-          title="Lecturers"
+          title={pluralize(terms.lecturer)}
           value={stats.lecturers || 0}
           icon="👤"
           color="bg-blue-100 text-blue-600"
         />
         <StatCard
-          title="Students"
+          title={pluralize(terms.student)}
           value={stats.students || 0}
           icon="🎓"
           color="bg-emerald-100 text-emerald-600"
         />
         <StatCard
-          title="Units"
+          title={pluralize(terms.unit)}
           value={stats.units || 0}
           icon="📘"
           color="bg-violet-100 text-violet-600"
@@ -245,8 +248,8 @@ const Dashboard = () => {
 
         {/* Doughnut — Attendance by Program */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-          <h3 className="font-semibold text-slate-800 mb-4">
-            Attendance by Program
+           <h3 className="font-semibold text-slate-800 mb-4">
+            Attendance by {terms.program}
           </h3>
           <div className="h-52 flex items-center justify-center mb-4">
             <Doughnut
@@ -264,7 +267,7 @@ const Dashboard = () => {
               {data?.summary?.avgAttendance || 0}%
             </span>
             <p className="text-xs text-slate-500 mt-1">
-              Overall Program Delivery
+              Overall {terms.program} Delivery
             </p>
           </div>
           <div className="space-y-3 pt-4 border-t border-slate-100">
@@ -327,8 +330,8 @@ const Dashboard = () => {
       {/* Row 3: Attendance Trend — full width */}
       <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="font-semibold text-slate-800">
-            Attendance Trend (This Semester)
+           <h3 className="font-semibold text-slate-800">
+            Attendance Trend (This {terms.timeUnit})
           </h3>
         </div>
 
@@ -408,8 +411,8 @@ const Dashboard = () => {
 
         {weekly.length > 0 && (
           <div className="grid grid-cols-3 gap-4 mt-6 pt-5 border-t border-slate-100">
-            <div>
-              <p className="text-xs text-slate-500">Semester</p>
+             <div>
+              <p className="text-xs text-slate-500">{terms.timeUnit}</p>
               <p className="text-sm font-semibold text-slate-800">
                 {data?.currentSemester?.name || "Current"}
               </p>
@@ -450,8 +453,9 @@ const Dashboard = () => {
 
       {/* Row 4: Semester Summary */}
       <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-        <h3 className="font-semibold text-slate-800 mb-4">Semester summary</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <h3 className="font-semibold text-slate-800 mb-4">
+          {terms.timeUnit} summary
+        </h3>        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
             <div>
               <p className="text-xs text-slate-500">Total Classes</p>

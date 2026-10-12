@@ -2,8 +2,11 @@ import { useEffect, useState } from "react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useTerminology } from "../../hooks/useTerminology";
+import { pluralize } from "../../utils/terminology";
 
 const LiveSession = () => {
+  const terms = useTerminology();
   const [session, setSession] = useState<any>(null);
   const [timer, setTimer] = useState(0);
   const [recentHistory, setRecentHistory] = useState<any[]>([]);
@@ -163,7 +166,7 @@ const LiveSession = () => {
                       </p>
                       <p className="text-[9px] md:text-xs text-slate-400 truncate">
                         {new Date(h.createdAt).toLocaleDateString()} • {total}{" "}
-                        students
+                        {pluralize(terms.student).toLowerCase()}
                       </p>
                     </div>
                     <div className="flex items-center gap-1.5 md:gap-3 shrink-0">
@@ -322,7 +325,8 @@ const LiveSession = () => {
 
       {outside > 0 && (
         <div className="bg-amber-900/20 border border-amber-800 rounded-md md:rounded-xl p-2 md:p-4 text-[10px] md:text-sm text-amber-400 flex items-center gap-1.5 md:gap-2">
-          <span>⚠</span> {outside} student(s) marked outside radius
+          <span>⚠</span> {outside}{" "}
+          {terms.student.toLowerCase()}(s) marked outside radius
         </div>
       )}
 
@@ -413,7 +417,9 @@ const LiveSession = () => {
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Total Students</span>
+                <span className="text-slate-400">
+                  Total {pluralize(terms.student)}
+                </span>
                 <span className="text-white font-medium">
                   {session.totalStudents || 0}
                 </span>

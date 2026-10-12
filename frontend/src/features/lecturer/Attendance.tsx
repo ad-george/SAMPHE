@@ -3,10 +3,13 @@ import { QRCodeSVG } from 'qrcode.react';
 import api from '../../services/api';
 import { io } from 'socket.io-client';
 import toast from 'react-hot-toast';
+import { useTerminology } from '../../hooks/useTerminology';
+import { pluralize } from '../../utils/terminology';
 
 const socket = io();
 
 const Attendance = () => {
+  const terms = useTerminology();
   const [units, setUnits] = useState<any[]>([]);
   const [selectedUnit, setSelectedUnit] = useState('');
   const [duration, setDuration] = useState(15);
@@ -91,13 +94,15 @@ const Attendance = () => {
       {!session ? (
         <div className="bg-white p-6 rounded-xl shadow space-y-4 max-w-xl">
           <div>
-            <label className="block text-sm font-medium mb-1">Teaching Unit</label>
+            <label className="block text-sm font-medium mb-1">
+              Teaching {terms.unit}
+            </label>
             <select
               value={selectedUnit}
               onChange={(e) => setSelectedUnit(e.target.value)}
               className="w-full border rounded-lg px-4 py-2"
             >
-              <option value="">Select unit...</option>
+              <option value="">Select {terms.unit.toLowerCase()}...</option>
               {units.map((u: any) => (
                 <option key={u.id} value={u.id}>{u.code} - {u.name}</option>
               ))}

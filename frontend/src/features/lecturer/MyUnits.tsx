@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import api from "../../services/api";
 import { useNavigate } from "react-router-dom";
+import { useTerminology } from "../../hooks/useTerminology";
+import { pluralize } from "../../utils/terminology";
 
 const MyUnits = () => {
+  const terms = useTerminology();
   const [units, setUnits] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -48,11 +51,12 @@ const MyUnits = () => {
           </svg>
         </div>
         <h2 className="text-sm md:text-xl font-bold text-white mb-1 md:mb-2">
-          No Units Assigned
+          No {pluralize(terms.unit)} Assigned
         </h2>
         <p className="text-[11px] md:text-sm text-slate-400 max-w-sm mb-4 md:mb-6">
-          You currently have no teaching units assigned for this semester.
-          Contact your HOD or University Admin to get started.
+          You currently have no teaching {pluralize(terms.unit).toLowerCase()}{" "}
+          assigned for this {terms.timeUnit.toLowerCase()}. Contact your{" "}
+          {terms.hod} or University Admin to get started.
         </p>
         <div className="flex gap-2 md:gap-3">
           <button
@@ -76,10 +80,10 @@ const MyUnits = () => {
     <div className="space-y-1.5 md:space-y-8 max-w-5xl mx-auto">
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-base md:text-2xl font-bold text-green tracking-tight truncate">
-          My Teaching Units
+          My Teaching {pluralize(terms.unit)}
         </h1>
         <span className="text-[10px] md:text-xs text-slate-400 bg-slate-700 border border-slate-600 px-2 md:px-3 py-1 md:py-1.5 rounded-md md:rounded-lg whitespace-nowrap shrink-0">
-          {units.length} units
+          {units.length} {pluralize(terms.unit).toLowerCase()}
         </span>
       </div>
 
@@ -107,7 +111,8 @@ const MyUnits = () => {
                     </p>
                   </div>
                   <p className="text-[9px] md:text-xs text-slate-400 mt-1 md:mt-1.5 leading-snug">
-                    {u.semester} • {u.totalStudents} students •{" "}
+                    {u.semester} • {u.totalStudents}{" "}
+                    {pluralize(terms.student).toLowerCase()} •{" "}
                     {u.sessionsConducted} sessions • Avg{" "}
                     <span className="text-emerald-400 font-medium">
                       {u.avgAttendance}%

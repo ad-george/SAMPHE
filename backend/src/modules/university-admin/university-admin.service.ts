@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 export class UniversityAdminService {
   // --- Me / Profile ---
   async getMe(adminId: string) {
-    return prisma.universityAdmin.findUnique({
+    const admin = await prisma.universityAdmin.findUnique({
       where: { id: adminId },
       select: {
         id: true,
@@ -17,10 +17,18 @@ export class UniversityAdminService {
         avatar: true,
         universityId: true,
         role: true,
+        category: true,
+        university: {
+          select: { name: true, category: true },
+        },
       },
     });
+    if (!admin) return null;
+    return {
+      ...admin,
+      institutionType: admin.university?.category || admin.category || "UNIVERSITY",
+    };
   }
-
   async updateMe(adminId: string, data: any) {
     if (data.password) data.password = await bcrypt.hash(data.password, 10);
     return prisma.universityAdmin.update({ where: { id: adminId }, data });
@@ -1613,7 +1621,7 @@ export class UniversityAdminService {
         licenseId: newLicense.id,
         universityId,
         eventType: "UPGRADE",
-        amount: 299.0,
+        amount: 60000.0,
         description: `Converted from Trial to Subscription (${daysRemaining} days remaining on trial)`,
         status: "COMPLETED",
       },

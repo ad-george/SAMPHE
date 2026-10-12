@@ -674,13 +674,13 @@ const Subscription = () => {
                 <div className="flex items-center gap-2">
                   <span className="text-slate-400 text-sm">📧 Email:</span>
                   <span className="text-slate-300 text-sm">
-                    support@suamp.com
+                    sampheplatform@gmail.com
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-slate-400 text-sm">📞 Phone:</span>
                   <span className="text-slate-300 text-sm">
-                    +254 700 000 000
+                    +254 704 760 727
                   </span>
                 </div>
                 <div className="flex items-center gap-2">

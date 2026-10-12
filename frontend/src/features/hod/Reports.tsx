@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
+import { useTerminology } from "../../hooks/useTerminology";
+import { pluralize } from "../../utils/terminology";
 
 const Reports = () => {
+  const terms = useTerminology();
   const [programs, setPrograms] = useState<any[]>([]);
   const [years, setYears] = useState<any[]>([]);
   const [semesters, setSemesters] = useState<any[]>([]);
@@ -185,9 +188,9 @@ const Reports = () => {
         <div class="details">
           <div><span class="label">School:</span> <span class="value">${faculty.name || "—"}</span></div>
           <div><span class="label">Department:</span> <span class="value">${dept.name || "—"}</span></div>
-          <div><span class="label">Programme:</span> <span class="value">${gridData.student.programName}</span></div>
-          <div><span class="label">Year of Study:</span> <span class="value">${gridData.student.studyYearName}</span></div>
-          <div><span class="label">Semester:</span> <span class="value">${gridData.student.semesterName}</span></div>
+          <div><span class="label">${terms.program}:</span> <span class="value">${gridData.student.programName}</span></div>
+          <div><span class="label">${terms.year} of Study:</span> <span class="value">${gridData.student.studyYearName}</span></div>
+          <div><span class="label">${terms.timeUnit}:</span> <span class="value">${gridData.student.semesterName}</span></div>
           <div><span class="label">Academic Year:</span> <span class="value">${gridData.academicYear || "—"}</span></div>
           <div><span class="label">Student Name:</span> <span class="value">${gridData.student.fullName}</span></div>
           <div><span class="label">Reg No:</span> <span class="value">${gridData.student.regNo}</span></div>
@@ -208,11 +211,11 @@ const Reports = () => {
           </tbody>
         </table>
 
-        <div class="section-title">Per Unit Summary</div>
+        <div class="section-title">Per ${terms.unit} Summary</div>
         <table>
           <thead>
             <tr>
-              <th style="text-align:left;">Unit</th>
+              <th style="text-align:left;">${terms.unit}</th>
               <th>Present</th>
               <th>Missed</th>
               <th>Total</th>
@@ -258,7 +261,7 @@ const Reports = () => {
         <div className="flex flex-wrap items-end gap-2 md:gap-3">
           <div className="flex flex-col gap-1 flex-1 min-w-[150px]">
             <label className="text-[10px] md:text-xs text-slate-500 uppercase tracking-wide font-semibold">
-              Program
+              {terms.program}
             </label>
             <select
               value={programId}
@@ -269,7 +272,7 @@ const Reports = () => {
               }}
               className="bg-slate-50 border border-slate-200 rounded-md md:rounded-lg px-2 md:px-3 py-2 text-[12px] md:text-sm text-slate-800 focus:border-emerald-400 focus:outline-none"
             >
-              <option value="">All Programs</option>
+              <option value="">All {pluralize(terms.program)}</option>
               {programs.map((p: any) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
@@ -281,7 +284,7 @@ const Reports = () => {
           {programId && (
             <div className="flex flex-col gap-1 flex-1 min-w-[130px]">
               <label className="text-[10px] md:text-xs text-slate-500 uppercase tracking-wide font-semibold">
-                Year
+                {terms.year}
               </label>
               <select
                 value={studyYearId}
@@ -291,7 +294,7 @@ const Reports = () => {
                 }}
                 className="bg-slate-50 border border-slate-200 rounded-md md:rounded-lg px-2 md:px-3 py-2 text-[12px] md:text-sm text-slate-800 focus:border-emerald-400 focus:outline-none"
               >
-                <option value="">All Years</option>
+                <option value="">All {pluralize(terms.year)}</option>
                 {years.map((y: any) => (
                   <option key={y.id} value={y.id}>
                     {y.name}
@@ -304,14 +307,14 @@ const Reports = () => {
           {studyYearId && (
             <div className="flex flex-col gap-1 flex-1 min-w-[130px]">
               <label className="text-[10px] md:text-xs text-slate-500 uppercase tracking-wide font-semibold">
-                Semester
+                {terms.timeUnit}
               </label>
               <select
                 value={semesterId}
                 onChange={(e) => setSemesterId(e.target.value)}
                 className="bg-slate-50 border border-slate-200 rounded-md md:rounded-lg px-2 md:px-3 py-2 text-[12px] md:text-sm text-slate-800 focus:border-emerald-400 focus:outline-none"
               >
-                <option value="">All Semesters</option>
+                <option value="">All {pluralize(terms.timeUnit)}</option>
                 {semesters.map((s: any) => (
                   <option key={s.id} value={s.id}>
                     {s.name}
@@ -327,7 +330,8 @@ const Reports = () => {
       <div className="bg-white border border-slate-200 rounded-lg md:rounded-2xl shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-3 md:px-5 py-2 md:py-4 border-b border-slate-100">
           <span className="text-[11px] md:text-sm text-slate-500">
-            {displayed.length} of {students.length} students
+            {displayed.length} of {students.length}{" "}
+            {pluralize(terms.student).toLowerCase()}
           </span>
           {students.length > viewLimit && (
             <button
@@ -347,7 +351,7 @@ const Reports = () => {
                   S/N
                 </th>
                 <th className="text-left p-2 md:p-3 font-semibold sticky left-[40px] bg-slate-50 z-10 min-w-[140px]">
-                  Student Name
+                  {terms.student} Name
                 </th>
                 <th className="text-left p-2 md:p-3 font-semibold min-w-[120px]">
                   Reg No
@@ -385,7 +389,7 @@ const Reports = () => {
                     colSpan={units.length + 5}
                     className="p-8 text-center text-slate-400"
                   >
-                    No students found
+                    No {pluralize(terms.student).toLowerCase()} found
                   </td>
                 </tr>
               ) : (
@@ -531,7 +535,7 @@ const Reports = () => {
                   </div>
                   <div className="flex">
                     <span className="text-slate-500 w-24 md:w-32 shrink-0">
-                      Programme:
+                      {terms.program}:
                     </span>
                     <span className="text-slate-800 font-medium truncate">
                       {gridData.student.programName}
@@ -539,7 +543,7 @@ const Reports = () => {
                   </div>
                   <div className="flex">
                     <span className="text-slate-500 w-24 md:w-32 shrink-0">
-                      Year:
+                      {terms.year}:
                     </span>
                     <span className="text-slate-800 font-medium">
                       {gridData.student.studyYearName}
@@ -547,7 +551,7 @@ const Reports = () => {
                   </div>
                   <div className="flex">
                     <span className="text-slate-500 w-24 md:w-32 shrink-0">
-                      Semester:
+                      {terms.timeUnit}:
                     </span>
                     <span className="text-slate-800 font-medium">
                       {gridData.student.semesterName}
@@ -563,7 +567,7 @@ const Reports = () => {
                   </div>
                   <div className="flex">
                     <span className="text-slate-500 w-24 md:w-32 shrink-0">
-                      Student:
+                      {terms.student}:
                     </span>
                     <span className="text-slate-800 font-medium truncate">
                       {gridData.student.fullName}
@@ -649,14 +653,14 @@ const Reports = () => {
                     className="text-[10px] md:text-sm font-semibold uppercase tracking-wide mb-2"
                     style={{ color: accentColor }}
                   >
-                    Per Unit Summary
+                    Per {terms.unit} Summary
                   </h4>
                   <div className="overflow-x-auto">
                     <table className="w-full text-[10px] md:text-xs border-collapse">
                       <thead>
                         <tr className="bg-slate-50 text-slate-600 uppercase">
                           <th className="border border-slate-300 text-left p-1 md:p-2">
-                            Unit
+                            {terms.unit}
                           </th>
                           <th className="border border-slate-300 p-1 md:p-2">
                             Present

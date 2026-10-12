@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import api from "../../services/api";
+import { Bar, Doughnut } from "react-chartjs-2";
+import { useTerminology } from "../../hooks/useTerminology";
+import { pluralize } from "../../utils/terminology";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -13,7 +16,6 @@ import {
   Legend,
   Filler,
 } from "chart.js";
-import { Bar, Doughnut } from "react-chartjs-2";
 
 ChartJS.register(
   CategoryScale,
@@ -29,6 +31,7 @@ ChartJS.register(
 );
 
 const SessionsAnalytics = () => {
+  const terms = useTerminology();
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
@@ -113,7 +116,7 @@ const SessionsAnalytics = () => {
         </div>
         <div className="bg-slate-700 border border-slate-600 rounded-md md:rounded-2xl p-1 md:p-6 text-center">
           <p className="text-[8px] md:text-xs text-slate-400 uppercase tracking-wide md:tracking-wider font-medium leading-tight">
-            Units
+            {pluralize(terms.unit)}
           </p>
           <p className="text-[11px] md:text-4xl font-bold text-violet-400 leading-tight">
             {data?.totalUnits || 0}
@@ -157,7 +160,7 @@ const SessionsAnalytics = () => {
                {/* Sessions by Program */}
         <div className="lg:col-span-2 bg-slate-700 border border-slate-600 rounded-lg md:rounded-2xl p-2.5 md:p-6">
           <h3 className="text-[11px] md:text-base font-semibold text-white mb-1.5 md:mb-4">
-            Sessions by Program
+            Sessions by {terms.program}
           </h3>
           <div className="space-y-2 md:space-y-4 max-h-64 overflow-y-auto">
             {data?.byProgram?.map((p: any) => (
@@ -188,7 +191,7 @@ const SessionsAnalytics = () => {
             ))}
             {!data?.byProgram?.length && (
               <p className="text-slate-500 text-[11px] md:text-sm text-center py-4">
-                No program data available
+                No {terms.program.toLowerCase()} data available
               </p>
             )}
           </div>
@@ -199,7 +202,7 @@ const SessionsAnalytics = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 md:gap-6">
         <div className="lg:col-span-2 bg-slate-700 border border-slate-600 rounded-lg md:rounded-2xl p-2.5 md:p-6">
           <h3 className="text-[11px] md:text-base font-semibold text-white mb-1.5 md:mb-4">
-            Unit Delivery Comparison
+            {terms.unit} Delivery Comparison
           </h3>
           <div className="space-y-2 md:space-y-4">
             {data?.byUnit?.map((u: any) => (
@@ -282,7 +285,8 @@ const SessionsAnalytics = () => {
           ))}
           {!data?.lowUnits?.length && (
             <p className="text-slate-500 text-[11px] md:text-sm col-span-full">
-              All units are above 75% delivery. Great work!
+              All {pluralize(terms.unit).toLowerCase()} are above 75%
+              delivery. Great work!
             </p>
           )}
         </div>

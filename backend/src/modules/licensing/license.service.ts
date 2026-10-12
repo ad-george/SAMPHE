@@ -336,7 +336,7 @@ export class LicenseService {
           universityId: universityId,
           eventType: "ACTIVATION",
           amount:
-            license.type === "PERPETUAL" ? 2499 : license.isTrial ? 0 : 299,
+            license.type === "PERPETUAL" ? 2499 : license.isTrial ? 0 : 60000,
           currency: "KES",
           description: `${license.type} license activated${license.isTrial ? " (Trial)" : ""}`,
           status: "COMPLETED",
@@ -764,7 +764,7 @@ export class LicenseService {
         licenseId: newLicense.id,
         universityId,
         eventType: "UPGRADE",
-        amount: 299.0,
+        amount: 60000.0,
         description: "Converted from Trial to Subscription",
         status: "COMPLETED",
       },

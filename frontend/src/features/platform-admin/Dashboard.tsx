@@ -90,7 +90,7 @@ const PlatformAdminDashboard = () => {
             Platform Overview
           </h1>
           <p className="text-gray-500">
-            Real-time insights across all tenant universities
+            Real-time insights across all tenant institutions
           </p>
         </div>
         {/* <button className="px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-xl font-medium text-sm hover:from-violet-500 hover:to-indigo-500 transition shadow-lg shadow-violet-500/20">
@@ -102,13 +102,13 @@ const PlatformAdminDashboard = () => {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
-          title="Active Universities"
+          title="Active Institutions"
           value={stats?.activeUniversities || 0}
           icon="▣"
           gradient="from-violet-500 to-purple-600"
         />
         <StatCard
-          title="Total Universities"
+          title="Total Institutions"
           value={stats?.totalUniversities || 0}
           icon="◉"
           gradient="from-blue-500 to-cyan-500"
@@ -278,7 +278,7 @@ const PlatformAdminDashboard = () => {
         {/* Recent Universities */}
         <div className="bg-[#13131f] border border-white/5 rounded-2xl p-6">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="font-semibold text-lg">Recent Universities</h3>
+            <h3 className="font-semibold text-lg">Recent Institutions</h3>
 
             <select
               value={universityFilter}
@@ -336,7 +336,7 @@ const PlatformAdminDashboard = () => {
 
             {recentUniversities.length === 0 && (
               <p className="text-gray-600 text-sm text-center py-8">
-                No universities registered yet
+                No institutions registered yet
               </p>
             )}
           </div>

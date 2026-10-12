@@ -2,8 +2,11 @@ import { useEffect, useState } from "react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTerminology } from "../../hooks/useTerminology";
+import { pluralize } from "../../utils/terminology";
 
 const StartAttendance = () => {
+  const terms = useTerminology();
   const [units, setUnits] = useState<any[]>([]);
   const [selectedUnit, setSelectedUnit] = useState("");
   const [duration, setDuration] = useState(15);
@@ -65,7 +68,7 @@ const StartAttendance = () => {
           {/* ── Fix 3: custom dropdown ── */}
           <div>
             <label className="text-[10px] md:text-xs text-emerald-400 uppercase tracking-wide md:tracking-wider font-medium mb-1 md:mb-3 block">
-              Select Teaching Unit
+              Select Teaching {terms.unit}
             </label>
 
             {/* Trigger button */}
@@ -75,14 +78,17 @@ const StartAttendance = () => {
               className="w-full bg-slate-800 border border-slate-500 rounded-md md:rounded-xl px-2.5 md:px-4 py-2 md:py-3 text-[12px] md:text-sm text-white text-left focus:border-emerald-400 focus:outline-none flex items-center justify-between gap-2"
             >
               <span className="truncate">
-                {unit ? `${unit.code} — ${unit.name}` : "Choose a unit..."}
+                {unit
+                  ? `${unit.code} — ${unit.name}`
+                  : `Choose a ${terms.unit.toLowerCase()}...`}
               </span>
               <span className="text-slate-400 shrink-0">▾</span>
             </button>
 
             {unit && (
               <p className="text-[10px] md:text-xs text-slate-400 mt-1 md:mt-2">
-                {unit.program} {unit.studyYear} • {unit.totalStudents} students
+                {unit.program} {unit.studyYear} • {unit.totalStudents}{" "}
+                {pluralize(terms.student).toLowerCase()}
               </p>
             )}
 
@@ -99,7 +105,7 @@ const StartAttendance = () => {
                   {/* Header */}
                   <div className="px-3 py-2 md:px-4 md:py-3 border-b border-slate-700 flex items-center justify-between shrink-0">
                     <p className="text-[11px] md:text-sm text-emerald-400 uppercase tracking-wide font-semibold">
-                      Choose Unit
+                      Choose {terms.unit}
                     </p>
                     <button
                       type="button"
@@ -114,7 +120,7 @@ const StartAttendance = () => {
                   <div className="overflow-y-auto flex-1">
                     {units.length === 0 && (
                       <p className="text-center text-[11px] text-slate-400 py-6">
-                        No units assigned
+                        No {pluralize(terms.unit).toLowerCase()} assigned
                       </p>
                     )}
                     {units.map((u: any) => {
@@ -232,7 +238,7 @@ const StartAttendance = () => {
             </p>
             <div className="grid grid-cols-2 gap-1 md:gap-2 text-[11px] md:text-sm">
               <p className="text-slate-400">
-                Unit:{" "}
+                {terms.unit}:{" "}
                 <span className="text-white font-medium truncate">
                   {unit?.name || "—"}
                 </span>

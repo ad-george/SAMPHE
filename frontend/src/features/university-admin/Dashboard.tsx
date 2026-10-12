@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import api from "../../services/api";
 import { useNavigate } from "react-router-dom";
+import { Line } from "react-chartjs-2";
+import { useTerminology } from "../../hooks/useTerminology";
+import { pluralize } from "../../utils/terminology";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,7 +15,6 @@ import {
   Legend,
   Filler,
 } from "chart.js";
-import { Line } from "react-chartjs-2";
 
 ChartJS.register(
   CategoryScale,
@@ -92,12 +94,18 @@ const Dashboard = () => {
     studyYear: "",
     semester: "",
   });
+
+  const terms = useTerminology();
   const [years, setYears] = useState<any[]>([]);
   const [studyYears, setStudyYears] = useState<any[]>([]);
-  const [semesters] = useState(["Semester 1", "Semester 2", "Semester 3"]);
+  const [semesters] = useState([
+    `${terms.timeUnit} 1`,
+    `${terms.timeUnit} 2`,
+    `${terms.timeUnit} 3`,
+  ]);
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const navigate = useNavigate();
-
+  
   useEffect(() => {
     // Check if banner was dismissed in this session
     const dismissed = sessionStorage.getItem("licenseBannerDismissed");
@@ -353,28 +361,30 @@ const Dashboard = () => {
       )}
 
       {/* STATS CARDS - Updated license card to "Account Type" */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {terms.faculty && (
+          <StatCard
+            title={pluralize(terms.faculty)}
+            value={stats?.faculties || 0}
+            color="text-blue-400"
+            icon="🏛️"
+          />
+        )}
         <StatCard
-          title="Faculties"
-          value={stats?.faculties || 0}
-          color="text-blue-400"
-          icon="🏛️"
-        />
-        <StatCard
-          title="Departments"
+          title={pluralize(terms.department)}
           value={stats?.departments || 0}
           color="text-cyan-400"
           icon="📋"
         />
         <StatCard
-          title="HODs"
+          title={pluralize(terms.hod)}
           value={stats?.hods || 0}
           color="text-emerald-400"
           icon="👤"
         />
         <StatCard
           title="Account Type"
-          value={<span className="text-sm">{licenseDisplay.type}</span>} // Same as title size
+          value={<span className="text-sm">{licenseDisplay.type}</span>}
           color="text-emerald-400"
           icon={licenseDisplay.icon}
           subtitle={
@@ -440,7 +450,7 @@ const Dashboard = () => {
               }
               className="bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
             >
-              <option value="">All Study Years</option>
+              <option value="">All {pluralize(terms.year)}</option>
               {studyYears.map((y: any) => (
                 <option key={y.id} value={y.id}>
                   {y.name}
@@ -454,8 +464,8 @@ const Dashboard = () => {
               }
               className="bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
             >
-              <option value="">All Semesters</option>
-              {semesters.map((s, i) => (
+              <option value="">All {pluralize(terms.timeUnit)}</option>
+               {semesters.map((s, i) => (
                 <option key={i} value={s}>
                   {s}
                 </option>

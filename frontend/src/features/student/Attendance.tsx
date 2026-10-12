@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import api from "../../services/api";
 import toast from "react-hot-toast";
 import backgroundImage from "../../assets/submission.png";
+import { getTerminology } from "../../utils/terminology";
 
 const StudentAttendance = () => {
   const { token } = useParams<{ token: string }>();
@@ -19,6 +20,9 @@ const StudentAttendance = () => {
   const timerInterval = useRef<any>(null);
 
   const accentColor = "#10b981";
+  const institutionType =
+    session?.lecturer?.university?.category || "UNIVERSITY";
+  const terms = getTerminology(institutionType);
 
   // ✅ Check if session is still valid
   const checkSessionValidity = async () => {
@@ -299,16 +303,16 @@ const StudentAttendance = () => {
               value={faculty?.name || department?.faculty?.name}
             />
             <InfoRow label="Stage" value={`${yearSem} / MAIN`} />
-            <InfoRow label="Dept" value={department?.name} />
+            <InfoRow label={terms.department.slice(0, 4)} value={department?.name} />
             <InfoRow
               label="Date"
               value={`${sessionDate.toLocaleDateString()} - Wk.${weekNumber}`}
             />
-            <InfoRow label="Prog" value={program?.name} />
-            <InfoRow label="Lec" value={lecturer?.fullName} />
+            <InfoRow label={terms.program} value={program?.name} />
+            <InfoRow label={terms.lecturer} value={lecturer?.fullName} />
             <div className="col-span-2">
               <InfoRow
-                label="Unit"
+                label={terms.unit}
                 value={unit?.code ? `${unit.code} - ${unit.name}` : unit?.name}
               />
             </div>

@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
+import { useTerminology } from "../../hooks/useTerminology";
+import { pluralize } from "../../utils/terminology";
 
 const Reports = () => {
+  const terms = useTerminology();
   const [history, setHistory] = useState<any[]>([]);
   const [units, setUnits] = useState<any[]>([]);
   const [filters, setFilters] = useState({
@@ -232,9 +235,9 @@ const Reports = () => {
           <div class="row"><span class="label">Stage / Campus:</span><span class="value">Y${yearNum}S${semNum} / MAIN</span></div>
           <div class="row"><span class="label">Department:</span><span class="value">${session.lecturer?.department?.name || "N/A"}</span></div>
           <div class="row"><span class="label">Date / Week:</span><span class="value">${new Date(session.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} / Week: ${Math.ceil((new Date(session.createdAt).getDate() - 1) / 7 + 1) || 1}</span></div>
-          <div class="row"><span class="label">Programme:</span><span class="value">${session.unit?.program?.name || "N/A"}</span></div>
-          <div class="row"><span class="label">Lecturer:</span><span class="value">${session.lecturer?.fullName || "N/A"}</span></div>
-          <div class="row" style="grid-column: span 2;"><span class="label">Unit:</span><span class="value">${session.unit?.code} - ${session.unit?.name}</span></div>
+          <div class="row"><span class="label">${terms.program}:</span><span class="value">${session.unit?.program?.name || "N/A"}</span></div>
+          <div class="row"><span class="label">${terms.lecturer}:</span><span class="value">${session.lecturer?.fullName || "N/A"}</span></div>
+          <div class="row" style="grid-column: span 2;"><span class="label">${terms.unit}:</span><span class="value">${session.unit?.code} - ${session.unit?.name}</span></div>
         </div>
 
         <hr />
@@ -292,7 +295,7 @@ const Reports = () => {
             <div class="date-label">Date: ___________</div>
           </div>
           <div>
-            <div class="sig-label">LEC Signature:</div>
+            <div class="sig-label">${terms.lecturer} Signature:</div>
             <div class="line"></div>
             <div class="date-label">Date: ___________</div>
           </div>
@@ -387,9 +390,9 @@ const Reports = () => {
         csv += `"Stage / Campus:","Y${yearNum}S${semNum} / MAIN"\n`;
         csv += `"Department:","${session.lecturer?.department?.name || "N/A"}"\n`;
         csv += `"Date / Week:","${new Date(session.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} / Week: ${Math.ceil((new Date(session.createdAt).getDate() - 1) / 7 + 1) || 1}"\n`;
-        csv += `"Programme:","${session.unit?.program?.name || "N/A"}"\n`;
-        csv += `"Lecturer:","${session.lecturer?.fullName || "N/A"}"\n`;
-        csv += `"Unit:","${session.unit?.code} - ${session.unit?.name}"\n`;
+        csv += `"${terms.program}:","${session.unit?.program?.name || "N/A"}"\n`;
+        csv += `"${terms.lecturer}:","${session.lecturer?.fullName || "N/A"}"\n`;
+        csv += `"${terms.unit}:","${session.unit?.code} - ${session.unit?.name}"\n`;
         csv += `\n`;
 
         csv += `"STATS"\n`;
@@ -406,7 +409,7 @@ const Reports = () => {
         });
         csv += `\n`;
 
-        csv += `"HOD Signature:","","LEC Signature:",""\n`;
+        csv += `"HOD Signature:","","${terms.lecturer} Signature:",""\n`;
         csv += `"__________________","","__________________",""\n`;
         csv += `"Date: ___________","","Date: ___________",""\n`;
         csv += `\n`;
@@ -499,7 +502,7 @@ const Reports = () => {
         </div>
         <div className="bg-slate-700 border border-slate-600 rounded-md md:rounded-2xl p-1 md:p-5 text-center">
           <p className="text-[8px] md:text-xs text-slate-400 uppercase leading-tight">
-            Students
+            {pluralize(terms.student)}
           </p>
           <p className="text-[11px] md:text-2xl font-bold text-blue-400 leading-tight">
             {stats.totalStudents}
@@ -525,7 +528,7 @@ const Reports = () => {
           {/* Unit — custom dropdown */}
           <div className="flex flex-col gap-0.5 flex-1 min-w-[120px]">
             <label className="text-[9px] md:text-xs text-slate-400 uppercase tracking-wide md:tracking-wider font-medium">
-              Unit
+              {terms.unit}
             </label>
             <button
               type="button"
@@ -536,7 +539,7 @@ const Reports = () => {
                 {filters.unitId
                   ? units.find((u: any) => u.id === filters.unitId)?.code ||
                     "Selected"
-                  : "All Units"}
+                  : `All ${pluralize(terms.unit)}`}
               </span>
               <span className="text-slate-400 shrink-0">▾</span>
             </button>
@@ -579,7 +582,7 @@ const Reports = () => {
           >
             <div className="px-3 py-2 md:px-4 md:py-3 border-b border-slate-700 flex items-center justify-between shrink-0">
               <p className="text-[11px] md:text-sm text-emerald-400 uppercase tracking-wide font-semibold">
-                Choose Unit
+                Choose {terms.unit}
               </p>
               <button
                 type="button"
@@ -602,7 +605,7 @@ const Reports = () => {
                     : "text-white"
                 }`}
               >
-                All Units
+                All {pluralize(terms.unit)}
               </button>
               {units.map((u: any) => {
                 const isSelected = u.id === filters.unitId;
@@ -814,7 +817,7 @@ const Reports = () => {
                   </div>
                   <div className="flex">
                     <span className="text-slate-500 w-16 md:w-32 shrink-0">
-                      Prog:
+                      {terms.program}:
                     </span>
                     <span className="text-slate-800 font-medium truncate">
                       {selectedReport.unit?.program?.name || "N/A"}
@@ -822,7 +825,7 @@ const Reports = () => {
                   </div>
                   <div className="flex">
                     <span className="text-slate-500 w-16 md:w-32 shrink-0">
-                      Lect:
+                      {terms.lecturer}:
                     </span>
                     <span className="text-slate-800 font-medium truncate">
                       {selectedReport.lecturer?.fullName || "N/A"}
@@ -830,7 +833,7 @@ const Reports = () => {
                   </div>
                   <div className="flex col-span-2">
                     <span className="text-slate-500 w-16 md:w-32 shrink-0">
-                      Unit:
+                      {terms.unit}:
                     </span>
                     <span className="text-slate-800 font-medium truncate">
                       {selectedReport.unit?.code} - {selectedReport.unit?.name}
@@ -942,7 +945,7 @@ const Reports = () => {
                           Reg No.
                         </th>
                         <th className="text-left p-1.5 md:p-3 font-medium text-slate-600 whitespace-nowrap">
-                          Name
+                          {terms.student} Name
                         </th>
                         <th className="text-left p-1.5 md:p-3 font-medium text-slate-600">
                           Status
@@ -1009,7 +1012,7 @@ const Reports = () => {
                 </div>
                 <div>
                   <p className="text-[10px] md:text-sm text-slate-700 font-medium">
-                    LEC. Signature:
+                    {terms.lecturer} Signature:
                   </p>
                   <div className="h-5 md:h-8 border-b border-slate-300 mt-1 md:mt-2"></div>
                   <p className="text-[9px] md:text-xs text-slate-400 mt-0.5 md:mt-1">

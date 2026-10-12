@@ -806,38 +806,38 @@ export const uploadLogo = async (
   }
 };
 
-export const universityAdminSignup = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    const { licenseCode, licenseType, ...data } = req.body;
+// export const universityAdminSignup = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction,
+// ) => {
+//   try {
+//     const { licenseCode, licenseType, ...data } = req.body;
 
-    // ... existing validation ...
+//     // ... existing validation ...
 
-    // Create university with default report settings
-    const university = await prisma.university.create({
-      data: {
-        name: data.institutionName,
-        email: data.institutionEmail,
-        phone: data.institutionPhone,
-        address: data.institutionType,
-        licenseType: licenseType,
-        status: "PENDING",
-        // ✅ Set default report settings on signup
-        reportSettings: {
-          accentColor: "#10b981",
-          showAllStudents: true,
-        },
-      },
-    });
+//     // Create university with default report settings
+//     const university = await prisma.university.create({
+//       data: {
+//         name: data.institutionName,
+//         email: data.institutionEmail,
+//         phone: data.institutionPhone,
+//         address: data.institutionType,
+//         licenseType: licenseType,
+//         status: "PENDING",
+//         // ✅ Set default report settings on signup
+//         reportSettings: {
+//           accentColor: "#10b981",
+//           showAllStudents: true,
+//         },
+//       },
+//     });
 
-    // ... rest of the signup logic
-  } catch (error: any) {
-    next({ statusCode: 400, message: error.message });
-  }
-};
+//     // ... rest of the signup logic
+//   } catch (error: any) {
+//     next({ statusCode: 400, message: error.message });
+//   }
+// };
 
 export const getUniversitySettings = async (
   req: Request,
@@ -1137,7 +1137,7 @@ export const renewLicense = async (
         licenseId: license.id,
         universityId: license.universityId,
         eventType: "RENEWAL",
-        amount: 299.0,
+        amount: 60000.0,
         description: `License renewed for ${durationMonths} months`,
         status: "COMPLETED",
       },
@@ -1441,7 +1441,7 @@ export const activateLicense = async (
           universityId,
           eventType: "ACTIVATION",
           amount:
-            license.type === "PERPETUAL" ? 2499 : license.isTrial ? 0 : 299,
+            license.type === "PERPETUAL" ? 2499 : license.isTrial ? 0 : 60000,
           currency: "KES",
           description: `${license.type} license activated${license.isTrial ? " (Trial)" : ""}`,
           status: "COMPLETED",

@@ -151,17 +151,20 @@ const PlatformAdminUniversities = () => {
           <option value="UNIVERSITY" className="bg-[#1a1a2e] text-white">
             University
           </option>
-          <option value="POLYTECHNIC" className="bg-[#1a1a2e] text-white">
-            Polytechnic
+          <option value="KMTC" className="bg-[#1a1a2e] text-white">
+            Kenya Medical Training College
           </option>
-          <option value="COLLEGE" className="bg-[#1a1a2e] text-white">
-            College
+          <option
+            value="NATIONAL_POLYTECHNIC"
+            className="bg-[#1a1a2e] text-white"
+          >
+            National Polytechnic
           </option>
-          <option value="TVET" className="bg-[#1a1a2e] text-white">
-            TVET
+          <option value="TTI" className="bg-[#1a1a2e] text-white">
+            Technical Training Institute
           </option>
-          <option value="INSTITUTE" className="bg-[#1a1a2e] text-white">
-            Institute
+          <option value="TTC" className="bg-[#1a1a2e] text-white">
+            Teachers Training College
           </option>
         </select>
 
@@ -445,7 +448,7 @@ const PlatformAdminUniversities = () => {
                 <p className="text-2xl font-bold text-blue-400">
                   {selectedUniversity._count?.programmes || 0}
                 </p>
-                <p className="text-xs text-gray-500">Programmes</p>
+                <p className="text-xs text-gray-500">Programs / Courses</p>
               </div>
               <div className="text-center p-4 bg-white/5 rounded-xl">
                 <p className="text-2xl font-bold text-amber-400">

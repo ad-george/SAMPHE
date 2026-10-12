@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import api from "../../services/api";
+import { Bar, Doughnut } from "react-chartjs-2";
+import { useTerminology } from "../../hooks/useTerminology";
+import { pluralize } from "../../utils/terminology";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -13,7 +16,6 @@ import {
   Legend,
   Filler,
 } from "chart.js";
-import { Bar, Doughnut } from "react-chartjs-2";
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -28,6 +30,7 @@ ChartJS.register(
 );
 
 const Analytics = () => {
+  const terms = useTerminology();
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
@@ -69,7 +72,7 @@ const Analytics = () => {
   return (
     <div className="space-y-2 md:space-y-6 max-w-6xl mx-auto">
       <h1 className="text-base md:text-2xl font-bold text-black tracking-tight">
-        Students Attendance Analytics
+        {pluralize(terms.student)} Attendance Analytics
       </h1>
 
       {/* Top Insight Cards — 4 in one row on mobile */}
@@ -82,7 +85,7 @@ const Analytics = () => {
             {data?.avgRate || 0}%
           </p>
           <p className="hidden md:block text-xs text-slate-500 mt-1">
-            Across all units
+            Across all {pluralize(terms.unit).toLowerCase()}
           </p>
         </div>
         <div className="bg-slate-700 border border-slate-600 rounded-md md:rounded-2xl p-1 md:p-6 text-center md:text-left">
@@ -109,7 +112,7 @@ const Analytics = () => {
         </div>
         <div className="bg-slate-700 border border-slate-600 rounded-md md:rounded-2xl p-1 md:p-6 text-center">
           <p className="text-[8px] md:text-xs text-slate-400 uppercase tracking-wide md:tracking-wider font-medium leading-tight">
-            Units
+            {pluralize(terms.unit)}
           </p>
           <p className="text-[11px] md:text-4xl font-bold text-blue-400 leading-tight">
             {data?.byUnit?.length || 0}
@@ -148,7 +151,7 @@ const Analytics = () => {
         </div>
         <div className="lg:col-span-2 bg-slate-700 border border-slate-600 rounded-lg md:rounded-2xl p-2.5 md:p-6">
           <h3 className="text-[11px] md:text-base font-semibold text-white mb-1.5 md:mb-4">
-            Attendance by Program
+            Attendance by {terms.program}
           </h3>
           <div className="space-y-2 md:space-y-4 max-h-64 overflow-y-auto">
             {data?.byProgram?.map((p: any) => (
@@ -179,7 +182,7 @@ const Analytics = () => {
             ))}
             {!data?.byProgram?.length && (
               <p className="text-slate-500 text-[11px] md:text-sm text-center py-4">
-                No program data available
+                No {terms.program.toLowerCase()} data available
               </p>
             )}
           </div>
@@ -190,7 +193,7 @@ const Analytics = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 md:gap-6">
         <div className="lg:col-span-2 bg-slate-700 border border-slate-600 rounded-lg md:rounded-2xl p-2.5 md:p-6">
           <h3 className="text-[11px] md:text-base font-semibold text-white mb-1.5 md:mb-4">
-            Unit Performance
+            {terms.unit} Performance
           </h3>
           <div className="space-y-2 md:space-y-4">
             {data?.byUnit?.map((u: any) => (
@@ -276,7 +279,8 @@ const Analytics = () => {
           ))}
           {!data?.lowAttendees?.length && (
             <p className="text-slate-500 text-[11px] md:text-sm col-span-full">
-              All students are above 75%. Great work!
+              All {pluralize(terms.student).toLowerCase()} are above 75%.
+              Great work!
             </p>
           )}
         </div>

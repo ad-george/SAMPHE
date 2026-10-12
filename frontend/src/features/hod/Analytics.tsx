@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import api from "../../services/api";
+import { useTerminology } from "../../hooks/useTerminology";
+import { pluralize } from "../../utils/terminology";
 
 const Analytics = () => {
+  const terms = useTerminology();
   const [data, setData] = useState<any>(null);
   const [showAllPrograms, setShowAllPrograms] = useState(false);
   const [showAllLecturers, setShowAllLecturers] = useState(false);
@@ -45,7 +48,7 @@ const Analytics = () => {
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">
-              Program Comparison
+              {terms.program} Comparison
             </h3>
             {data?.programStats?.length > VISIBLE_COUNT && (
               <button
@@ -70,7 +73,7 @@ const Analytics = () => {
                     {p.programName}
                   </p>
                   <p className="text-xs text-slate-500">
-                    {p.studentCount} students • {p.sessionsHeld || 0}/
+                    {p.studentCount} {pluralize(terms.student).toLowerCase()} • {p.sessionsHeld || 0}/
                     {p.sessionsExpected || 0} sessions
                   </p>
                 </div>
@@ -89,7 +92,7 @@ const Analytics = () => {
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">
-              Lecturer Performance
+              {terms.lecturer} Performance
             </h3>
             {data?.lecturerStats?.length > VISIBLE_COUNT && (
               <button
@@ -135,7 +138,7 @@ const Analytics = () => {
       <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">
-            Worst Performing Units
+            Worst Performing {pluralize(terms.unit)}
           </h3>
           {data?.unitStats?.length > VISIBLE_COUNT && (
             <button
@@ -207,7 +210,8 @@ const Analytics = () => {
           ))}
           {!data?.lowAttendees?.length && (
             <p className="text-emerald-600 text-sm text-center py-4 font-medium">
-              No students below 75% &mdash; Great job!
+              No {pluralize(terms.student).toLowerCase()} below 75% &mdash;
+              Great job!
             </p>
           )}
         </div>

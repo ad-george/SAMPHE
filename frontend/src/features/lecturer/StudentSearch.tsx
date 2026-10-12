@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import api from "../../services/api";
+import { Line, Bar } from "react-chartjs-2";
+import { useTerminology } from "../../hooks/useTerminology";
+import { pluralize } from "../../utils/terminology";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -11,7 +14,6 @@ import {
   Tooltip,
   Filler,
 } from "chart.js";
-import { Line, Bar } from "react-chartjs-2";
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -24,6 +26,7 @@ ChartJS.register(
 );
 
 const Students = () => {
+  const terms = useTerminology();
   const [students, setStudents] = useState<any[]>([]);
   const [programs, setPrograms] = useState<any[]>([]);
   const [programFilter, setProgramFilter] = useState("");
@@ -149,7 +152,7 @@ const Students = () => {
           }}
           className="text-[11px] md:text-sm text-green-600 hover:text-green-800 font-bold flex items-center gap-1 mb-1 md:mb-2"
         >
-          ← Back to Students
+          ← Back to {pluralize(terms.student)}
         </button>
 
         {/* Student Header */}
@@ -179,7 +182,7 @@ const Students = () => {
               }}
               className="bg-slate-600 border border-slate-500 rounded-md md:rounded-lg px-1.5 md:px-3 py-1 md:py-2 text-[10px] md:text-sm text-white focus:border-emerald-400 focus:outline-none"
             >
-              <option value="semester">Sem</option>
+              <option value="semester">{terms.timeUnit.slice(0, 3)}</option>
               <option value="month">30d</option>
               <option value="custom">Custom</option>
             </select>
@@ -313,7 +316,7 @@ const Students = () => {
                     Code
                   </th>
                   <th className="text-left px-2 py-1 md:p-4 font-medium whitespace-nowrap">
-                    Unit
+                    {terms.unit}
                   </th>
                   <th className="text-left px-2 py-1 md:p-4 font-medium">
                     Status
@@ -367,7 +370,7 @@ const Students = () => {
         {detail.byUnit?.length > 0 && (
           <div className="space-y-2 md:space-y-4">
             <h3 className="text-[11px] md:text-base font-bold text-black mb-1.5 md:mb-3">
-              Per Unit Breakdown
+              Per {terms.unit} Breakdown
             </h3>
             {detail.byUnit.map((u: any) => (
               <div
@@ -419,7 +422,7 @@ const Students = () => {
   return (
     <div className="space-y-2 md:space-y-6 max-w-6xl mx-auto">
       <h1 className="text-base md:text-2xl font-bold text-slate-800 tracking-tight">
-        Students
+        {pluralize(terms.student)}
       </h1>
 
       {/* Filters */}
@@ -435,7 +438,7 @@ const Students = () => {
           onChange={(e) => setProgramFilter(e.target.value)}
           className="bg-slate-600 border border-slate-500 rounded-md md:rounded-lg px-2 md:px-3 py-1.5 md:py-2.5 text-[11px] md:text-sm text-white focus:border-emerald-400 focus:outline-none"
         >
-          <option value="">All Programs</option>
+          <option value="">All {pluralize(terms.program)}</option>
           {programs.map((p: any) => (
             <option key={p.id} value={p.id}>
               {p.name}
@@ -448,7 +451,7 @@ const Students = () => {
       <div className="grid grid-cols-3 gap-1 md:gap-4">
         <div className="bg-slate-700 border border-slate-600 rounded-md md:rounded-xl p-1.5 md:p-4 text-center shadow-sm">
           <p className="text-[9px] md:text-xs text-slate-400 uppercase font-semibold leading-tight">
-            Students
+            {pluralize(terms.student)}
           </p>
           <p className="text-[13px] md:text-xl font-bold text-white leading-tight">
             {students.length}
@@ -456,7 +459,7 @@ const Students = () => {
         </div>
         <div className="bg-slate-700 border border-slate-600 rounded-md md:rounded-xl p-1.5 md:p-4 text-center shadow-sm">
           <p className="text-[9px] md:text-xs text-slate-400 uppercase font-semibold leading-tight">
-            Programs
+            {pluralize(terms.program)}
           </p>
           <p className="text-[13px] md:text-xl font-bold text-emerald-400 leading-tight">
             {programs.length}
@@ -482,7 +485,7 @@ const Students = () => {
           {/* Table Header with View More/Less */}
           <div className="flex items-center justify-between px-2.5 py-1.5 md:p-5 border-b border-slate-600">
             <h3 className="text-[11px] md:text-base font-bold text-white">
-              Student List
+              {terms.student} List
             </h3>
             <div className="flex items-center gap-2 md:gap-3">
               <span className="text-[10px] md:text-xs text-slate-400">
@@ -511,7 +514,7 @@ const Students = () => {
                     Reg No.
                   </th>
                   <th className="text-left px-2 py-1 md:p-4 font-medium whitespace-nowrap">
-                    Program
+                    {terms.program}
                   </th>
                   <th className="text-left px-2 py-1 md:p-4 font-medium">
                     Y/S
@@ -562,7 +565,9 @@ const Students = () => {
                     >
                       <div className="flex flex-col items-center gap-1.5 md:gap-3">
                         <span className="text-2xl md:text-4xl">👤</span>
-                        <p>No students found</p>
+                        <p>
+                          No {pluralize(terms.student).toLowerCase()} found
+                        </p>
                       </div>
                     </td>
                   </tr>
