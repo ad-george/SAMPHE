@@ -66,7 +66,7 @@ const StartAttendance = () => {
 
         <div className="space-y-2.5 md:space-y-8">
           {/* ── Fix 3: custom dropdown ── */}
-          <div>
+          <div className="relative">
             <label className="text-[10px] md:text-xs text-emerald-400 uppercase tracking-wide md:tracking-wider font-medium mb-1 md:mb-3 block">
               Select Teaching {terms.unit}
             </label>
@@ -92,67 +92,50 @@ const StartAttendance = () => {
               </p>
             )}
 
-            {/* Dropdown modal — centered, small, scrollable */}
+            {/* Inline dropdown — appears right below the button */}
             {dropdownOpen && (
-              <div
-                className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 md:p-4"
-                onClick={() => setDropdownOpen(false)}
-              >
+              <>
+                {/* Click-away layer (no dim) */}
                 <div
-                  className="bg-slate-800 border border-slate-600 rounded-xl md:rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[70vh]"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {/* Header */}
-                  <div className="px-3 py-2 md:px-4 md:py-3 border-b border-slate-700 flex items-center justify-between shrink-0">
-                    <p className="text-[11px] md:text-sm text-emerald-400 uppercase tracking-wide font-semibold">
-                      Choose {terms.unit}
+                  className="fixed inset-0 z-[60]"
+                  onClick={() => setDropdownOpen(false)}
+                />
+                {/* Dropdown panel */}
+                <div className="absolute left-0 right-0 mt-1 z-[70] bg-slate-800 border border-slate-600 rounded-md md:rounded-xl shadow-2xl overflow-hidden max-h-64 overflow-y-auto">
+                  {units.length === 0 && (
+                    <p className="text-center text-[11px] text-slate-400 py-6">
+                      No {pluralize(terms.unit).toLowerCase()} assigned
                     </p>
-                    <button
-                      type="button"
-                      onClick={() => setDropdownOpen(false)}
-                      className="text-slate-400 hover:text-white text-base"
-                    >
-                      ✕
-                    </button>
-                  </div>
-
-                  {/* Unit list */}
-                  <div className="overflow-y-auto flex-1">
-                    {units.length === 0 && (
-                      <p className="text-center text-[11px] text-slate-400 py-6">
-                        No {pluralize(terms.unit).toLowerCase()} assigned
-                      </p>
-                    )}
-                    {units.map((u: any) => {
-                      const isSelected = u.id === selectedUnit;
-                      return (
-                        <button
-                          key={u.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedUnit(u.id);
-                            setDropdownOpen(false);
-                          }}
-                          className={`w-full text-left px-3 py-2 md:px-4 md:py-2.5 border-b border-slate-700/60 hover:bg-slate-700/50 transition flex items-start gap-2 ${
-                            isSelected ? "bg-emerald-900/30" : ""
+                  )}
+                  {units.map((u: any) => {
+                    const isSelected = u.id === selectedUnit;
+                    return (
+                      <button
+                        key={u.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedUnit(u.id);
+                          setDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 md:px-4 md:py-2.5 border-b border-slate-700/60 hover:bg-slate-700/50 transition flex items-start gap-2 ${
+                          isSelected ? "bg-emerald-900/30" : ""
+                        }`}
+                      >
+                        <span
+                          className={`text-[11px] md:text-sm font-bold shrink-0 ${
+                            isSelected ? "text-emerald-400" : "text-white"
                           }`}
                         >
-                          <span
-                            className={`text-[11px] md:text-sm font-bold shrink-0 ${
-                              isSelected ? "text-emerald-400" : "text-white"
-                            }`}
-                          >
-                            {u.code}
-                          </span>
-                          <span className="text-[10px] md:text-xs text-slate-300 truncate">
-                            {u.name}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
+                          {u.code}
+                        </span>
+                        <span className="text-[10px] md:text-xs text-slate-300 truncate">
+                          {u.name}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
-              </div>
+              </>
             )}
           </div>
 
