@@ -363,7 +363,7 @@ export class HodService {
     const toCreate: {
       regNo: string;
       fullName: string;
-      email: string;
+      phone: string;
       password: string;
       programId: string;
       studyYearId: string;
@@ -380,7 +380,7 @@ export class HodService {
         if (
           !row.regNo ||
           !row.fullName ||
-          !row.email ||
+          !row.phone ||
           !row.program ||
           !row.studyYear ||
           !row.semester
@@ -432,8 +432,8 @@ export class HodService {
         toCreate.push({
           regNo,
           fullName: row.fullName.trim(),
-          email: row.email.trim(),
-          password: "imported-no-login", // students don't log in
+          phone: row.phone.trim(),
+          password: "imported-no-login",
           programId: program.id,
           studyYearId: studyYear.id,
           semesterId: semester.id,

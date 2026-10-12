@@ -87,7 +87,15 @@ export const importStudents = async (
           "Name",
           "StudentName",
         ]),
-        email: getVal(row, ["email", "Email", "E-mail", "Mail"]),
+        phone: getVal(row, [
+          "phone",
+          "Phone",
+          "PhoneNumber",
+          "Phone Number",
+          "Mobile",
+          "Tel",
+          "Telephone",
+        ]),
         program: getVal(row, [
           "program",
           "Program",
@@ -127,7 +135,7 @@ export const importStudents = async (
             "Telephone",
           ]) || "",
       }))
-      .filter((s: any) => s.regNo && s.fullName && s.email);
+      .filter((s: any) => s.regNo && s.fullName && s.phone);
 
     console.log("Mapped students:", students.length, students[0]);
 

@@ -43,7 +43,6 @@ const Students = () => {
   const [form, setForm] = useState({
     regNo: "",
     fullName: "",
-    email: "",
     phone: "",
     programId: "",
     studyYearId: "",
@@ -167,7 +166,6 @@ const Students = () => {
       setForm({
         regNo: "",
         fullName: "",
-        email: "",
         phone: "",
         programId: "",
         studyYearId: "",
@@ -484,7 +482,7 @@ const Students = () => {
                 <th className="text-left p-4 font-medium">
                   {terms.timeUnit}
                 </th>
-                <th className="text-left p-4 font-medium">Email</th>
+                <th className="text-left p-4 font-medium">Phone</th>
                 {view === "archived" && (
                   <>
                     <th className="text-left p-4 font-medium">Archived</th>
@@ -531,7 +529,9 @@ const Students = () => {
                   <td className="p-4 text-slate-500 text-xs">
                     {s.semester?.name}
                   </td>
-                  <td className="p-4 text-slate-500 text-xs">{s.email}</td>
+                  <td className="p-4 text-slate-500 text-xs">
+                    {s.phone || "—"}
+                  </td>
                   {view === "archived" && (
                     <>
                       <td className="p-4 text-slate-500 text-xs">
@@ -696,10 +696,9 @@ const Students = () => {
             <p className="text-xs text-slate-500 mb-4">
               Upload Excel (.xlsx) or CSV. Columns:{" "}
               <span className="font-medium text-slate-700">
-                regNo, fullName, email, {terms.program.toLowerCase()},{" "}
+                regNo, fullName, phone, {terms.program.toLowerCase()},{" "}
                 {terms.year.toLowerCase()}, {terms.timeUnit.toLowerCase()}
               </span>
-              . Optional: phone.
             </p>
                        <input
               ref={fileRef}
@@ -828,19 +827,14 @@ const Students = () => {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <input
-                  placeholder="Email"
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-800 focus:border-emerald-400 focus:outline-none"
-                  required
-                />
-                <input
-                  placeholder="Phone (optional)"
+                  placeholder="Phone"
+                  type="tel"
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
                   className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-800 focus:border-emerald-400 focus:outline-none"
+                  required
                 />
+
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <select
