@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import { useTerminology } from "../../hooks/useTerminology";
 import { pluralize } from "../../utils/terminology";
 import { useAuth } from "../../context/AuthContext";
+import { createPortal } from "react-dom";
 
 const Programmes = () => {
   const terms = useTerminology();
@@ -221,7 +222,8 @@ const Programmes = () => {
       </div>
 
       {/* Add Programme Modal */}
-      {showAddModal && (
+      {showAddModal && 
+      createPortal(
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-md shadow-2xl">
             <div className="flex items-center justify-between mb-4">
@@ -299,11 +301,13 @@ const Programmes = () => {
               </div>
             </form>
           </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
 
       {/* Edit Modal */}
-      {editing && (
+      {editing && 
+      createPortal(
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-md shadow-2xl">
             <h3 className="text-lg font-bold text-slate-800 mb-4">
@@ -377,11 +381,13 @@ const Programmes = () => {
               </div>
             </form>
           </div>
-        </div>
-      )}
+         </div>,
+          document.body,
+        )}
 
       {/* Delete Modal */}
-      {deleteTarget && (
+      {deleteTarget && 
+      createPortal(
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white border border-rose-200 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
             <h3 className="text-lg font-bold text-rose-600 mb-2">
@@ -409,8 +415,9 @@ const Programmes = () => {
               </button>
             </div>
           </div>
-        </div>
-      )}
+        </div>,
+          document.body,
+        )}
     </div>
   );
 };

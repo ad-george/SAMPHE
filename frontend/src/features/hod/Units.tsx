@@ -3,6 +3,7 @@ import api from "../../services/api";
 import toast from "react-hot-toast";
 import { useTerminology } from "../../hooks/useTerminology";
 import { pluralize } from "../../utils/terminology";
+import { createPortal } from "react-dom";
 
 const Units = () => {
   const terms = useTerminology();
@@ -43,6 +44,35 @@ const Units = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+    // CSV template columns + samples for the current institution type
+  const unitTemplate = {
+    headers: ["Code", "Unit Name", terms.program, terms.year, terms.timeUnit],
+    samples: [
+      ["CDS 3250", "Big Data", "BSc Data Science", "4", terms.timeUnit === "Term" ? "1" : "1"],
+      ["CDS 3101", "Machine Learning", "BSc Data Science", "3", terms.timeUnit === "Term" ? "2" : "2"],
+    ],
+  };
+
+  const [templateOpen, setTemplateOpen] = useState(false);
+
+  const downloadTemplate = () => {
+    const escape = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
+    const lines = [
+      unitTemplate.headers.map(escape).join(","),
+      ...unitTemplate.samples.map((row) => row.map(escape).join(",")),
+    ];
+    const csv = lines.join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${terms.unit}_import_template.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -290,7 +320,8 @@ const Units = () => {
       </div>
 
       {/* Import Modal */}
-      {importOpen && (
+      {importOpen && 
+      createPortal(
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
           <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-md p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-4">
@@ -307,12 +338,19 @@ const Units = () => {
                 ✕
               </button>
             </div>
-            <p className="text-xs text-slate-500 mb-4">
+            <p className="text-xs text-slate-500 mb-2">
               Upload Excel (.xlsx) or CSV. Columns:{" "}
               <span className="font-medium text-slate-700">
-                S/N, unitCode, unitName, program, studyYear, semester
+                {unitTemplate.headers.join(", ")}
               </span>
             </p>
+            <button
+              type="button"
+              onClick={() => setTemplateOpen(true)}
+              className="text-xs text-emerald-600 hover:text-emerald-700 font-medium mb-4"
+            >
+              📋 See Template
+            </button>
             <input
               ref={fileRef}
               type="file"
@@ -343,11 +381,86 @@ const Units = () => {
               </div>
             )}
           </div>
-        </div>
-      )}
+    </div>,
+     document.body,
+     )}
+
+      {/* Template Preview Modal */}
+      {templateOpen &&
+        createPortal(
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[70] p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-slate-800">
+                {terms.unit} Import Template
+              </h3>
+              <button
+                onClick={() => setTemplateOpen(false)}
+                className="text-slate-400 hover:text-slate-700 text-xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500 mb-3">
+              Use these exact column headers. Sample rows below are examples only.
+            </p>
+
+            <div className="overflow-x-auto rounded-lg border border-slate-200">
+              <table className="w-full text-xs">
+                <thead className="bg-slate-100">
+                  <tr>
+                    {unitTemplate.headers.map((h) => (
+                      <th
+                        key={h}
+                        className="text-left p-2 font-semibold text-slate-700 border-b border-slate-200"
+                      >
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {unitTemplate.samples.map((row, i) => (
+                    <tr key={i} className="text-slate-400 italic">
+                      {row.map((cell, j) => (
+                        <td key={j} className="p-2 border-b border-slate-100">
+                          {cell}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <p className="text-[11px] text-amber-600 bg-amber-50 border border-amber-200 rounded-lg p-2 mt-3 leading-snug">
+              ⚠ The rows shown in grey are samples. Replace them with your real
+              data, or delete them entirely.
+            </p>
+
+            <div className="flex gap-3 mt-5">
+              <button
+                onClick={() => setTemplateOpen(false)}
+                className="flex-1 py-2.5 rounded-xl bg-slate-100 text-sm hover:bg-slate-200 transition text-slate-700"
+              >
+                Close
+              </button>
+              <button
+                onClick={downloadTemplate}
+                className="flex-1 py-2.5 rounded-xl bg-emerald-600 text-sm font-medium hover:bg-emerald-500 transition text-white"
+              >
+                ⬇ Download CSV
+              </button>
+            </div>
+          </div>
+        </div>,
+          document.body,
+        )}
 
       {/* Add Unit Modal */}
-      {addOpen && (
+      {addOpen && 
+      createPortal(
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
           <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-4">
@@ -442,11 +555,13 @@ const Units = () => {
               </div>
             </form>
           </div>
-        </div>
-      )}
+         </div>,
+          document.body,
+        )}
 
       {/* Edit Modal */}
-      {editOpen && editing && (
+      {editOpen && editing && 
+      createPortal(
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
           <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-4">
@@ -551,11 +666,13 @@ const Units = () => {
               </div>
             </form>
           </div>
-        </div>
-      )}
+           </div>,
+          document.body,
+        )}
 
       {/* Delete Modal */}
-      {deleteTarget && (
+      {deleteTarget && 
+      createPortal(
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
           <div className="bg-white border border-rose-200 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
             <h3 className="text-lg font-bold text-rose-600 mb-2">
@@ -583,8 +700,9 @@ const Units = () => {
               </button>
             </div>
           </div>
-        </div>
-      )}
+         </div>,
+          document.body,
+        )}
     </div>
   );
 };

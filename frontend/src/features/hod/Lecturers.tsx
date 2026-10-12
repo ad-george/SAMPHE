@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import { Line } from "react-chartjs-2";
 import { useTerminology } from "../../hooks/useTerminology";
 import { pluralize } from "../../utils/terminology";
+import { createPortal } from "react-dom";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -494,7 +495,8 @@ const Lecturers = () => {
       </div>
 
       {/* Add Lecturer Modal */}
-      {showAddModal && (
+      {showAddModal && 
+      createPortal(
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
           <div className="bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-md shadow-2xl">
             <div className="flex items-center justify-between mb-4">
@@ -555,11 +557,13 @@ const Lecturers = () => {
               </div>
             </form>
           </div>
-        </div>
-      )}
+           </div>,
+          document.body,
+        )}
 
       {/* Credentials Modal */}
-      {credentials && (
+      {credentials && 
+      createPortal(
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
           <div className="bg-white border border-emerald-200 rounded-2xl p-8 w-full max-w-md shadow-2xl">
             <div className="text-center mb-6">
@@ -605,11 +609,13 @@ const Lecturers = () => {
               </button>
             </div>
           </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
 
       {/* Share Modal */}
-      {shareTarget && (
+      {shareTarget && 
+      createPortal(
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
           <div className="bg-white border border-emerald-200 rounded-2xl p-8 w-full max-w-md shadow-2xl">
             <div className="text-center mb-6">
@@ -712,11 +718,13 @@ const Lecturers = () => {
               Close
             </button>
           </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
 
       {/* Manage Modal */}
-      {manageTarget && (
+      {manageTarget && 
+      createPortal(
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
           <div className="bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
             <div className="flex items-center gap-3 mb-6">
@@ -795,11 +803,13 @@ const Lecturers = () => {
               Cancel
             </button>
           </div>
-        </div>
-      )}
+         </div>,
+          document.body,
+        )}
 
       {/* Profile Modal */}
-      {profileTarget && (
+      {profileTarget && 
+      createPortal(
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
@@ -1045,11 +1055,13 @@ const Lecturers = () => {
               </div>
             </div>
           </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
 
       {/* Edit Modal */}
-      {editing && (
+      {editing && 
+      createPortal(
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
           <div className="bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-md shadow-2xl">
             <h3 className="text-lg font-bold text-slate-800 mb-4">
@@ -1103,11 +1115,13 @@ const Lecturers = () => {
               </div>
             </form>
           </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
 
       {/* Delete Warning */}
-      {deleteTarget && (
+      {deleteTarget && 
+      createPortal(
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
           <div className="bg-white border border-rose-200 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
             <h3 className="text-lg font-bold text-rose-600 mb-2">
@@ -1135,11 +1149,13 @@ const Lecturers = () => {
               </button>
             </div>
           </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
 
       {/* Assign Units Modal */}
-      {assignModal && (
+      {assignModal && 
+      createPortal(
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[70] p-4">
           <div className="bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-4xl shadow-2xl max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between mb-4">
@@ -1292,8 +1308,9 @@ const Lecturers = () => {
               </button>
             </div>
           </div>
-        </div>
-      )}
+         </div>,
+          document.body,
+        )}
     </div>
   );
 };

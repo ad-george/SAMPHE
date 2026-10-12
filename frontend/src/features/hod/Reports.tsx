@@ -3,6 +3,7 @@ import api from "../../services/api";
 import toast from "react-hot-toast";
 import { useTerminology } from "../../hooks/useTerminology";
 import { pluralize } from "../../utils/terminology";
+import { createPortal } from "react-dom";
 
 const Reports = () => {
   const terms = useTerminology();
@@ -450,7 +451,8 @@ const Reports = () => {
       </div>
 
       {/* Grid Modal */}
-      {gridOpen && (
+      {gridOpen && 
+      createPortal(
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2 md:p-4">
           <div className="bg-white rounded-lg md:rounded-2xl w-full max-w-5xl max-h-[92vh] overflow-y-auto shadow-2xl p-3 md:p-6">
             {gridLoading ? (
@@ -728,8 +730,9 @@ const Reports = () => {
               </div>
             ) : null}
           </div>
-        </div>
-      )}
+        </div>,
+          document.body,
+        )}
     </div>
   );
 };
