@@ -87,15 +87,7 @@ export const importStudents = async (
           "Name",
           "StudentName",
         ]),
-        phone: getVal(row, [
-          "phone",
-          "Phone",
-          "PhoneNumber",
-          "Phone Number",
-          "Mobile",
-          "Tel",
-          "Telephone",
-        ]),
+  
         program: getVal(row, [
           "program",
           "Program",
