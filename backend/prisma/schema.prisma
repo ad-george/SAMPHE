@@ -160,6 +160,8 @@ model LecturerUnitAssignment {
   unitId     String
   unit       Unit     @relation(fields: [unitId], references: [id])
   assignedAt DateTime @default(now())
+
+  @@unique([lecturerId, unitId])
 }
 
 model Student {

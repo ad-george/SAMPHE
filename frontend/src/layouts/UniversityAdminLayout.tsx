@@ -489,7 +489,7 @@ const UniversityAdminLayout = () => {
             {/* Role text */}
             <div className="absolute top-10 left-28 whitespace-nowrap z-10">
               <p className="text-sm font-semibold text-white">
-                University Admin
+                Institution Admin
               </p>
             </div>
           </div>
@@ -552,7 +552,7 @@ const UniversityAdminLayout = () => {
                     {profileForm.fullName || user?.fullName}
                   </p>
                   <p className="text-[10px] text-slate-500">
-                    University Admin
+                    Institution Admin
                   </p>
                 </div>
               )}

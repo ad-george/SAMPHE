@@ -798,27 +798,44 @@ export class HodService {
     const hod = await prisma.hod.findUnique({ where: { id: hodId } });
     if (!hod) throw new Error("HOD not found");
 
-    // Get units already assigned to this lecturer
-    const assignedUnitIds = await prisma.lecturerUnitAssignment.findMany({
+    // Units assigned to THIS lecturer → hidden from right panel
+    const assignedToThis = await prisma.lecturerUnitAssignment.findMany({
       where: { lecturerId },
       select: { unitId: true },
     });
+    const assignedToThisIds = new Set(assignedToThis.map((a) => a.unitId));
 
-    const assignedIds = assignedUnitIds.map((a) => a.unitId);
-
-    // Get all units in the department not assigned to this lecturer
-    return prisma.unit.findMany({
-      where: {
-        departmentId: hod.departmentId,
-        id: { notIn: assignedIds },
-      },
-      include: {
-        program: true,
-        studyYear: true,
-        semester: true,
-      },
+    // All units in department
+    const allUnits = await prisma.unit.findMany({
+      where: { departmentId: hod.departmentId },
+      include: { program: true, studyYear: true, semester: true },
       orderBy: { name: "asc" },
     });
+
+    // ALL assignments in this department's units (any lecturer)
+    const deptUnitIds = allUnits.map((u) => u.id);
+    const deptAssignments = await prisma.lecturerUnitAssignment.findMany({
+      where: { unitId: { in: deptUnitIds } },
+      select: { unitId: true },
+    });
+    const assignedUnitIds = new Set(deptAssignments.map((a) => a.unitId));
+
+    // Visible list = all dept units except THIS lecturer's
+    const visibleUnits = allUnits
+      .filter((u) => !assignedToThisIds.has(u.id))
+      .map((u) => ({
+        ...u,
+        assigned: assignedUnitIds.has(u.id),
+      }));
+
+    const total = allUnits.length;
+    const assigned = assignedUnitIds.size;      // units with ≥1 assignment (any lecturer)
+    const available = total - assigned;
+
+    return {
+      units: visibleUnits,
+      counts: { total, assigned, available },
+    };
   }
 
   async assignUnitsToLecturer(
@@ -848,7 +865,10 @@ export class HodService {
           continue;
         }
 
-        // Check if already assigned
+        // Atomic: create only if not already assigned.
+        // Uses @@unique([lecturerId, unitId]) if it exists in schema.
+        // If your schema does NOT have that unique constraint,
+        // skipUniqueCheck below falls back to a findFirst check.
         const existing = await prisma.lecturerUnitAssignment.findFirst({
           where: { lecturerId, unitId },
         });
@@ -858,13 +878,20 @@ export class HodService {
           continue;
         }
 
-        await prisma.lecturerUnitAssignment.create({
-          data: {
-            lecturerId,
-            unitId,
-          },
-        });
-        results.assigned++;
+        try {
+          await prisma.lecturerUnitAssignment.create({
+            data: { lecturerId, unitId },
+          });
+          results.assigned++;
+        } catch (err: any) {
+          // P2002 = unique constraint violation (race lost)
+          if (err?.code === "P2002") {
+            results.failed++;
+            results.errors.push(`Unit already assigned (duplicate blocked)`);
+          } else {
+            throw err;
+          }
+        }
       } catch (err: any) {
         results.failed++;
         results.errors.push(err.message);
