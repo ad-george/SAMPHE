@@ -1145,6 +1145,46 @@ export class HodService {
     return prisma.unit.delete({ where: { id } });
   }
 
+  async bulkDeleteUnits(hodId: string, unitIds: string[]) {
+    const hod = await prisma.hod.findUnique({ where: { id: hodId } });
+    if (!hod) throw new Error("HOD not found");
+
+    // Only delete units that belong to this HOD's department
+    const validUnits = await prisma.unit.findMany({
+      where: { id: { in: unitIds }, departmentId: hod.departmentId },
+      select: { id: true, name: true },
+    });
+
+    const validIds = validUnits.map((u) => u.id);
+
+    if (validIds.length === 0) {
+      return { deleted: 0, failed: unitIds.length, failedNames: [] };
+    }
+
+    // Try bulk delete — Prisma will reject if any unit has FK references.
+    // To be safe, delete units one at a time from the valid set, but in
+    // a single Prisma transaction. Still much faster than N HTTP requests.
+    let deleted = 0;
+    const failedNames: string[] = [];
+
+    await prisma.$transaction(async (tx) => {
+      for (const u of validUnits) {
+        try {
+          await tx.unit.delete({ where: { id: u.id } });
+          deleted++;
+        } catch {
+          failedNames.push(u.name);
+        }
+      }
+    }, { timeout: 60000 });
+
+    return {
+      deleted,
+      failed: unitIds.length - deleted,
+      failedNames,
+    };
+  }
+
   // --- Study Years ---
   async getStudyYears(universityId: string) {
     return prisma.studyYear.findMany({

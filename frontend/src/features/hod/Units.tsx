@@ -179,32 +179,28 @@ const Units = () => {
     if (selectedIds.length === 0 || bulkDeleting) return;
     setBulkDeleting(true);
 
-    let deleted = 0;
-    let failed = 0;
-    const failedNames: string[] = [];
+    try {
+      const res = await api.post("/hod/units/bulk-delete", {
+        unitIds: selectedIds,
+      });
 
-    for (const id of selectedIds) {
-      const target = units.find((u: any) => u.id === id);
-      try {
-        await api.delete(`/hod/units/${id}`);
-        deleted++;
-      } catch {
-        failed++;
-        if (target?.name) failedNames.push(target.name);
-      }
+      const { deleted, failed, failedNames } = res.data.data;
+
+      setBulkDeleting(false);
+      setBulkDeleteOpen(false);
+      setSelectedIds([]);
+      fetchUnits();
+
+      toast.success(
+        failed === 0
+          ? `✓ Deleted ${deleted}`
+          : `Deleted ${deleted}, Failed ${failed} (in use)${failedNames?.length ? ` — ${failedNames.slice(0, 3).join(", ")}${failedNames.length > 3 ? "…" : ""}` : ""}`,
+        { duration: failed === 0 ? 5000 : 8000 },
+      );
+    } catch (err: any) {
+      setBulkDeleting(false);
+      toast.error(err.response?.data?.message || "Delete failed");
     }
-
-    setBulkDeleting(false);
-    setBulkDeleteOpen(false);
-    setSelectedIds([]);
-    fetchUnits();
-
-    toast.success(
-      failed === 0
-        ? `✓ Deleted ${deleted}`
-        : `Deleted ${deleted}, Failed ${failed} (in use)${failedNames.length ? ` — ${failedNames.slice(0, 3).join(", ")}${failedNames.length > 3 ? "…" : ""}` : ""}`,
-      { duration: failed === 0 ? 5000 : 8000 },
-    );
   };
 
   if (loading) {

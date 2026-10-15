@@ -20,6 +20,7 @@ import {
   createUnit,
   updateUnit,
   deleteUnit,
+  bulkDeleteUnits,
   getStudyYears,
   createStudyYear,
   updateStudyYear,
@@ -143,6 +144,12 @@ router.post(
   authorize("HOD"),
   upload.single("file"),
   importUnits,
+);
+router.post(
+  "/units/bulk-delete",
+  authenticate,
+  authorize("HOD"),
+  bulkDeleteUnits,
 );
 router.put("/units/:id", authenticate, authorize("HOD"), updateUnit);
 router.delete("/units/:id", authenticate, authorize("HOD"), deleteUnit);

@@ -680,6 +680,23 @@ export const deleteUnit = async (
   }
 };
 
+export const bulkDeleteUnits = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { unitIds } = req.body;
+    if (!unitIds || !Array.isArray(unitIds) || unitIds.length === 0) {
+      return next({ statusCode: 400, message: "Please provide unitIds array" });
+    }
+    const data = await service.bulkDeleteUnits(req.user!.id, unitIds);
+    res.json({ success: true, data });
+  } catch (e: any) {
+    next({ statusCode: 400, message: e.message });
+  }
+};
+
 // ==================== STUDY YEARS ====================
 export const getStudyYears = async (
   req: Request,
