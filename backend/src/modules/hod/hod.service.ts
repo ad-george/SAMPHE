@@ -688,7 +688,7 @@ export class HodService {
     return { message: "Permanently deleted" };
   }
 
-  // --- BULK IMPORT UNITS ---
+  // --- BULK IMPORT UNITS (BATCHED) ---
   async bulkImportUnits(hodId: string, units: any[]) {
     const hod = await prisma.hod.findUnique({
       where: { id: hodId },
@@ -696,11 +696,28 @@ export class HodService {
     });
     if (!hod) throw new Error("HOD not found");
 
-    const [allPrograms, allYears, allSemesters] = await Promise.all([
-      prisma.programme.findMany({ where: { universityId: hod.universityId } }),
-      prisma.studyYear.findMany({ where: { universityId: hod.universityId } }),
-      prisma.semester.findMany({ where: { universityId: hod.universityId } }),
-    ]);
+    const [allPrograms, allYears, allSemesters, existingUnits] =
+      await Promise.all([
+        prisma.programme.findMany({
+          where: { universityId: hod.universityId },
+        }),
+        prisma.studyYear.findMany({
+          where: { universityId: hod.universityId },
+        }),
+        prisma.semester.findMany({
+          where: { universityId: hod.universityId },
+        }),
+        // Preload existing unit dedup keys for this department
+        prisma.unit.findMany({
+          where: { departmentId: hod.departmentId },
+          select: {
+            code: true,
+            programId: true,
+            studyYearId: true,
+            semesterId: true,
+          },
+        }),
+      ]);
 
     const findBest = (list: any[], search: string, key: string = "name") => {
       const s = search.toLowerCase().trim();
@@ -722,6 +739,24 @@ export class HodService {
       failed: 0,
       errors: [] as string[],
     };
+
+    // Build dedup set: "code|programId|yearId|semId" (lowercased code)
+    const seen = new Set<string>(
+      existingUnits.map(
+        (u) =>
+          `${u.code.toLowerCase()}|${u.programId}|${u.studyYearId}|${u.semesterId}`,
+      ),
+    );
+
+    const toCreate: {
+      code: string;
+      name: string;
+      programId: string;
+      studyYearId: string;
+      semesterId: string;
+      universityId: string;
+      departmentId: string;
+    }[] = [];
 
     for (const row of units) {
       try {
@@ -756,37 +791,48 @@ export class HodService {
           continue;
         }
 
-        // Duplicate: same code AND program AND year AND semester
-        const exists = await prisma.unit.findFirst({
-          where: {
-            code: row.code.trim(),
-            programId: program.id,
-            studyYearId: studyYear.id,
-            semesterId: semester.id,
-            departmentId: hod.departmentId,
-          },
-        });
-        if (exists) {
+        const code = row.code.trim();
+        const dedupKey = `${code.toLowerCase()}|${program.id}|${studyYear.id}|${semester.id}`;
+
+        if (seen.has(dedupKey)) {
           results.skipped++;
           continue;
         }
+        seen.add(dedupKey);
 
-        await prisma.unit.create({
-          data: {
-            code: row.code.trim(),
-            name: row.name.trim(),
-            programId: program.id,
-            studyYearId: studyYear.id,
-            semesterId: semester.id,
-            universityId: hod.universityId,
-            departmentId: hod.departmentId,
-          } as any,
+        toCreate.push({
+          code,
+          name: row.name.trim(),
+          programId: program.id,
+          studyYearId: studyYear.id,
+          semesterId: semester.id,
+          universityId: hod.universityId,
+          departmentId: hod.departmentId,
         });
-
-        results.created++;
       } catch (err: any) {
         results.failed++;
         results.errors.push(`Row ${row.code || "?"}: ${err.message}`);
+      }
+    }
+
+    if (toCreate.length > 0) {
+      try {
+        await prisma.unit.createMany({
+          data: toCreate,
+          skipDuplicates: true,
+        });
+        results.created = toCreate.length;
+      } catch (err: any) {
+        // If batch fails (e.g. unique constraint race), fall back to per-row
+        for (const row of toCreate) {
+          try {
+            await prisma.unit.create({ data: row });
+            results.created++;
+          } catch (e: any) {
+            results.failed++;
+            results.errors.push(`Row ${row.code}: ${e.message}`);
+          }
+        }
       }
     }
 
