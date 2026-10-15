@@ -403,7 +403,30 @@ export class HodService {
         let yearSearch = String(row.studyYear).trim();
         if (/^\d+$/.test(yearSearch)) yearSearch = `Year ${yearSearch}`;
         const studyYear = findBest(allYears, yearSearch);
-        const semester = findBest(allSemesters, row.semester);
+
+        // Semester / term resolution — institution-type agnostic.
+        // 1. Try direct match (row already says "Semester 1" / "Term 2").
+        // 2. Extract the number from the row and match against whatever
+        //    prefix actually exists in the DB (Semester / Sem / Term).
+        let semester = findBest(allSemesters, row.semester);
+
+        if (!semester) {
+          const numMatch = String(row.semester || "").match(/\d+/);
+          const num = numMatch ? numMatch[0] : null;
+
+          if (num) {
+            semester =
+              allSemesters.find((s: any) => {
+                const name = (s.name || "").toLowerCase();
+                return (
+                  (name.includes("semester") ||
+                    name.includes("sem") ||
+                    name.includes("term")) &&
+                  new RegExp(`\\b${num}\\b`).test(name)
+                );
+              }) || null;
+          }
+        }
 
         if (!program || !studyYear || !semester) {
           results.failed++;
