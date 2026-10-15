@@ -1,5 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import { prisma } from "../../lib/prisma";
+// const prisma = new PrismaClient();
 
 export class UniversityService {
   async create(data: { name: string; email?: string; phone?: string; address?: string; website?: string }) {

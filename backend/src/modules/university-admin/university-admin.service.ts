@@ -1,8 +1,8 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../../lib/prisma";
 import bcrypt from "bcryptjs";
 import emailService from "../../services/email.service";
 
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
 
 export class UniversityAdminService {
   // --- Me / Profile ---

@@ -1,6 +1,6 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../lib/prisma";
 
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
 
 export const cleanupExpiredAttendanceLinks = async () => {
   const fiveYearsAgo = new Date();

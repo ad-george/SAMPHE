@@ -2,7 +2,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import app from "./app";
 import { env } from "./config/env";
-import { PrismaClient } from "@prisma/client";
+// import { prisma } from "./lib/prisma";
 import { checkLicenseExpiry, checkTrialExpiry } from "./jobs/license-checker";
 import express from "express";
 import path from "path";
@@ -11,7 +11,7 @@ import { cleanupExpiredAttendanceLinks } from "./jobs/cleanup-expired-links";
 import { expireOldSessions } from "./jobs/expire-sessions";
 
 const licenseService = new LicenseService();
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
 
 // 1. APPLY LICENSE PROTECTION MIDDLEWARE
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));

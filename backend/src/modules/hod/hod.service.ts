@@ -1,8 +1,8 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../../lib/prisma";
 import bcrypt from "bcryptjs";
 import { getSemesterWeekBuckets } from "../../utils/helpers";
 
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
 
 export class HodService {
   // --- Profile ---
@@ -793,6 +793,98 @@ export class HodService {
     return results;
   }
 
+    // --- BULK IMPORT PROGRAMMES ---
+  async bulkImportPrograms(hodId: string, programs: any[]) {
+    const hod = await prisma.hod.findUnique({
+      where: { id: hodId },
+      include: { university: true, department: true },
+    });
+    if (!hod) throw new Error("HOD not found");
+
+    const results = {
+      created: 0,
+      skipped: 0,
+      failed: 0,
+      errors: [] as string[],
+    };
+
+    const existing = await prisma.programme.findMany({
+      where: { departmentId: hod.departmentId },
+      select: { name: true, code: true },
+    });
+    const existingNames = new Set(
+      existing.map((p) => p.name.toLowerCase().trim()),
+    );
+    const existingCodes = new Set(
+      existing
+        .filter((p) => p.code)
+        .map((p) => (p.code as string).toLowerCase().trim()),
+    );
+
+    for (const row of programs) {
+      try {
+        if (!row.name) {
+          results.failed++;
+          results.errors.push(`Row: Missing programme name`);
+          continue;
+        }
+
+        const name = row.name.trim();
+        const code = row.code ? row.code.trim() : null;
+        const nameKey = name.toLowerCase();
+        const codeKey = code ? code.toLowerCase() : null;
+
+        if (existingNames.has(nameKey)) {
+          results.skipped++;
+          results.errors.push(`Skipped (duplicate name): ${name}`);
+          continue;
+        }
+        if (codeKey && existingCodes.has(codeKey)) {
+          results.skipped++;
+          results.errors.push(`Skipped (duplicate code): ${code}`);
+          continue;
+        }
+
+        let duration = 4;
+        if (row.duration) {
+          const parsed = parseInt(String(row.duration).replace(/\D/g, ""));
+          if (!isNaN(parsed) && parsed >= 1 && parsed <= 8) {
+            duration = parsed;
+          }
+        }
+
+        let level: number | null = null;
+        if (row.level) {
+          const parsed = parseInt(String(row.level).replace(/\D/g, ""));
+          if (!isNaN(parsed) && parsed >= 1 && parsed <= 10) {
+            level = parsed;
+          }
+        }
+
+        await prisma.programme.create({
+          data: {
+            name,
+            code,
+            duration,
+            level,
+            departmentId: hod.departmentId,
+            universityId: hod.universityId,
+          },
+        });
+
+        existingNames.add(nameKey);
+        if (codeKey) existingCodes.add(codeKey);
+        results.created++;
+      } catch (err: any) {
+        results.failed++;
+        results.errors.push(`Row ${row.name || "?"}: ${err.message}`);
+      }
+    }
+
+    return results;
+  }
+
+
   // --- Lecturer Unit Assignment ---
   async getAvailableUnits(hodId: string, lecturerId: string) {
     const hod = await prisma.hod.findUnique({ where: { id: hodId } });
@@ -957,14 +1049,28 @@ export class HodService {
     });
   }
   async createProgram(data: any) {
-    const programData = {
+    const programData: any = {
       ...data,
       duration: data.duration || 4,
+      level:
+        data.level === "" || data.level === undefined || data.level === null
+          ? null
+          : Number(data.level),
     };
     return prisma.programme.create({ data: programData });
   }
   async updateProgram(id: string, data: any) {
-    return prisma.programme.update({ where: { id }, data });
+    const clean: any = { ...data };
+    if ("level" in clean) {
+      clean.level =
+        clean.level === "" || clean.level === undefined || clean.level === null
+          ? null
+          : Number(clean.level);
+    }
+    if ("duration" in clean && !clean.duration) {
+      clean.duration = 4;
+    }
+    return prisma.programme.update({ where: { id }, data: clean });
   }
   async deleteProgram(id: string) {
     return prisma.programme.delete({ where: { id } });

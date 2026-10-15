@@ -1,7 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../lib/prisma";
 import emailService from "../services/email.service";
 
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
 
 // Run this function daily
 export async function checkLicenseExpiry() {

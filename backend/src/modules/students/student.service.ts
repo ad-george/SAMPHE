@@ -1,8 +1,8 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../../lib/prisma";
 import ExcelJS from "exceljs";
 import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
 
 export class StudentService {
   async importStudents(universityId: string, fileBuffer: Buffer) {

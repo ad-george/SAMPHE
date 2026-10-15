@@ -18,8 +18,12 @@ const Units = () => {
   const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [importResult, setImportResult] = useState<any>(null);
+  const [importing, setImporting] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const [form, setForm] = useState({
     code: "",
     name: "",
@@ -78,19 +82,32 @@ const Units = () => {
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    setImporting(true);
+    setImportResult(null);
+
     const formData = new FormData();
     formData.append("file", file);
+
     try {
       const res = await api.post("/hod/units/import", formData, {
         headers: { "Content-Type": "multipart/form-data" },
+        timeout: 180000,
       });
-      setImportResult(res.data.data);
-      toast.success(
-        `Created: ${res.data.data.created}, Skipped: ${res.data.data.skipped}, Failed: ${res.data.data.failed}`,
-      );
+
+      const payload = res.data?.data ?? res.data;
+      setImportResult(payload);
       fetchUnits();
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Import failed");
+      // Show error inside the modal instead of a toast
+      setImportResult({
+        created: 0,
+        skipped: 0,
+        failed: 0,
+        errors: [err.response?.data?.message || err.message || "Import failed"],
+      });
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -147,6 +164,49 @@ const Units = () => {
   const displayed = filtered.slice(0, showCount);
   const hasMore = filtered.length > showCount;
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  };
+
+  const selectAll = () => {
+    const ids = filtered.map((u: any) => u.id);
+    setSelectedIds(ids.length === selectedIds.length ? [] : ids);
+  };
+
+  const bulkDelete = async () => {
+    if (selectedIds.length === 0 || bulkDeleting) return;
+    setBulkDeleting(true);
+
+    let deleted = 0;
+    let failed = 0;
+    const failedNames: string[] = [];
+
+    for (const id of selectedIds) {
+      const target = units.find((u: any) => u.id === id);
+      try {
+        await api.delete(`/hod/units/${id}`);
+        deleted++;
+      } catch {
+        failed++;
+        if (target?.name) failedNames.push(target.name);
+      }
+    }
+
+    setBulkDeleting(false);
+    setBulkDeleteOpen(false);
+    setSelectedIds([]);
+    fetchUnits();
+
+    toast.success(
+      failed === 0
+        ? `✓ Deleted ${deleted}`
+        : `Deleted ${deleted}, Failed ${failed} (in use)${failedNames.length ? ` — ${failedNames.slice(0, 3).join(", ")}${failedNames.length > 3 ? "…" : ""}` : ""}`,
+      { duration: failed === 0 ? 5000 : 8000 },
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -169,6 +229,14 @@ const Units = () => {
           </p>
         </div>
         <div className="flex gap-2">
+          {selectedIds.length > 0 && (
+            <button
+              onClick={() => setBulkDeleteOpen(true)}
+              className="px-4 py-2 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-sm font-medium hover:bg-rose-100 transition"
+            >
+              🗑 Delete {selectedIds.length} selected
+            </button>
+          )}
           <button
             onClick={() => setImportOpen(true)}
             className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition"
@@ -230,8 +298,17 @@ const Units = () => {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-100 text-slate-500 text-xs uppercase bg-slate-50/50">
-                {/* All header alignments updated to text-left */}
                 <th className="text-left p-3 font-medium w-12">S/N</th>
+                <th className="text-left p-3 font-medium w-10">
+                  <input
+                    type="checkbox"
+                    checked={
+                      selectedIds.length > 0 &&
+                      selectedIds.length === filtered.length
+                    }
+                    onChange={selectAll}
+                  />
+                </th>
                 <th className="text-left p-3 font-medium w-24">Code</th>
                 <th className="text-left p-3 font-medium w-64">
                   {terms.unit} Name
@@ -255,12 +332,18 @@ const Units = () => {
                     i % 2 === 0 ? "bg-white" : "bg-slate-50/30"
                   }`}
                 >
-                  {/* Left-aligned serial number */}
                   <td className="p-3 text-slate-400 font-mono text-xs text-left">
                     {i + 1}
                   </td>
 
-                  {/* Left-aligned unit code */}
+                  <td className="p-3 text-left">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(u.id)}
+                      onChange={() => toggleSelect(u.id)}
+                    />
+                  </td>
+
                   <td className="p-3 text-emerald-600 font-mono text-xs font-medium text-left">
                     {u.code}
                   </td>
@@ -309,7 +392,7 @@ const Units = () => {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="p-12 text-center text-slate-400">
+                  <td colSpan={8} className="p-12 text-center text-slate-400">
                   No {pluralize(terms.unit).toLowerCase()} found
                   </td>
                 </tr>
@@ -332,6 +415,8 @@ const Units = () => {
                 onClick={() => {
                   setImportOpen(false);
                   setImportResult(null);
+                  setImporting(false);
+                  if (fileRef.current) fileRef.current.value = "";
                 }}
                 className="text-slate-400 hover:text-slate-700"
               >
@@ -356,18 +441,27 @@ const Units = () => {
               type="file"
               accept=".csv,.xlsx"
               onChange={handleFile}
-              className="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+              disabled={importing}
+              className="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 disabled:opacity-50"
             />
+
+            {importing && (
+              <div className="mt-4 flex items-center gap-2 text-sm text-slate-600">
+                <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                Importing… this may take a few seconds
+              </div>
+            )}
+
             {importResult && (
               <div className="mt-4 bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-1 text-sm">
                 <p className="text-emerald-600 font-medium">
-                  ✓ Created: {importResult.created}
+                  ✓ Created: {importResult.created ?? 0}
                 </p>
                 <p className="text-amber-600 font-medium">
-                  ◈ Skipped: {importResult.skipped}
+                  ◈ Skipped: {importResult.skipped ?? 0}
                 </p>
                 <p className="text-rose-600 font-medium">
-                  ✕ Failed: {importResult.failed}
+                  ✕ Failed: {importResult.failed ?? 0}
                 </p>
                 {importResult.errors?.length > 0 && (
                   <div className="max-h-32 overflow-y-auto text-xs text-rose-500 mt-2 space-y-1">
@@ -703,6 +797,39 @@ const Units = () => {
          </div>,
           document.body,
         )}
+
+      {/* Bulk Delete Modal */}
+      {bulkDeleteOpen &&
+      createPortal(
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[80] p-4">
+          <div className="bg-white border border-rose-200 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+            <h3 className="text-lg font-bold text-rose-600 mb-2">
+              Delete {selectedIds.length} {pluralize(terms.unit)}?
+            </h3>
+            <p className="text-sm text-slate-500 mb-6">
+              This action cannot be undone. {pluralize(terms.unit)} that are in
+              use (have sessions or records) will not be deleted.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setBulkDeleteOpen(false)}
+                disabled={bulkDeleting}
+                className="flex-1 py-2.5 rounded-xl bg-slate-100 text-sm hover:bg-slate-200 transition text-slate-700 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={bulkDelete}
+                disabled={bulkDeleting}
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 text-sm font-medium hover:bg-rose-500 transition text-white disabled:opacity-50"
+              >
+                {bulkDeleting ? "Deleting…" : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
     </div>
   );
 };

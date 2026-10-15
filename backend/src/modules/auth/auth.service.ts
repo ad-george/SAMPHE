@@ -1,10 +1,10 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../../lib/prisma";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../../utils/jwt";
 import crypto from "crypto";
 import emailService from "../../services/email.service";
 
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
 
 // Institution-type aware structure defaults
 const defaultStructureFor = (institutionType: string) => {

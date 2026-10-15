@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { UniversityAdminService } from "./university-admin.service";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../../lib/prisma";
 import emailService from "../../services/email.service";
 import { supabase } from "../../config/supabase";
 
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
 const service = new UniversityAdminService();
 
 // Me

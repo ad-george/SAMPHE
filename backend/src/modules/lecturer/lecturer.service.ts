@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../../lib/prisma";
 import bcrypt from "bcryptjs";
 import {
   getSemesterWeekBuckets,
@@ -6,7 +6,7 @@ import {
   generateBrowserFingerprint,
 } from "../../utils/helpers";
 
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
 
 export class LecturerService {
   // --- Profile ---

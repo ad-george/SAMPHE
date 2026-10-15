@@ -1,8 +1,8 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../../lib/prisma";
 import PDFDocument from "pdfkit";
 import ExcelJS from "exceljs";
 
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
 
 export class ReportService {
   async getReport(sessionId: string) {

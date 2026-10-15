@@ -244,6 +244,60 @@ export const importUnits = async (
   }
 };
 
+// ==================== IMPORT PROGRAMMES ====================
+export const importPrograms = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    if (!req.file) throw new Error("No file uploaded");
+
+    const { rows, getVal } = readExcelRows(req.file.buffer);
+
+    const programs = (rows as any[])
+      .map((row: any) => ({
+        name: getVal(row, [
+          "programName",
+          "ProgramName",
+          "Program Name",
+          "ProgrammeName",
+          "Programme Name",
+          "Name",
+          "Program",
+          "Programme",
+          "Course",
+        ]),
+        code: getVal(row, [
+          "programCode",
+          "ProgramCode",
+          "Program Code",
+          "ProgrammeCode",
+          "Programme Code",
+          "Code",
+        ]),
+        duration: getVal(row, ["duration", "Duration", "Years", "Year"]),
+        level: getVal(row, [
+          "level",
+          "Level",
+          "KNQF",
+          "KNQFLevel",
+          "KNQF Level",
+        ]),
+      }))
+      .filter((p: any) => p.name);
+
+    console.log("Mapped programs:", programs.length, programs[0]);
+
+    const result = await service.bulkImportPrograms(req.user!.id, programs);
+    res.status(201).json({ success: true, data: result });
+  } catch (e: any) {
+    console.error("IMPORT PROGRAMS ERROR:", e);
+    next({ statusCode: 400, message: e.message });
+  }
+};
+
+
 // ==================== PROMOTE / ARCHIVE ====================
 export const promoteSemester = async (
   req: Request,

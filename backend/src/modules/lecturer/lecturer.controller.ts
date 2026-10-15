@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import { LecturerService } from "./lecturer.service";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../../lib/prisma";
 import { globalSearch as globalSearchService } from "./lecturer.search";
 
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
 const service = new LecturerService();
 
 const getLecturer = async (req: Request) => {

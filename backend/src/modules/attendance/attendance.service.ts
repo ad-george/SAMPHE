@@ -1,11 +1,11 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../../lib/prisma";
 import {
   generateSessionToken,
   haversineDistance,
   generateBrowserFingerprint,
 } from "../../utils/helpers";
 
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
 
 export class AttendanceService {
   async createSession(lecturerId: string, data: any) {

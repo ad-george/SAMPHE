@@ -1,5 +1,5 @@
-import { PrismaClient } from "@prisma/client";
-const prisma = new PrismaClient();
+import { prisma } from "../../lib/prisma";
+// const prisma = new PrismaClient();
 
 export class UnitService {
   async create(data: {

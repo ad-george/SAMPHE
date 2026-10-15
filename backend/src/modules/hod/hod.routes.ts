@@ -35,6 +35,7 @@ import {
   searchDepartment,
   importStudents,
   importUnits,
+  importPrograms,
   upload,
   promoteSemester,
   promoteYear,
@@ -187,6 +188,13 @@ router.delete(
 // Programs
 router.get("/programs", authenticate, authorize("HOD"), getPrograms);
 router.post("/programs", authenticate, authorize("HOD"), createProgram);
+router.post(
+  "/programs/import",
+  authenticate,
+  authorize("HOD"),
+  upload.single("file"),
+  importPrograms,
+);
 router.put("/programs/:id", authenticate, authorize("HOD"), updateProgram);
 router.delete("/programs/:id", authenticate, authorize("HOD"), deleteProgram);
 
