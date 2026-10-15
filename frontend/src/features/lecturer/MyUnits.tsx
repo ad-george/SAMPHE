@@ -50,7 +50,7 @@ const MyUnits = () => {
             />
           </svg>
         </div>
-       <h2 className="text-sm md:text-xl font-bold text-slate-300 mb-1 md:mb-2">
+       <h2 className="text-sm md:text-xl font-bold text-slate-400 mb-1 md:mb-2">
           No {pluralize(terms.unit)} Assigned
         </h2>
 
