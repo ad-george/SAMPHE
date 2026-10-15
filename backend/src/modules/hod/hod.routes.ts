@@ -16,6 +16,7 @@ import {
   createProgram,
   updateProgram,
   deleteProgram,
+  bulkDeletePrograms,
   getUnits,
   createUnit,
   updateUnit,
@@ -44,6 +45,8 @@ import {
   unarchiveStudent,
   getArchivedStudents,
   deleteStudentPermanent,
+  bulkArchiveStudents,
+  bulkDeleteStudentsPermanent,
   promoteAllSemester,
   promoteAllYear,
   getPromotionHistory,
@@ -109,6 +112,18 @@ router.delete(
   authenticate,
   authorize("HOD"),
   deleteStudentPermanent,
+);
+router.post(
+  "/students/bulk-archive",
+  authenticate,
+  authorize("HOD"),
+  bulkArchiveStudents,
+);
+router.post(
+  "/students/bulk-delete-permanent",
+  authenticate,
+  authorize("HOD"),
+  bulkDeleteStudentsPermanent,
 );
 router.put("/students/:id", authenticate, authorize("HOD"), updateStudent);
 router.delete("/students/:id", authenticate, authorize("HOD"), deleteStudent);
@@ -201,6 +216,12 @@ router.post(
   authorize("HOD"),
   upload.single("file"),
   importPrograms,
+);
+router.post(
+  "/programs/bulk-delete",
+  authenticate,
+  authorize("HOD"),
+  bulkDeletePrograms,
 );
 router.put("/programs/:id", authenticate, authorize("HOD"), updateProgram);
 router.delete("/programs/:id", authenticate, authorize("HOD"), deleteProgram);

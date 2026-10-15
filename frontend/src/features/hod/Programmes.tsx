@@ -171,37 +171,27 @@ const Programmes = () => {
     if (selectedIds.length === 0 || bulkDeleting) return;
     setBulkDeleting(true);
 
-    const toastId = toast.loading(
-      `Deleting ${selectedIds.length} ${pluralize(terms.program).toLowerCase()}…`,
-    );
+    try {
+      const res = await api.post("/hod/programs/bulk-delete", {
+        programIds: selectedIds,
+      });
 
-    let deleted = 0;
-    let failed = 0;
-    const failedNames: string[] = [];
+      const { deleted, failed, failedNames } = res.data.data;
 
-    for (const id of selectedIds) {
-      const target = programmes.find((p: any) => p.id === id);
-      try {
-        await api.delete(`/hod/programs/${id}`);
-        deleted++;
-      } catch {
-        failed++;
-        if (target?.name) failedNames.push(target.name);
-      }
-    }
+      setBulkDeleting(false);
+      setBulkDeleteOpen(false);
+      setSelectedIds([]);
+      fetch();
 
-    setBulkDeleting(false);
-    setBulkDeleteOpen(false);
-    setSelectedIds([]);
-    fetch();
-
-    if (failed === 0) {
-      toast.success(`✓ Deleted ${deleted}`, { id: toastId, duration: 5000 });
-    } else {
-      toast.error(
-        `Deleted ${deleted}, Failed ${failed} (in use)${failedNames.length ? ` — ${failedNames.slice(0, 3).join(", ")}${failedNames.length > 3 ? "…" : ""}` : ""}`,
-        { id: toastId, duration: 8000 },
+      toast.success(
+        failed === 0
+          ? `✓ Deleted ${deleted}`
+          : `Deleted ${deleted}, Failed ${failed} (in use)${failedNames?.length ? ` — ${failedNames.slice(0, 3).join(", ")}${failedNames.length > 3 ? "…" : ""}` : ""}`,
+        { duration: failed === 0 ? 5000 : 8000 },
       );
+    } catch (err: any) {
+      setBulkDeleting(false);
+      toast.error(err.response?.data?.message || "Delete failed");
     }
   };
 

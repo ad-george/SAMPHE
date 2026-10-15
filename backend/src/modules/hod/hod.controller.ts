@@ -390,6 +390,53 @@ export const deleteStudentPermanent = async (
   }
 };
 
+export const bulkArchiveStudents = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { studentIds, archiveUntil } = req.body;
+    if (!studentIds || !Array.isArray(studentIds) || studentIds.length === 0) {
+      return next({
+        statusCode: 400,
+        message: "Please provide studentIds array",
+      });
+    }
+    const data = await service.bulkArchiveStudents(
+      req.user!.id,
+      studentIds,
+      archiveUntil,
+    );
+    res.json({ success: true, data });
+  } catch (e: any) {
+    next({ statusCode: 400, message: e.message });
+  }
+};
+
+export const bulkDeleteStudentsPermanent = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { studentIds } = req.body;
+    if (!studentIds || !Array.isArray(studentIds) || studentIds.length === 0) {
+      return next({
+        statusCode: 400,
+        message: "Please provide studentIds array",
+      });
+    }
+    const data = await service.bulkPermanentlyDeleteStudents(
+      req.user!.id,
+      studentIds,
+    );
+    res.json({ success: true, data });
+  } catch (e: any) {
+    next({ statusCode: 400, message: e.message });
+  }
+};
+
 // ==================== PROFILE ====================
 export const getMe = async (
   req: Request,
@@ -616,6 +663,26 @@ export const deleteProgram = async (
   try {
     await service.deleteProgram(req.params.id);
     res.json({ success: true, message: "Deleted" });
+  } catch (e: any) {
+    next({ statusCode: 400, message: e.message });
+  }
+};
+
+export const bulkDeletePrograms = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { programIds } = req.body;
+    if (!programIds || !Array.isArray(programIds) || programIds.length === 0) {
+      return next({
+        statusCode: 400,
+        message: "Please provide programIds array",
+      });
+    }
+    const data = await service.bulkDeletePrograms(req.user!.id, programIds);
+    res.json({ success: true, data });
   } catch (e: any) {
     next({ statusCode: 400, message: e.message });
   }

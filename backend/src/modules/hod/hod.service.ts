@@ -688,6 +688,80 @@ export class HodService {
     return { message: "Permanently deleted" };
   }
 
+  // --- BULK ARCHIVE STUDENTS ---
+  async bulkArchiveStudents(
+    hodId: string,
+    studentIds: string[],
+    archiveUntil?: string,
+  ) {
+    const hod = await prisma.hod.findUnique({ where: { id: hodId } });
+    if (!hod) throw new Error("HOD not found");
+
+    const valid = await prisma.student.findMany({
+      where: { id: { in: studentIds }, departmentId: hod.departmentId },
+      select: { id: true },
+    });
+
+    const validIds = valid.map((s) => s.id);
+
+    if (validIds.length === 0) {
+      return { archived: 0, failed: studentIds.length };
+    }
+
+    const result = await prisma.student.updateMany({
+      where: { id: { in: validIds } },
+      data: {
+        archived: true,
+        archivedAt: new Date(),
+        archiveUntil: archiveUntil ? new Date(archiveUntil) : null,
+      },
+    });
+
+    return {
+      archived: result.count,
+      failed: studentIds.length - result.count,
+    };
+  }
+
+  // --- BULK PERMANENT DELETE STUDENTS ---
+  async bulkPermanentlyDeleteStudents(hodId: string, studentIds: string[]) {
+    const hod = await prisma.hod.findUnique({ where: { id: hodId } });
+    if (!hod) throw new Error("HOD not found");
+
+    const valid = await prisma.student.findMany({
+      where: { id: { in: studentIds }, departmentId: hod.departmentId },
+      select: { id: true },
+    });
+
+    const validIds = valid.map((s) => s.id);
+
+    if (validIds.length === 0) {
+      return { deleted: 0, failed: studentIds.length };
+    }
+
+    let deleted = 0;
+
+    await prisma.$transaction(
+      async (tx) => {
+        // Delete attendance records first
+        await tx.attendanceRecord.deleteMany({
+          where: { studentId: { in: validIds } },
+        });
+        // Then delete students
+        const res = await tx.student.deleteMany({
+          where: { id: { in: validIds } },
+        });
+        deleted = res.count;
+      },
+      { timeout: 60000 },
+    );
+
+    return {
+      deleted,
+      failed: studentIds.length - deleted,
+    };
+  }
+
   // --- BULK IMPORT UNITS (BATCHED) ---
   async bulkImportUnits(hodId: string, units: any[]) {
     const hod = await prisma.hod.findUnique({
@@ -839,7 +913,7 @@ export class HodService {
     return results;
   }
 
-    // --- BULK IMPORT PROGRAMMES ---
+    // --- BULK IMPORT PROGRAMMES (BATCHED) ---
   async bulkImportPrograms(hodId: string, programs: any[]) {
     const hod = await prisma.hod.findUnique({
       where: { id: hodId },
@@ -866,6 +940,15 @@ export class HodService {
         .filter((p) => p.code)
         .map((p) => (p.code as string).toLowerCase().trim()),
     );
+
+    const toCreate: {
+      name: string;
+      code: string | null;
+      duration: number;
+      level: number | null;
+      departmentId: string;
+      universityId: string;
+    }[] = [];
 
     for (const row of programs) {
       try {
@@ -907,23 +990,38 @@ export class HodService {
           }
         }
 
-        await prisma.programme.create({
-          data: {
-            name,
-            code,
-            duration,
-            level,
-            departmentId: hod.departmentId,
-            universityId: hod.universityId,
-          },
+        toCreate.push({
+          name,
+          code,
+          duration,
+          level,
+          departmentId: hod.departmentId,
+          universityId: hod.universityId,
         });
 
         existingNames.add(nameKey);
         if (codeKey) existingCodes.add(codeKey);
-        results.created++;
       } catch (err: any) {
         results.failed++;
         results.errors.push(`Row ${row.name || "?"}: ${err.message}`);
+      }
+    }
+
+    if (toCreate.length > 0) {
+      try {
+        await prisma.programme.createMany({ data: toCreate });
+        results.created = toCreate.length;
+      } catch (err: any) {
+        // Fall back to per-row if the batch fails for any reason
+        for (const row of toCreate) {
+          try {
+            await prisma.programme.create({ data: row });
+            results.created++;
+          } catch (e: any) {
+            results.failed++;
+            results.errors.push(`Row ${row.name}: ${e.message}`);
+          }
+        }
       }
     }
 
@@ -1120,6 +1218,43 @@ export class HodService {
   }
   async deleteProgram(id: string) {
     return prisma.programme.delete({ where: { id } });
+  }
+
+  async bulkDeletePrograms(hodId: string, programIds: string[]) {
+    const hod = await prisma.hod.findUnique({ where: { id: hodId } });
+    if (!hod) throw new Error("HOD not found");
+
+    const validPrograms = await prisma.programme.findMany({
+      where: { id: { in: programIds }, departmentId: hod.departmentId },
+      select: { id: true, name: true },
+    });
+
+    if (validPrograms.length === 0) {
+      return { deleted: 0, failed: programIds.length, failedNames: [] };
+    }
+
+    let deleted = 0;
+    const failedNames: string[] = [];
+
+    await prisma.$transaction(
+      async (tx) => {
+        for (const p of validPrograms) {
+          try {
+            await tx.programme.delete({ where: { id: p.id } });
+            deleted++;
+          } catch {
+            failedNames.push(p.name);
+          }
+        }
+      },
+      { timeout: 60000 },
+    );
+
+    return {
+      deleted,
+      failed: programIds.length - deleted,
+      failedNames,
+    };
   }
 
   // --- Units ---

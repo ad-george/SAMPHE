@@ -27,6 +27,8 @@ const Students = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [historyData, setHistoryData] = useState<any[]>([]);
+  const [bulkDeletePermanentOpen, setBulkDeletePermanentOpen] = useState(false);
+  const [bulkDeletingPermanent, setBulkDeletingPermanent] = useState(false);
 
   const [importOpen, setImportOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
@@ -265,18 +267,23 @@ const Students = () => {
       return;
     }
     try {
-      for (const id of selectedIds) {
-        await api.patch(`/hod/students/${id}/archive`, {
-          archiveUntil: archiveUntil || undefined,
-        });
-      }
-      toast.success("Archived");
+      const res = await api.post("/hod/students/bulk-archive", {
+        studentIds: selectedIds,
+        archiveUntil: archiveUntil || undefined,
+      });
+      const { archived, failed } = res.data.data;
+      toast.success(
+        failed === 0
+          ? `✓ Archived ${archived}`
+          : `Archived ${archived}, Failed ${failed}`,
+        { duration: failed === 0 ? 5000 : 8000 },
+      );
       setArchiveModal(false);
       setSelectedIds([]);
       fetchStudents();
       fetchArchived();
-    } catch {
-      toast.error("Failed");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed");
     }
   };
 
@@ -303,6 +310,30 @@ const Students = () => {
     }
   };
 
+  const bulkPermanentDelete = async () => {
+    if (selectedIds.length === 0 || bulkDeletingPermanent) return;
+    setBulkDeletingPermanent(true);
+    try {
+      const res = await api.post("/hod/students/bulk-delete-permanent", {
+        studentIds: selectedIds,
+      });
+      const { deleted, failed } = res.data.data;
+      toast.success(
+        failed === 0
+          ? `✓ Permanently deleted ${deleted}`
+          : `Deleted ${deleted}, Failed ${failed}`,
+        { duration: failed === 0 ? 5000 : 8000 },
+      );
+      setBulkDeletePermanentOpen(false);
+      setSelectedIds([]);
+      fetchArchived();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed");
+    } finally {
+      setBulkDeletingPermanent(false);
+    }
+  };
+
   const data = view === "active" ? displayedData : archived;
 
   const sortedPreview = [...importedPreview].sort((a, b) =>
@@ -319,6 +350,14 @@ const Students = () => {
           Students
         </h1>
         <div className="flex items-center gap-2">
+          {view === "archived" && selectedIds.length > 0 && (
+            <button
+              onClick={() => setBulkDeletePermanentOpen(true)}
+              className="px-4 py-2 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-sm font-medium hover:bg-rose-100 transition"
+            >
+              🗑 Permanently delete {selectedIds.length}
+            </button>
+          )}
           <div className="flex bg-white border border-slate-200 rounded-lg p-1 shadow-sm">
             <button
               onClick={() => setView("active")}
@@ -494,18 +533,26 @@ const Students = () => {
             <thead>
               <tr className="border-b border-slate-100 text-slate-500 text-xs uppercase bg-slate-50/50">
                 <th className="text-left p-4 font-medium w-10">S/N</th>
-                {view === "active" && (
-                  <th className="text-left p-4 font-medium w-10">
-                    <input
-                      type="checkbox"
-                      checked={
-                        selectedIds.length > 0 &&
-                        selectedIds.length === filtered.length
-                      }
-                      onChange={selectAll}
-                    />
-                  </th>
-                )}
+                <th className="text-left p-4 font-medium w-10">
+                  <input
+                    type="checkbox"
+                    checked={
+                      selectedIds.length > 0 &&
+                      selectedIds.length ===
+                        (view === "active" ? filtered.length : archived.length)
+                    }
+                    onChange={
+                      view === "active"
+                        ? selectAll
+                        : () => {
+                            const ids = archived.map((s: any) => s.id);
+                            setSelectedIds(
+                              ids.length === selectedIds.length ? [] : ids,
+                            );
+                          }
+                    }
+                  />
+                </th>
                 <th className="text-left p-4 font-medium">Reg No</th>
                 <th className="text-left p-4 font-medium">Name</th>
                 {usesLevel && (
@@ -536,15 +583,13 @@ const Students = () => {
                   <td className="p-4 text-slate-400 font-mono text-xs text-center">
                     {idx + 1}
                   </td>
-                  {view === "active" && (
-                    <td className="p-4">
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.includes(s.id)}
-                        onChange={() => toggleSelect(s.id)}
-                      />
-                    </td>
-                  )}
+                  <td className="p-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(s.id)}
+                      onChange={() => toggleSelect(s.id)}
+                    />
+                  </td>
                   <td className="p-4 text-slate-600 font-mono text-xs">
                     {s.regNo}
                   </td>
@@ -597,7 +642,7 @@ const Students = () => {
                 <tr>
                   <td
                     colSpan={
-                      (view === "archived" ? 9 : 8) + (usesLevel ? 1 : 0)
+                      (view === "archived" ? 9 : 7) + (usesLevel ? 1 : 0)
                     }
                     className="p-12 text-center text-slate-400"
                   >
@@ -1069,6 +1114,39 @@ const Students = () => {
          </div>,
           document.body,
         )}
+
+      {/* Bulk Permanent Delete Modal */}
+      {bulkDeletePermanentOpen &&
+      createPortal(
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[80] p-4">
+          <div className="bg-white border border-rose-200 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+            <h3 className="text-lg font-bold text-rose-600 mb-2">
+              Permanently delete {selectedIds.length} student(s)?
+            </h3>
+            <p className="text-sm text-slate-500 mb-6">
+              This will delete the students and all their attendance records.
+              This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setBulkDeletePermanentOpen(false)}
+                disabled={bulkDeletingPermanent}
+                className="flex-1 py-2.5 rounded-xl bg-slate-100 text-sm hover:bg-slate-200 transition text-slate-700 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={bulkPermanentDelete}
+                disabled={bulkDeletingPermanent}
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 text-sm font-medium hover:bg-rose-500 transition text-white disabled:opacity-50"
+              >
+                {bulkDeletingPermanent ? "Deleting…" : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
     </div>
   );
 };
