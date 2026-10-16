@@ -303,7 +303,9 @@ const Licenses = () => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `SAMPHE-License-${license.code}.pdf`;
+      a.download = `SAMPHE-License-${license.code
+        .substring(0, 3)
+        .toUpperCase()}.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

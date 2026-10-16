@@ -356,9 +356,10 @@ export const downloadLicensePdf = async (
     });
 
     res.setHeader("Content-Type", "application/pdf");
+    const shortCode = license.code.substring(0, 3).toUpperCase();
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="SAMPHE-License-${license.code}.pdf"`,
+      `attachment; filename="SAMPHE-License-${shortCode}.pdf"`,
     );
     res.send(Buffer.from(pdfBytes));
   } catch (e: any) {
