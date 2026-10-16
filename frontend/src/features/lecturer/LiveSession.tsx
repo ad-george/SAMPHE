@@ -446,7 +446,6 @@ const LiveSession = () => {
                   <th className="text-left p-1.5 md:p-4 font-medium">Reg No</th>
                   <th className="text-left p-1.5 md:p-4 font-medium">Name</th>
                   <th className="text-left p-1.5 md:p-4 font-medium">Time</th>
-                  <th className="text-left p-1.5 md:p-4 font-medium">Dist</th>
                   <th className="text-left p-1.5 md:p-4 font-medium">Status</th>
                 </tr>
               </thead>
@@ -472,11 +471,6 @@ const LiveSession = () => {
                         minute: "2-digit",
                       })}
                     </td>
-                    <td className="p-1.5 md:p-4 text-slate-400">
-                      {r.distance !== null && r.distance !== undefined
-                        ? `${Math.round(r.distance)}m`
-                        : "—"}
-                    </td>
                     <td className="p-1.5 md:p-4">
                       <span
                         className={`text-[9px] md:text-xs font-bold px-1.5 md:px-2.5 py-0.5 md:py-1 rounded-full border ${
@@ -493,7 +487,7 @@ const LiveSession = () => {
                 {records.length === 0 && (
                   <tr>
                     <td
-                      colSpan={5}
+                      colSpan={4}
                       className="p-8 md:p-16 text-center text-slate-400"
                     >
                       <div className="flex flex-col items-center gap-1.5 md:gap-3">

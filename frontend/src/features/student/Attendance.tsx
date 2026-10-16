@@ -254,21 +254,21 @@ const StudentAttendance = () => {
         backgroundRepeat: "no-repeat",
       }}
     >
-      <div className="bg-white/90 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-2xl p-3 md:p-8 max-w-2xl w-full border border-slate-200">
+      <div className="bg-white/90 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-2xl p-3 md:p-6 max-w-lg w-full border border-slate-200">
         {/* University Header — centered */}
-        <div className="text-center border-b border-slate-200 pb-3 md:pb-6 mb-3 md:mb-6">
+        <div className="text-center border-b border-slate-200 pb-2 md:pb-4 mb-2 md:mb-4">
           {university?.logo ? (
             <img
               src={university.logo}
               alt={university.name}
-              className="h-24 md:h-40 w-auto mx-auto mb-3 md:mb-6 object-contain"
+              className="h-20 md:h-28 w-auto mx-auto mb-2 md:mb-4 object-contain"
             />
           ) : (
             <div
-              className="w-24 h-24 md:w-40 md:h-40 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-6"
+              className="w-20 h-20 md:w-28 md:h-28 rounded-full flex items-center justify-center mx-auto mb-2 md:mb-4"
               style={{ backgroundColor: accentColor }}
             >
-              <span className="text-xl md:text-3xl text-white">🎓</span>
+              <span className="text-lg md:text-2xl text-white">🎓</span>
             </div>
           )}
           <h1 className="text-base md:text-2xl font-bold text-slate-800 leading-tight">
@@ -289,9 +289,9 @@ const StudentAttendance = () => {
         </div>
 
         {/* Academic Session Details — TWO columns on all screens */}
-        <div className="mb-3 md:mb-6">
+        <div className="mb-3 md:mb-4">
           <h2
-            className="text-[10px] md:text-sm font-bold mb-2 md:mb-4 text-center uppercase tracking-wide border-b border-slate-200 pb-1 md:pb-2"
+            className="text-[10px] md:text-xs font-bold mb-2 md:mb-3 text-center uppercase tracking-wide border-b border-slate-200 pb-1 md:pb-1.5"
             style={{ color: accentColor }}
           >
             Academic Session Details
@@ -350,7 +350,7 @@ const StudentAttendance = () => {
         </div>
 
         {/* Countdown Banner */}
-        <div className="mb-3 md:mb-5 flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg md:rounded-xl px-3 md:px-4 py-2 md:py-3">
+        <div className="mb-3 md:mb-4 flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg md:rounded-xl px-3 md:px-4 py-2 md:py-2.5">
           <div>
             <p className="text-[9px] md:text-[10px] text-slate-500 uppercase tracking-wider font-semibold">
               Session Closes In
@@ -372,7 +372,7 @@ const StudentAttendance = () => {
           </div>
         </div>
 
-        <hr className="border-slate-200 mb-3 md:mb-6" />
+        <hr className="border-slate-200 mb-3 md:mb-4" />
 
         {/* Success State */}
         {submitted ? (

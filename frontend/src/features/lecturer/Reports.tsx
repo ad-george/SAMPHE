@@ -573,7 +573,7 @@ const Reports = () => {
       {/* Unit dropdown — custom modal */}
       {unitDropdownOpen && (
         <div
-          className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 md:p-4"
+          className="fixed inset-0 z-[100] bg-black/70 flex items-center justify-center p-6 md:p-4"
           onClick={() => setUnitDropdownOpen(false)}
         >
           <div
@@ -642,7 +642,7 @@ const Reports = () => {
       {/* Format dropdown — custom modal */}
       {formatDropdownOpen && (
         <div
-          className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 md:p-4"
+          className="fixed inset-0 z-[100] bg-black/70 flex items-center justify-center p-6 md:p-4"
           onClick={() => setFormatDropdownOpen(false)}
         >
           <div
@@ -692,7 +692,7 @@ const Reports = () => {
       )}
       {/* View Report Modal */}
       {viewModalOpen && selectedReport && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2 md:p-4">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-2 md:p-4">
           <div className="bg-white rounded-lg md:rounded-2xl w-full max-w-4xl max-h-[92vh] md:max-h-[90vh] overflow-y-auto shadow-2xl p-3 md:p-8">
             <div
               className="rounded-lg md:rounded-xl p-3 md:p-8 border-2"
