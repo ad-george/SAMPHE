@@ -536,7 +536,9 @@ const Licenses = () => {
                 <td className="px-4 py-4 font-mono text-[11px] text-violet-400 whitespace-nowrap">
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => copyToClipboard(license.code, license.id)}
+                      onClick={() =>
+                        copyToClipboard(formatLicenseCode(license.code), license.id)
+                      }
                       title="Copy license code"
                       className="p-1 rounded hover:bg-white/10 transition text-violet-400"
                     >
