@@ -845,50 +845,50 @@ export class LicenseService {
   async getStats() {
     const now = new Date();
 
-    const [total, unused, used, suspended, revoked, expired] =
+    const [total, unused, used, suspended, revoked, expired, revokedOrExpired] =
       await Promise.all([
         prisma.license.count(),
 
         prisma.license.count({
-          where: {
-            status: "UNUSED",
-          },
+          where: { status: "UNUSED" },
         }),
 
         prisma.license.count({
           where: {
             status: "USED",
+            OR: [{ expiryDate: null }, { expiryDate: { gte: now } }],
+          },
+        }),
+
+        prisma.license.count({
+          where: { status: "SUSPENDED" },
+        }),
+
+        prisma.license.count({
+          where: { status: "REVOKED" },
+        }),
+
+        // Expired = any license whose expiry date has passed,
+        // excluding revoked/suspended/unused.
+        prisma.license.count({
+          where: {
+            expiryDate: { lt: now },
+            status: {
+              notIn: ["REVOKED", "SUSPENDED", "UNUSED"],
+            },
+          },
+        }),
+
+        // Revoked or Expired — for the combined card.
+        prisma.license.count({
+          where: {
             OR: [
+              { status: "REVOKED" },
               {
-                expiryDate: null,
-              },
-              {
-                expiryDate: {
-                  gte: now,
-                },
+                expiryDate: { lt: now },
+                status: { notIn: ["REVOKED", "SUSPENDED", "UNUSED"] },
               },
             ],
-          },
-        }),
-
-        prisma.license.count({
-          where: {
-            status: "SUSPENDED",
-          },
-        }),
-
-        prisma.license.count({
-          where: {
-            status: "REVOKED",
-          },
-        }),
-
-        prisma.license.count({
-          where: {
-            status: "USED",
-            expiryDate: {
-              lt: now,
-            },
           },
         }),
       ]);
@@ -900,6 +900,7 @@ export class LicenseService {
       suspended,
       revoked,
       expired,
+      revokedOrExpired,
     };
   }
 }

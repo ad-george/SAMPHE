@@ -459,7 +459,7 @@ const Licenses = () => {
 
         <button
           onClick={() => setShowModal(true)}
-          className="px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-xl font-medium text-sm hover:from-violet-500 hover:to-indigo-500 transition shadow-lg shadow-violet-500/20"
+                   className="px-5 py-2.5 bg-emerald-600 rounded-xl font-medium text-sm hover:bg-emerald-500 transition shadow-lg shadow-emerald-500/20 text-white"
         >
           + Generate License
         </button>
@@ -493,10 +493,10 @@ const Licenses = () => {
         </div>
 
         <div className="bg-[#13131f] border border-white/5 rounded-2xl p-6">
-          <p className="text-sm text-gray-500 mb-1">Expired</p>
+          <p className="text-sm text-gray-500 mb-1">Expired/Revoked</p>
 
           <p className="text-3xl font-bold text-rose-400">
-            {stats?.expired || 0}
+            {stats?.revokedOrExpired || 0}
           </p>
         </div>
       </div>
@@ -537,14 +537,14 @@ const Licenses = () => {
                 </td>
 
                 {/* LICENSE CODE */}
-                <td className="px-4 py-4 font-mono text-[11px] text-violet-400 whitespace-nowrap">
+                <td className="px-4 py-4 font-mono text-[11px] text-emerald-400 whitespace-nowrap">
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() =>
                         copyToClipboard(formatLicenseCode(license.code), license.id)
                       }
                       title="Copy license code"
-                      className="p-1 rounded hover:bg-white/10 transition text-violet-400"
+                      className="p-1 rounded hover:bg-white/10 transition text-emerald-400"
                     >
                       {copyingId === license.id ? (
                         <svg
@@ -617,7 +617,7 @@ const Licenses = () => {
                 <td className="px-4 py-4 text-center">
                   <button
                     onClick={() => openActionMenu(license)}
-                    className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-violet-500/30 transition"
+                    className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-emerald-500/30 transition"
                     title="License actions"
                   >
                     <span className="text-lg leading-none">⋮</span>
@@ -640,18 +640,21 @@ const Licenses = () => {
           GENERATE LICENSE MODAL
       ====================================================== */}
 
-      {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-2xl flex items-center justify-center z-[100] p-4">
+      {showModal && 
+      createPortal(
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4">
           <div className="bg-[#13131f] border border-white/10 rounded-2xl p-8 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-1">Generate New License</h2>
+            <h2 className="text-xl font-bold mb-1 text-white">
+              Generate New License
+            </h2>
 
-            <p className="text-sm text-gray-500 mb-6">
+            <p className="text-sm text-gray-400 mb-6">
               A unique 16-character code will be created
             </p>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-xs text-gray-200 uppercase tracking-wider mb-2">
+                <label className="block text-xs text-gray-300 uppercase tracking-wider mb-2">
                   License Type
                 </label>
 
@@ -663,18 +666,22 @@ const Licenses = () => {
                       type: e.target.value,
                     })
                   }
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-violet-500/50"
+                  className="w-full bg-[#1c1c2e] border border-white/15 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500/60"
                 >
-                  <option value="SUBSCRIPTION">Subscription</option>
-
-                  <option value="PERPETUAL">Perpetual</option>
-
-                  <option value="TRIAL">Trial</option>
+                  <option className="bg-[#1c1c2e] text-white" value="SUBSCRIPTION">
+                    Subscription
+                  </option>
+                  <option className="bg-[#1c1c2e] text-white" value="PERPETUAL">
+                    Perpetual
+                  </option>
+                  <option className="bg-[#1c1c2e] text-white" value="TRIAL">
+                    Trial
+                  </option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs text-gray-200 uppercase tracking-wider mb-2">
+                <label className="block text-xs text-gray-300 uppercase tracking-wider mb-2">
                   Expiry Date (optional)
                 </label>
 
@@ -687,7 +694,7 @@ const Licenses = () => {
                       expiryDate: e.target.value,
                     })
                   }
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-violet-500/50"
+                  className="w-full bg-[#1c1c2e] border border-white/15 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500/60 [color-scheme:dark]"
                 />
               </div>
 
@@ -695,7 +702,7 @@ const Licenses = () => {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 transition text-sm font-medium"
+                  className="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 transition text-sm font-medium text-white"
                 >
                   Cancel
                 </button>
@@ -703,22 +710,24 @@ const Licenses = () => {
                 <button
                   onClick={generateLicense}
                   disabled={loading}
-                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 transition text-sm font-medium shadow-lg shadow-violet-500/20 disabled:opacity-50"
+                  className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 transition text-sm font-medium shadow-lg shadow-emerald-500/20 disabled:opacity-50 text-white"
                 >
                   {loading ? "Generating..." : "Generate License"}
                 </button>
               </div>
             </div>
           </div>
-        </div>
+     </div>,
+          document.body,
         )}
 
       {/* =====================================================
           ACTION MODAL
       ====================================================== */}
 
-      {showActionModal && actionLicense && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-2xl flex items-center justify-center z-[100] p-4">
+      {showActionModal && actionLicense && 
+      createPortal(
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4">
           <div className="bg-[#13131f] border border-white/10 rounded-2xl p-7 w-full max-w-lg shadow-2xl">
             {/* HEADER */}
 
@@ -892,7 +901,8 @@ const Licenses = () => {
               Cancel
             </button>
           </div>
-         </div>
+         </div>,
+          document.body,
         )}
     </div>
   );
