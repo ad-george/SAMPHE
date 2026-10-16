@@ -17,8 +17,20 @@ class EmailService {
     this.privateKey = process.env.EMAILJS_PRIVATE_KEY || "";
   }
 
-  async sendEmail(options: EmailOptions) {
+  async sendEmail(options: EmailOptions): Promise<{ success: boolean; error?: string }> {
     try {
+      // Basic guard — skip malformed recipients instead of throwing
+      if (
+        !options?.to ||
+        typeof options.to !== "string" ||
+        !options.to.includes("@")
+      ) {
+        console.error(
+          `❌ Skipped email — invalid recipient: "${options?.to}"`,
+        );
+        return { success: false, error: "Invalid recipient address" };
+      }
+
       const payload = {
         service_id: this.serviceId,
         template_id: this.templateId,
@@ -39,13 +51,21 @@ class EmailService {
 
       if (!res.ok) {
         const text = await res.text();
-        throw new Error(`EmailJS failed: ${res.status} ${text}`);
+        console.error(
+          `❌ EmailJS failed (${res.status}) to "${options.to}": ${text}`,
+        );
+        return { success: false, error: `EmailJS ${res.status}: ${text}` };
       }
 
       console.log("✅ Email sent via EmailJS to:", options.to);
-    } catch (error) {
-      console.error("❌ EmailJS sending failed:", error);
-      throw error;
+      return { success: true };
+    } catch (error: any) {
+      // Log and swallow — email failures must never crash the app
+      console.error(
+        `❌ EmailJS exception to "${options?.to}":`,
+        error?.message || error,
+      );
+      return { success: false, error: error?.message || String(error) };
     }
   }
 
