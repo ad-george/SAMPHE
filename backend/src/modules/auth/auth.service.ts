@@ -3,6 +3,10 @@ import bcrypt from "bcryptjs";
 import { generateToken } from "../../utils/jwt";
 import crypto from "crypto";
 import emailService from "../../services/email.service";
+import {
+  signPendingSignup,
+  verifyPendingSignup,
+} from "../../utils/pendingSignup";
 
 // const prisma = new PrismaClient();
 
@@ -279,93 +283,198 @@ export class AuthService {
     };
   }
 
-   async universityAdminSignup(data: {
+  // Stage 1 + 2 — NO database writes. Returns a short-lived signed token.
+  async universityAdminSignup(data: {
     institutionType: string;
+    licenseType: string;
     institutionName: string;
     institutionEmail: string;
     institutionPhone: string;
-    capacity: number;
     adminFullName: string;
     adminEmail: string;
     adminPhone: string;
     adminPassword: string;
   }) {
+    if (!data.adminPassword || data.adminPassword.length < 6) {
+      throw new Error("Password must be at least 6 characters");
+    }
+
+    const institutionType = (
+      data.institutionType || "UNIVERSITY"
+    ).toUpperCase();
+
+    // Check email isn't already taken (non-destructive, read-only)
     const existing = await prisma.universityAdmin.findUnique({
       where: { email: data.adminEmail },
     });
     if (existing) throw new Error("Admin email already registered");
 
-    if (!data.adminPassword || data.adminPassword.length < 6) {
-      throw new Error("Password must be at least 6 characters");
-    }
+    // Hash password before signing (never store raw)
+    const adminPasswordHash = await bcrypt.hash(data.adminPassword, 10);
 
-    const institutionType = (data.institutionType || "UNIVERSITY").toUpperCase();
-
-    // Create university with proper category
-    const university = await prisma.university.create({
-      data: {
-        name: data.institutionName,
-        email: data.institutionEmail,
-        phone: data.institutionPhone,
-        category: institutionType, // ← proper field
-        status: "PENDING",
-      },
-    });
-
-    // Create "General" faculty for non-faculty institutions (hidden on UI)
-    if (!isFacultyBased(institutionType)) {
-      await prisma.faculty.create({
-        data: {
-          name: "General",
-          universityId: university.id,
-        },
-      });
-    }
-
-    // Auto-create study years + time units
-    const { years, timeUnits } = defaultStructureFor(institutionType);
-
-    const yearIds: string[] = [];
-    for (let i = 1; i <= years; i++) {
-      const y = await prisma.studyYear.create({
-        data: {
-          name: `Year ${i}`,
-          description: `Year ${i} of study`,
-          universityId: university.id,
-        },
-      });
-      yearIds.push(y.id);
-
-      // Create time units for this year
-      for (const unitName of timeUnits) {
-        await prisma.semester.create({
-          data: {
-            name: unitName,
-            universityId: university.id,
-            studyYearId: y.id,
-          },
-        });
-      }
-    }
-
-    const hashedPassword = await bcrypt.hash(data.adminPassword, 10);
-
-    const admin = await prisma.universityAdmin.create({
-      data: {
-        fullName: data.adminFullName,
-        email: data.adminEmail,
-        phone: data.adminPhone,
-        password: hashedPassword,
-        universityId: university.id,
-        category: institutionType,
-        status: "PENDING",
-      },
+    const token = signPendingSignup({
+      institutionType,
+      licenseType: data.licenseType || "TRIAL",
+      institutionName: data.institutionName,
+      institutionEmail: data.institutionEmail,
+      institutionPhone: data.institutionPhone,
+      adminFullName: data.adminFullName,
+      adminEmail: data.adminEmail,
+      adminPhone: data.adminPhone,
+      adminPasswordHash,
     });
 
     return {
-      universityId: university.id,
-      adminId: admin.id,
-      adminEmail: admin.email,
+      pendingToken: token,
+      adminEmail: data.adminEmail,
+      expiresInMinutes: 10,
+    };
+  }
+
+  // Stage 3 — validates license + writes EVERYTHING in one transaction.
+  async completeUniversityAdminSignup(
+    pendingToken: string,
+    licenseCode: string,
+  ) {
+    if (!pendingToken) throw new Error("Missing signup session");
+    if (!licenseCode) throw new Error("License code is required");
+
+    // Verify signed token (throws if tampered or expired)
+    const pending = verifyPendingSignup(pendingToken);
+
+    // Clean license code (same cleaning as existing activateLicense)
+    const cleanCode = licenseCode
+      .toUpperCase()
+      .trim()
+      .replace(/^SUAMP-/, "")
+      .replace(/-/g, "");
+
+    if (cleanCode.length !== 16) {
+      throw new Error("INVALID");
+    }
+
+    // Preload the license outside the transaction so we can give
+    // specific error messages.
+    const license = await prisma.license.findUnique({
+      where: { code: cleanCode },
+    });
+
+    if (!license) throw new Error("INVALID");
+    if (license.status === "USED" || license.status === "ACTIVE")
+      throw new Error("USED");
+    if (license.status === "REVOKED") throw new Error("REVOKED");
+    if (license.status === "SUSPENDED") throw new Error("SUSPENDED");
+    if (license.expiryDate && new Date(license.expiryDate) < new Date())
+      throw new Error("EXPIRED");
+
+    // Re-check email uniqueness right before commit (race-condition safe)
+    const existing = await prisma.universityAdmin.findUnique({
+      where: { email: pending.adminEmail },
+    });
+    if (existing) throw new Error("Admin email already registered");
+
+    const institutionType = pending.institutionType;
+    const isFaculty = isFacultyBased(institutionType);
+    const structure = defaultStructureFor(institutionType);
+
+    // ---------- SINGLE TRANSACTION — all or nothing ----------
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Create University
+      const university = await tx.university.create({
+        data: {
+          name: pending.institutionName,
+          email: pending.institutionEmail,
+          phone: pending.institutionPhone,
+          category: institutionType,
+          status: "ACTIVE",
+          licenseType: license.type,
+          reportSettings: {
+            accentColor: "#10b981",
+            showAllStudents: true,
+          },
+        },
+      });
+
+      // 2. Create "General" faculty for non-faculty institutions
+      if (!isFaculty) {
+        await tx.faculty.create({
+          data: { name: "General", universityId: university.id },
+        });
+      }
+
+      // 3. Study years + semesters/terms
+      for (let i = 1; i <= structure.years; i++) {
+        const year = await tx.studyYear.create({
+          data: {
+            name: `Year ${i}`,
+            description: `Year ${i} of study`,
+            universityId: university.id,
+          },
+        });
+
+        for (const unitName of structure.timeUnits) {
+          await tx.semester.create({
+            data: {
+              name: unitName,
+              universityId: university.id,
+              studyYearId: year.id,
+            },
+          });
+        }
+      }
+
+      // 4. Create UniversityAdmin (ACTIVE)
+      const admin = await tx.universityAdmin.create({
+        data: {
+          fullName: pending.adminFullName,
+          email: pending.adminEmail,
+          phone: pending.adminPhone,
+          password: pending.adminPasswordHash,
+          universityId: university.id,
+          category: institutionType,
+          status: "ACTIVE",
+        },
+      });
+
+      // 5. Consume the license
+      await tx.license.update({
+        where: { id: license.id },
+        data: {
+          status: "USED",
+          universityId: university.id,
+          usedBy: admin.email,
+          startDate: new Date(),
+        },
+      });
+
+      // 6. Billing event
+      await tx.billingEvent.create({
+        data: {
+          licenseId: license.id,
+          universityId: university.id,
+          eventType: "ACTIVATION",
+          amount:
+            license.type === "PERPETUAL"
+              ? 2499
+              : license.isTrial
+                ? 0
+                : 60000,
+          currency: "KES",
+          description: `${license.type} license activated${
+            license.isTrial ? " (Trial)" : ""
+          }`,
+          status: "COMPLETED",
+        },
+      });
+
+      return { university, admin };
+    });
+
+    return {
+      universityId: result.university.id,
+      adminId: result.admin.id,
+      adminEmail: result.admin.email,
+      message: "Account activated. You can now log in.",
     };
   }
 }

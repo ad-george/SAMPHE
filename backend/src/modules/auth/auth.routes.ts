@@ -7,6 +7,7 @@ import {
   universityAdminSignup,
   forgotPassword,
   resetPassword,
+  completeUniversityAdminSignup,
 } from "./auth.controller";
 import { authenticate } from "../../middleware/auth.middleware";
 import { authorize } from "../../middleware/role.middleware";
@@ -19,6 +20,10 @@ router.post("/hod/login", loginHod);
 router.post("/lecturer/login", loginLecturer);
 router.post("/university-admin/login", loginUniversityAdmin);
 router.post("/university-admin/signup", universityAdminSignup);
+router.post(
+  "/university-admin/complete-signup",
+  completeUniversityAdminSignup,
+);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
 

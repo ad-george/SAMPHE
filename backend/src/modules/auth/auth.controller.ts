@@ -30,6 +30,29 @@ export const universityAdminSignup = async (
   }
 };
 
+export const completeUniversityAdminSignup = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { pendingToken, licenseCode } = req.body;
+    if (!pendingToken || !licenseCode) {
+      return next({
+        statusCode: 400,
+        message: "pendingToken and licenseCode are required",
+      });
+    }
+    const result = await authService.completeUniversityAdminSignup(
+      pendingToken,
+      licenseCode,
+    );
+    res.status(201).json({ success: true, data: result });
+  } catch (error: any) {
+    next({ statusCode: 400, message: error.message });
+  }
+};
+
 export const loginUniversityAdmin = async (
   req: Request,
   res: Response,

@@ -17,6 +17,6 @@
     "noFallthroughCasesInSwitch": true,
     "rootDirs": ["src"]
   },
-  "include": ["src"],
+  "include": ["src", "../backend/src/utils/pendingSignup.ts"],
   "exclude": ["node_modules", "dist", "vite.config.ts"]
 }

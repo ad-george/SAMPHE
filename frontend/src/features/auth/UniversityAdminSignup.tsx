@@ -16,6 +16,8 @@ const UniversityAdminSignup = () => {
   const [step, setStep] = useState<Step>(1);
   const [loading, setLoading] = useState(false);
   const [licenseCode, setLicenseCode] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [form, setForm] = useState({
     institutionType: "",
@@ -142,9 +144,13 @@ const UniversityAdminSignup = () => {
         adminPassword: form.adminPassword,
       });
 
-      sessionStorage.setItem("signupData", JSON.stringify(res.data.data));
+      // Hold the signed pending token in sessionStorage (survives refresh)
+      sessionStorage.setItem(
+        "pendingSignupToken",
+        res.data.data.pendingToken,
+      );
 
-      toast.success("Account details saved!");
+      toast.success("Details saved. Enter your license to activate.");
 
       setErrors({});
       setStep(3);
@@ -161,37 +167,42 @@ const UniversityAdminSignup = () => {
     setLicenseError("");
 
     const rawCode = licenseCode.replace(/-/g, "");
+    const stripped = rawCode.replace(/^SUAMP/, "");
 
-    if (rawCode.length < 21) {
+    if (stripped.length < 16) {
       setLicenseError(
-        `License code is incomplete. Please enter all 21 characters.`,
+        "License code is incomplete. Please enter all 16 characters.",
       );
       return;
     }
-
-    if (rawCode.length > 21) {
+    if (stripped.length > 16) {
       setLicenseError("License code is invalid.");
+      return;
+    }
+
+    const pendingToken = sessionStorage.getItem("pendingSignupToken");
+    if (!pendingToken) {
+      setLicenseError(
+        "Your signup session has expired. Please start again.",
+      );
       return;
     }
 
     setLoading(true);
 
     try {
-      const signupData = JSON.parse(
-        sessionStorage.getItem("signupData") || "{}",
+      const response = await api.post(
+        "/auth/university-admin/complete-signup",
+        {
+          pendingToken,
+          licenseCode,
+        },
       );
-
-      const response = await api.post("/licenses/use", {
-        code: licenseCode,
-        universityId: signupData.universityId,
-        usedBy: signupData.adminEmail,
-        licenseType: signupData.licenseType || form.licenseType,
-      });
 
       if (response.data.success) {
         setLicenseError("");
-        toast.success("License activated! You can now log in.");
-        sessionStorage.removeItem("signupData");
+        toast.success("Account activated! You can now log in.");
+        sessionStorage.removeItem("pendingSignupToken");
         navigate("/login/university-admin");
       }
     } catch (err: any) {
@@ -199,7 +210,7 @@ const UniversityAdminSignup = () => {
 
       if (backendMessage === "INCOMPLETE") {
         setLicenseError(
-          "License code is incomplete. Please enter all 21 characters.",
+          "License code is incomplete. Please enter all 16 characters.",
         );
       } else if (backendMessage === "INVALID") {
         setLicenseError("Invalid license code.");
@@ -209,12 +220,14 @@ const UniversityAdminSignup = () => {
         setLicenseError("License code has already been used.");
       } else if (backendMessage === "SUSPENDED") {
         setLicenseError("This license has been suspended.");
-      } else if (backendMessage === "TYPE_MISMATCH") {
+      } else if (backendMessage?.includes("expired")) {
         setLicenseError(
-          "License type does not match the selected license type.",
+          "Your signup session has expired. Please start again.",
         );
       } else {
-        setLicenseError(backendMessage || "Unable to validate license code.");
+        setLicenseError(
+          backendMessage || "Unable to validate license code.",
+        );
       }
     } finally {
       setLoading(false);
@@ -660,18 +673,61 @@ const UniversityAdminSignup = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Password
                       </label>
-                      <input
-                        type="password"
-                        name="adminPassword"
-                        value={form.adminPassword}
-                        onChange={handleChange}
-                        placeholder="Minimum 6 characters"
-                        className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-sm ${
-                          errors.adminPassword
-                            ? "border-red-500"
-                            : "border-gray-300"
-                        }`}
-                      />
+                      <div className="relative">
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          name="adminPassword"
+                          value={form.adminPassword}
+                          onChange={handleChange}
+                          placeholder="Minimum 6 characters"
+                          className={`w-full px-4 py-2.5 pr-11 border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-sm ${
+                            errors.adminPassword
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword((v) => !v)}
+                          tabIndex={-1}
+                          aria-label={
+                            showPassword ? "Hide password" : "Show password"
+                          }
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition"
+                        >
+                          {showPassword ? (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="18"
+                              height="18"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                              <line x1="1" y1="1" x2="23" y2="23" />
+                            </svg>
+                          ) : (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="18"
+                              height="18"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                              <circle cx="12" cy="12" r="3" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
                       {errors.adminPassword && (
                         <p className="text-red-500 text-xs mt-1">
                           {errors.adminPassword}
@@ -683,18 +739,63 @@ const UniversityAdminSignup = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Confirm Password
                       </label>
-                      <input
-                        type="password"
-                        name="confirmPassword"
-                        value={form.confirmPassword}
-                        onChange={handleChange}
-                        placeholder="Confirm password"
-                        className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-sm ${
-                          errors.confirmPassword
-                            ? "border-red-500"
-                            : "border-gray-300"
-                        }`}
-                      />
+                      <div className="relative">
+                        <input
+                          type={showConfirmPassword ? "text" : "password"}
+                          name="confirmPassword"
+                          value={form.confirmPassword}
+                          onChange={handleChange}
+                          placeholder="Confirm password"
+                          className={`w-full px-4 py-2.5 pr-11 border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-sm ${
+                            errors.confirmPassword
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword((v) => !v)}
+                          tabIndex={-1}
+                          aria-label={
+                            showConfirmPassword
+                              ? "Hide password"
+                              : "Show password"
+                          }
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition"
+                        >
+                          {showConfirmPassword ? (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="18"
+                              height="18"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                              <line x1="1" y1="1" x2="23" y2="23" />
+                            </svg>
+                          ) : (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="18"
+                              height="18"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                              <circle cx="12" cy="12" r="3" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
                       {errors.confirmPassword && (
                         <p className="text-red-500 text-xs mt-1">
                           {errors.confirmPassword}
