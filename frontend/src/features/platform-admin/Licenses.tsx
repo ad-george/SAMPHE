@@ -511,7 +511,7 @@ const Licenses = () => {
                 Status
               </th>
               <th className="text-left px-4 py-5 font-medium w-[31%]">
-                University
+                Institution
               </th>
               <th className="text-left px-4 py-5 font-medium w-[18%]">
                 Generated/Expiry
