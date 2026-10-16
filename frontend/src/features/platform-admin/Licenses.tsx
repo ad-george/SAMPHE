@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
+import { createPortal } from "react-dom";
+
 
 const Licenses = () => {
   const [licenses, setLicenses] = useState<any[]>([]);
@@ -636,7 +638,8 @@ const Licenses = () => {
           GENERATE LICENSE MODAL
       ====================================================== */}
 
-      {showModal && (
+      {showModal && 
+      createPortal(
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-[#13131f] border border-white/10 rounded-2xl p-8 w-full max-w-md">
             <h2 className="text-xl font-bold mb-1">Generate New License</h2>
@@ -706,14 +709,16 @@ const Licenses = () => {
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </div>,
+          document.body,
+        )}
 
       {/* =====================================================
           ACTION MODAL
       ====================================================== */}
 
-      {showActionModal && actionLicense && (
+      {showActionModal && actionLicense && 
+      createPortal(
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-[#13131f] border border-white/10 rounded-2xl p-7 w-full max-w-lg shadow-2xl">
             {/* HEADER */}
@@ -888,8 +893,9 @@ const Licenses = () => {
               Cancel
             </button>
           </div>
-        </div>
-      )}
+         </div>,
+          document.body,
+        )}
     </div>
   );
 };
