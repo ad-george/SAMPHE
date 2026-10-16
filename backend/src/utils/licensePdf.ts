@@ -39,7 +39,7 @@ export async function buildLicensePdf(
     color: ink,
   });
   y -= 18;
-  page.drawText("Smart Attendance Management Platform", {
+  page.drawText("Smart Attendance Management Platform for Higher Education", {
     x: margin,
     y,
     size: 10,
