@@ -367,6 +367,13 @@ export class AuthService {
     if (license.expiryDate && new Date(license.expiryDate) < new Date())
       throw new Error("EXPIRED");
 
+    // License type must match what the institution selected in Step 1.
+    const selectedType = (pending.licenseType || "").toUpperCase();
+    const actualType = (license.type || "").toUpperCase();
+    if (selectedType && actualType && selectedType !== actualType) {
+      throw new Error("TYPE_MISMATCH");
+    }
+
     // Re-check email uniqueness right before commit (race-condition safe)
     const existing = await prisma.universityAdmin.findUnique({
       where: { email: pending.adminEmail },

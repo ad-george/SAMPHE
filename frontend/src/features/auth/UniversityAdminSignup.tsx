@@ -220,6 +220,10 @@ const UniversityAdminSignup = () => {
         setLicenseError("License code has already been used.");
       } else if (backendMessage === "SUSPENDED") {
         setLicenseError("This license has been suspended.");
+      } else if (backendMessage === "TYPE_MISMATCH") {
+        setLicenseError(
+          "License type does not match.",
+        );
       } else if (backendMessage?.includes("expired")) {
         setLicenseError(
           "Your signup session has expired. Please start again.",
