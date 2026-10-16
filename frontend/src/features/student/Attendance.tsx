@@ -234,11 +234,11 @@ const StudentAttendance = () => {
     label: string;
     value: string | undefined;
   }) => (
-    <div className="flex items-baseline">
-      <span className="text-slate-500 text-[10px] md:text-sm w-12 md:w-16 shrink-0">
+    <div className="flex items-start">
+      <span className="text-slate-500 text-[10px] md:text-sm w-12 md:w-16 shrink-0 leading-tight pt-[1px]">
         {label}:
       </span>
-      <span className="text-slate-800 font-medium text-[10px] md:text-xs flex-1 break-words pl-[5px]">
+      <span className="text-slate-800 font-medium text-[10px] md:text-xs flex-1 break-words leading-tight pl-[5px]">
         {value || "N/A"}
       </span>
     </div>
@@ -298,14 +298,10 @@ const StudentAttendance = () => {
           </h2>
 
           <div className="grid grid-cols-2 gap-x-2 md:gap-x-8 gap-y-1.5 md:gap-y-2">
-            {institutionType !== "TTI" &&
-              institutionType !== "TTC" &&
-              institutionType !== "NATIONAL_POLYTECHNIC" && (
-                <InfoRow
-                  label="School"
-                  value={faculty?.name || department?.faculty?.name}
-                />
-              )}
+            <InfoRow
+              label="School"
+              value={faculty?.name || department?.faculty?.name}
+            />
             <InfoRow label="Stage" value={`${yearSem} / MAIN`} />
             <InfoRow label={terms.department.slice(0, 4)} value={department?.name} />
             <InfoRow
