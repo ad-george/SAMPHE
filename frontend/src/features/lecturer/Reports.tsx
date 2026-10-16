@@ -3,6 +3,8 @@ import api from "../../services/api";
 import toast from "react-hot-toast";
 import { useTerminology } from "../../hooks/useTerminology";
 import { pluralize } from "../../utils/terminology";
+import { createPortal } from "react-dom";
+
 
 const Reports = () => {
   const terms = useTerminology();
@@ -571,7 +573,8 @@ const Reports = () => {
       </div>
 
       {/* Unit dropdown — custom modal */}
-      {unitDropdownOpen && (
+      {unitDropdownOpen && 
+      createPortal(
         <div
           className="fixed inset-0 z-[100] bg-black/70 flex items-center justify-center p-6 md:p-4"
           onClick={() => setUnitDropdownOpen(false)}
@@ -636,11 +639,13 @@ const Reports = () => {
               })}
             </div>
           </div>
-        </div>
-      )}
+        </div>,
+          document.body,
+        )}
 
       {/* Format dropdown — custom modal */}
-      {formatDropdownOpen && (
+      {formatDropdownOpen && 
+      createPortal(
         <div
           className="fixed inset-0 z-[100] bg-black/70 flex items-center justify-center p-6 md:p-4"
           onClick={() => setFormatDropdownOpen(false)}
@@ -688,10 +693,12 @@ const Reports = () => {
               );
             })}
           </div>
-        </div>
-      )}
+      </div>,
+          document.body,
+        )}
       {/* View Report Modal */}
-      {viewModalOpen && selectedReport && (
+      {viewModalOpen && selectedReport && 
+      createPortal(
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-2 md:p-4">
           <div className="bg-white rounded-lg md:rounded-2xl w-full max-w-4xl max-h-[92vh] md:max-h-[90vh] overflow-y-auto shadow-2xl p-3 md:p-8">
             <div
@@ -1042,8 +1049,9 @@ const Reports = () => {
               </div>
             </div>
           </div>
-        </div>
-      )}
+       </div>,
+          document.body,
+        )}
 
       {/* Report List */}
       <div className="bg-slate-700 border border-slate-600 rounded-lg md:rounded-2xl overflow-hidden shadow-sm">
