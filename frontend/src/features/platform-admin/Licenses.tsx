@@ -651,7 +651,7 @@ const Licenses = () => {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-xs text-gray-500 uppercase tracking-wider mb-2">
+                <label className="block text-xs text-gray-200 uppercase tracking-wider mb-2">
                   License Type
                 </label>
 
@@ -674,7 +674,7 @@ const Licenses = () => {
               </div>
 
               <div>
-                <label className="block text-xs text-gray-500 uppercase tracking-wider mb-2">
+                <label className="block text-xs text-gray-200 uppercase tracking-wider mb-2">
                   Expiry Date (optional)
                 </label>
 
@@ -717,8 +717,7 @@ const Licenses = () => {
           ACTION MODAL
       ====================================================== */}
 
-      {showActionModal && actionLicense && 
-      createPortal(
+      {showActionModal && actionLicense && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-2xl flex items-center justify-center z-[100] p-4">
           <div className="bg-[#13131f] border border-white/10 rounded-2xl p-7 w-full max-w-lg shadow-2xl">
             {/* HEADER */}
@@ -893,8 +892,7 @@ const Licenses = () => {
               Cancel
             </button>
           </div>
-         </div>,
-          document.body,
+         </div>
         )}
     </div>
   );
