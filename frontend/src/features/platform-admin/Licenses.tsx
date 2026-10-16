@@ -640,9 +640,8 @@ const Licenses = () => {
           GENERATE LICENSE MODAL
       ====================================================== */}
 
-      {showModal && 
-      createPortal(
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      {showModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-2xl flex items-center justify-center z-[100] p-4">
           <div className="bg-[#13131f] border border-white/10 rounded-2xl p-8 w-full max-w-md">
             <h2 className="text-xl font-bold mb-1">Generate New License</h2>
 
@@ -711,8 +710,7 @@ const Licenses = () => {
               </div>
             </div>
           </div>
-        </div>,
-          document.body,
+        </div>
         )}
 
       {/* =====================================================
@@ -721,7 +719,7 @@ const Licenses = () => {
 
       {showActionModal && actionLicense && 
       createPortal(
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-2xl flex items-center justify-center z-[100] p-4">
           <div className="bg-[#13131f] border border-white/10 rounded-2xl p-7 w-full max-w-lg shadow-2xl">
             {/* HEADER */}
 
