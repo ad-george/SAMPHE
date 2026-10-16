@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { LicenseService } from "./license.service";
+import { prisma } from "../../lib/prisma";
+import { buildLicensePdf } from "../../utils/licensePdf";
 
 const service = new LicenseService();
 
@@ -307,6 +309,58 @@ export const getStats = async (
       success: true,
       data,
     });
+  } catch (e: any) {
+    next({
+      statusCode: 400,
+      message: e.message,
+    });
+  }
+};
+
+// =========================================================
+// DOWNLOAD LICENSE PDF
+// =========================================================
+
+export const downloadLicensePdf = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const license = await prisma.license.findUnique({
+      where: { id: req.params.id },
+      include: {
+        university: { select: { name: true } },
+      },
+    });
+
+    if (!license) {
+      return next({ statusCode: 404, message: "License not found" });
+    }
+
+    if (!license.pdfPassword) {
+      return next({
+        statusCode: 400,
+        message:
+          "This license has no PDF password set. Regenerate the license.",
+      });
+    }
+
+    const pdfBytes = await buildLicensePdf({
+      institutionName: license.university?.name || null,
+      licenseType: license.type || "SUBSCRIPTION",
+      generatedAt: license.createdAt,
+      expiresAt: license.expiryDate || null,
+      code: license.code,
+      password: license.pdfPassword,
+    });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="SAMPHE-License-${license.code}.pdf"`,
+    );
+    res.send(Buffer.from(pdfBytes));
   } catch (e: any) {
     next({
       statusCode: 400,

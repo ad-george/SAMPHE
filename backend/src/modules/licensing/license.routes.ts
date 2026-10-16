@@ -14,6 +14,7 @@ import {
   revoke,
   reinstate,
   remove,
+  downloadLicensePdf,
 } from "./license.controller";
 
 import { authenticate } from "../../middleware/auth.middleware";
@@ -52,6 +53,13 @@ router.patch(
 );
 
 router.delete("/:id", authenticate, authorize("PLATFORM_ADMIN"), remove);
+
+router.get(
+  "/:id/pdf",
+  authenticate,
+  authorize("PLATFORM_ADMIN"),
+  downloadLicensePdf,
+);
 
 // =========================================================
 // PUBLIC LICENSE ACTIVATION

@@ -7,6 +7,7 @@ const Licenses = () => {
   const [stats, setStats] = useState<any>(null);
 
   const [loading, setLoading] = useState(false);
+  const [copyingId, setCopyingId] = useState<string | null>(null);
 
   const [showModal, setShowModal] = useState(false);
 
@@ -34,6 +35,19 @@ const Licenses = () => {
       toast.error(err.response?.data?.message || "Failed to load licenses");
     }
   };
+
+  const copyToClipboard = async (text: string, id?: string) => {
+  try {
+    await navigator.clipboard.writeText(text);
+    if (id) {
+      setCopyingId(id);
+      setTimeout(() => setCopyingId(null), 1200);
+    }
+    toast.success("Copied to clipboard");
+  } catch {
+    toast.error("Failed to copy");
+  }
+};
 
   // =========================================================
   // FETCH STATS
@@ -230,9 +244,79 @@ const Licenses = () => {
     }
   };
 
+    const shareLicensePdf = (license: any) => {
+    const formatted = formatLicenseCode(license.code);
+    const institution = license.university?.name || "Institution";
+    const expiry = license.expiryDate
+      ? new Date(license.expiryDate).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })
+      : "N/A";
+
+    const subject = `SAMPHE License Code — ${institution}`;
+
+    const body = [
+      `SAMPHE — Smart Attendance Management Platform`,
+      `──────────────────────────────────────────────`,
+      ``,
+      `OFFICIAL LICENSE DETAILS`,
+      ``,
+      `🎫 License Type : ${license.type}`,
+      `🏫 Institution  : ${institution}`,
+      `📅 Generated On : ${new Date(license.createdAt).toLocaleDateString(
+        "en-GB",
+        { day: "2-digit", month: "short", year: "numeric" },
+      )}`,
+      `📅 Expires On   : ${expiry}`,
+      ``,
+      `──────────────────────────────────────────────`,
+      `🔑 LICENSE CODE`,
+      ``,
+      `   ${formatted}`,
+      ``,
+      `──────────────────────────────────────────────`,
+      ``,
+      `🔒 This license is password protected.`,
+      `The PDF password is available from the SAMPHE platform admin.`,
+      ``,
+      `Please find the official PDF certificate attached.`,
+      ``,
+      `© ${new Date().getFullYear()} SAMPHE`,
+    ].join("\n");
+
+    window.location.href = `mailto:?subject=${encodeURIComponent(
+      subject,
+    )}&body=${encodeURIComponent(body)}`;
+  };
+
+  const downloadLicensePdf = async (license: any) => {
+    try {
+      const res = await api.get(`/licenses/${license.id}/pdf`, {
+        responseType: "blob",
+      });
+
+      const blob = new Blob([res.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `SAMPHE-License-${license.code}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      toast.error(
+        err.response?.data?.message || "Failed to download PDF",
+      );
+    }
+  };
+
   // =========================================================
   // REMOVE
   // =========================================================
+
 
   const removeLicense = async () => {
     if (!actionLicense) return;
@@ -450,7 +534,45 @@ const Licenses = () => {
 
                 {/* LICENSE CODE */}
                 <td className="px-4 py-4 font-mono text-[11px] text-violet-400 whitespace-nowrap">
-                  {formatLicenseCode(license.code)}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => copyToClipboard(license.code, license.id)}
+                      title="Copy license code"
+                      className="p-1 rounded hover:bg-white/10 transition text-violet-400"
+                    >
+                      {copyingId === license.id ? (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="13"
+                          height="13"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      ) : (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="13"
+                          height="13"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                        </svg>
+                      )}
+                    </button>
+                    <span>{formatLicenseCode(license.code)}</span>
+                  </div>
                 </td>
 
                 {/* TYPE */}
@@ -469,7 +591,7 @@ const Licenses = () => {
                   </span>
                 </td>
 
-                {/* UNIVERSITY */}
+                {/* INSTITUTION */}
                 <td className="px-4 py-4 text-gray-400 truncate">
                   {license.university?.name || "-"}
                 </td>
@@ -591,7 +713,7 @@ const Licenses = () => {
 
       {showActionModal && actionLicense && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-[#13131f] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+          <div className="bg-[#13131f] border border-white/10 rounded-2xl p-7 w-full max-w-lg shadow-2xl">
             {/* HEADER */}
 
             <div className="flex items-center justify-between mb-5">
@@ -630,6 +752,63 @@ const Licenses = () => {
               </div>
             </div>
 
+            {/* PDF PASSWORD */}
+            <div className="mb-5 p-3 rounded-xl bg-white/5 border border-white/10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-gray-500">PDF Password</p>
+                  <p className="text-sm font-mono text-emerald-400 mt-1">
+                    {actionLicense.pdfPassword || "—"}
+                  </p>
+                </div>
+                {actionLicense.pdfPassword && (
+                  <button
+                    onClick={() =>
+                      copyToClipboard(
+                        actionLicense.pdfPassword!,
+                        actionLicense.id + "-pw",
+                      )
+                    }
+                    className="p-2 rounded-lg hover:bg-white/10 transition"
+                    title="Copy password"
+                  >
+                    {copyingId === actionLicense.id + "-pw" ? (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-emerald-400"
+                      >
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    ) : (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-gray-400"
+                      >
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                      </svg>
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+
             {/* ACTIONS */}
 
             <div className="space-y-2">
@@ -649,6 +828,52 @@ const Licenses = () => {
                   </button>
                 ),
               )}
+            </div>
+
+            {/* SHARE + DOWNLOAD */}
+            <div className="grid grid-cols-2 gap-3 mt-5 pt-5 border-t border-white/5">
+              <button
+                onClick={() => shareLicensePdf(actionLicense)}
+                className="py-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:bg-blue-500/20 transition text-sm font-medium flex items-center justify-center gap-2"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                  <polyline points="22,6 12,13 2,6" />
+                </svg>
+                Share
+              </button>
+
+              <button
+                onClick={() => downloadLicensePdf(actionLicense)}
+                className="py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 transition text-sm font-medium flex items-center justify-center gap-2"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Download
+              </button>
             </div>
 
             {/* CANCEL */}

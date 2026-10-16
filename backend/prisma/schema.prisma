@@ -349,6 +349,7 @@ model License {
   isTrial           Boolean        @default(false)
   trialEndsAt       DateTime?      // When trial expires
   revokedAt         DateTime?
+  pdfPassword String?
   gracePeriodEndsAt DateTime?      // e.g., 14 days after revocation
   accessBlocked     Boolean        @default(false)
   createdAt         DateTime       @default(now())
