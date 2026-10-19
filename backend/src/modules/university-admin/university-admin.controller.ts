@@ -464,7 +464,7 @@ export const getAcademicYearProgress = async (
   next: NextFunction,
 ) => {
   try {
-    const data = await service.getAcademicYearProgress();
+    const data = await service.getAcademicYearProgress(req.user?.universityId);
     res.json({ success: true, data });
   } catch (e: any) {
     next({ statusCode: 400, message: e.message });
@@ -1013,19 +1013,43 @@ export const getSemesters = async (
   }
 };
 
-export const createSemester = async (
+export const getCurrentSemester = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
   try {
-    const { name, startDate, endDate, studyYearId } = req.body;
-    const data = await service.createSemester({
+    const data = await service.getCurrentSemester(req.user!.universityId!);
+    res.json({ success: true, data });
+  } catch (e: any) {
+    next({ statusCode: 400, message: e.message });
+  }
+};
+
+export const getSemesterHistory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const data = await service.getSemesterHistory(req.user!.universityId!);
+    res.json({ success: true, data });
+  } catch (e: any) {
+    next({ statusCode: 400, message: e.message });
+  }
+};
+
+export const startNewSemester = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { name, startDate, endDate } = req.body;
+    const data = await service.startNewSemester(req.user!.universityId!, {
       name,
       startDate: new Date(startDate),
       endDate: new Date(endDate),
-      studyYearId,
-      universityId: req.user!.universityId!,
     });
     res.status(201).json({ success: true, data });
   } catch (e: any) {
@@ -1033,23 +1057,28 @@ export const createSemester = async (
   }
 };
 
-export const updateSemester = async (
+export const updateCurrentSemester = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
   try {
     const { name, startDate, endDate } = req.body;
-    const data = await service.updateSemester(req.params.id, {
-      name,
-      startDate: startDate ? new Date(startDate) : undefined,
-      endDate: endDate ? new Date(endDate) : undefined,
-    });
+    const data = await service.updateCurrentSemester(
+      req.user!.universityId!,
+      {
+        name,
+        startDate: startDate ? new Date(startDate) : undefined,
+        endDate: endDate ? new Date(endDate) : undefined,
+      },
+    );
     res.json({ success: true, data });
   } catch (e: any) {
     next({ statusCode: 400, message: e.message });
   }
 };
+
+
 
 export const deleteSemester = async (
   req: Request,

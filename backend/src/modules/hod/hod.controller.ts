@@ -837,48 +837,11 @@ export const getSemesters = async (
   }
 };
 
-export const createSemester = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    const hod = await getHodContext(req);
-    const data = await service.createSemester({
-      ...req.body,
-      universityId: hod.universityId,
-    });
-    res.status(201).json({ success: true, data });
-  } catch (e: any) {
-    next({ statusCode: 400, message: e.message });
-  }
-};
 
-export const updateSemester = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    const data = await service.updateSemester(req.params.id, req.body);
-    res.json({ success: true, data });
-  } catch (e: any) {
-    next({ statusCode: 400, message: e.message });
-  }
-};
 
-export const deleteSemester = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    await service.deleteSemester(req.params.id);
-    res.json({ success: true, message: "Deleted" });
-  } catch (e: any) {
-    next({ statusCode: 400, message: e.message });
-  }
-};
+
+
+
 
 // ==================== TRACKING ====================
 export const getLecturerTracking = async (

@@ -9,18 +9,18 @@ const AcademicCalendar = () => {
   const [years, setYears] = useState<any[]>([]);
   const [archivedYears, setArchivedYears] = useState<any[]>([]);
   const [semesters, setSemesters] = useState<any[]>([]);
+  const [currentSemester, setCurrentSemester] = useState<any>(null);
   const [progress, setProgress] = useState<any>(null);
   const [showArchived, setShowArchived] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
   const [showSemesterModal, setShowSemesterModal] = useState(false);
-  const [editingSemester, setEditingSemester] = useState<any>(null);
   const [attendanceData, setAttendanceData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [updateData, setUpdateData] = useState({ startDate: "", endDate: "" });
   const [newYearName, setNewYearName] = useState("");
-  const [semesterForm, setSemesterForm] = useState({
+  const [semesterForm, setSemesterForm] = useState<any>({
     name: "",
     startDate: "",
     endDate: "",
@@ -45,6 +45,13 @@ const AcademicCalendar = () => {
     } catch (err) {
       console.error("Failed to fetch semesters:", err);
     }
+  };
+
+  const fetchCurrentSemester = async () => {
+    try {
+      const res = await api.get("/university-admin/semesters/current");
+      setCurrentSemester(res.data.data || null);
+    } catch {}
   };
 
   const fetchProgress = async () => {
@@ -88,6 +95,7 @@ const AcademicCalendar = () => {
     fetchData();
     fetchProgress();
     fetchSemesters();
+    fetchCurrentSemester();
   }, []);
 
   const handleUpdateClick = () => {
@@ -126,6 +134,8 @@ const AcademicCalendar = () => {
       fetchData();
       fetchProgress();
       fetchSemesters();
+      fetchCurrentSemester();
+      window.dispatchEvent(new Event("academic-calendar-updated"));
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Failed to update");
     } finally {
@@ -148,76 +158,29 @@ const AcademicCalendar = () => {
 
   const handleSemesterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Validate dates are within academic year
-    if (activeYear) {
-      const yearStart = new Date(activeYear.startDate);
-      const yearEnd = new Date(activeYear.endDate);
-      const semStart = new Date(semesterForm.startDate);
-      const semEnd = new Date(semesterForm.endDate);
-
-           if (semStart < yearStart || semEnd > yearEnd) {
-        toast.error(`${terms.timeUnit} dates must be within the academic year`);
-        return;
-      }
-    }
-
     setLoading(true);
     try {
-      const payload = {
-        ...semesterForm,
-        studyYearId: activeYear?.studyYearId || "",
-        universityId: activeYear?.universityId || "",
-      };
-
-      if (editingSemester) {
-        await api.put(
-          `/university-admin/semesters/${editingSemester.id}`,
-          payload,
-        );
-        toast.success(`${terms.timeUnit} updated successfully!`);      } else {
-        await api.post("/university-admin/semesters", payload);
-        toast.success(`${terms.timeUnit} created successfully!`);
-      }
-
+      await api.post("/university-admin/semesters/start", {
+        name: semesterForm.name,
+        startDate: semesterForm.startDate,
+        endDate: semesterForm.endDate,
+      });
+      toast.success(
+        `${terms.timeUnit} started. All users will now operate in this period.`,
+      );
       setShowSemesterModal(false);
-      setEditingSemester(null);
       setSemesterForm({ name: "", startDate: "", endDate: "" });
       fetchSemesters();
+      fetchCurrentSemester();
+      window.dispatchEvent(new Event("academic-calendar-updated"));
     } catch (err: any) {
-      toast.error(
-        err.response?.data?.message ||
-          `Failed to save ${terms.timeUnit.toLowerCase()}`,
-      );    } finally {
+      toast.error(err.response?.data?.message || "Failed to start semester");
+    } finally {
       setLoading(false);
     }
   };
 
-  const deleteSemester = async (id: string) => {
-    if (!confirm(`Delete this ${terms.timeUnit}? This cannot be undone.`
-
-    )) return;
-    try {
-      await api.delete(`/university-admin/semesters/${id}`);
-      toast.success(`${terms.timeUnit} deleted`);
-      fetchSemesters();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to delete");
-    }
-  };
-
-  const openEditSemester = (semester: any) => {
-    setEditingSemester(semester);
-    setSemesterForm({
-      name: semester.name,
-      startDate: semester.startDate?.split("T")[0] || "",
-      endDate: semester.endDate?.split("T")[0] || "",
-    });
-    setShowSemesterModal(true);
-  };
-
   const openAddSemester = () => {
-    setEditingSemester(null);
     setSemesterForm({ name: "", startDate: "", endDate: "" });
     setShowSemesterModal(true);
   };
@@ -231,17 +194,6 @@ const AcademicCalendar = () => {
     });
   };
 
-  const getCurrentSemester = () => {
-    const now = new Date();
-    return semesters.find((s) => {
-      const start = new Date(s.startDate);
-      const end = new Date(s.endDate);
-      return now >= start && now <= end;
-    });
-  };
-
-  const currentSemester = getCurrentSemester();
-
   return (
     <div className="space-y-6 max-w-5xl mx-auto px-6">
       <div>
@@ -249,7 +201,7 @@ const AcademicCalendar = () => {
           Academic Calendar
         </h1>
         <p className="text-slate-500 mt-1">
-          Manage your institution's academic year and semester dates
+          Manage your institution's academic year and {terms.timeUnit.toLowerCase()} dates
         </p>
       </div>
 
@@ -312,116 +264,93 @@ const AcademicCalendar = () => {
         </div>
       </div>
 
-      {/* Current Semester Card */}
-      <div className="bg-[#131c31] border border-slate-800 rounded-2xl p-6">
-        <div className="flex items-center justify-between mb-4">
+      {/* CURRENT SEMESTER CARD */}
+      <div className="bg-[#131c31] border border-emerald-500/30 rounded-2xl p-6">
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
-           <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">
+            <p className="text-xs text-emerald-400 uppercase tracking-wider font-semibold">
               Current {terms.timeUnit}
             </p>
-            <h3 className="text-2xl font-bold text-white">
-              {currentSemester?.name || `No active ${terms.timeUnit.toLowerCase()}`}
+            <h3 className="text-2xl font-bold text-white mt-1">
+              {currentSemester?.name ||
+                `No active ${terms.timeUnit.toLowerCase()}`}
             </h3>
-            {currentSemester && (
+            {currentSemester?.startDate && currentSemester?.endDate ? (
               <p className="text-sm text-slate-400 mt-1">
                 {formatDate(currentSemester.startDate)} —{" "}
                 {formatDate(currentSemester.endDate)}
+              </p>
+            ) : (
+              <p className="text-sm text-slate-500 mt-1">
+                Set the current {terms.timeUnit.toLowerCase()} to start using the
+                system.
               </p>
             )}
           </div>
           <button
             onClick={openAddSemester}
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-sm font-medium transition text-white"
+            className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-sm font-medium text-white"
           >
-           + Add {terms.timeUnit}
+            {currentSemester ? "End & Start New" : "Set Current"}
           </button>
         </div>
       </div>
 
-      {/* Semester List */}
+      {/* HISTORY */}
       <div className="bg-[#131c31] border border-slate-800 rounded-2xl overflow-hidden">
         <div className="p-5 border-b border-slate-800 flex items-center justify-between">
           <h3 className="font-semibold text-white">
             All {pluralize(terms.timeUnit)}
-          </h3>          <span className="text-xs text-slate-500">
-            {semesters.length} {pluralize(terms.timeUnit)}
-          </span>
+          </h3>
+          <span className="text-xs text-slate-500">{semesters.length} total</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-800 text-slate-500 text-xs uppercase">
-                <th className="text-left p-4 font-medium">
-                  {terms.timeUnit}
-                </th>                <th className="text-left p-4 font-medium">Start Date</th>
-                <th className="text-left p-4 font-medium">End Date</th>
-                <th className="text-left p-4 font-medium">Status</th>
-                <th className="text-left p-4 font-medium">Actions</th>
+              <tr className="text-slate-500 text-xs uppercase border-b border-slate-800">
+                <th className="text-left p-3 font-medium">{terms.timeUnit}</th>
+                <th className="text-left p-3 font-medium">Start</th>
+                <th className="text-left p-3 font-medium">End</th>
+                <th className="text-left p-3 font-medium">Status</th>
               </tr>
             </thead>
             <tbody>
               {semesters.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-slate-500">
-                     No {pluralize(terms.timeUnit).toLowerCase()} created yet
+                  <td colSpan={4} className="p-8 text-center text-slate-500">
+                    No {pluralize(terms.timeUnit).toLowerCase()} yet
                   </td>
                 </tr>
               ) : (
-                semesters.map((s) => {
-                  const isCurrent = currentSemester?.id === s.id;
-                  return (
-                    <tr
-                      key={s.id}
-                      className={`border-b border-slate-800/50 hover:bg-white/[0.02] transition ${
-                        isCurrent ? "bg-emerald-500/5" : ""
-                      }`}
-                    >
-                      <td className="p-4">
-                        <span
-                          className={`font-medium ${isCurrent ? "text-emerald-400" : "text-white"}`}
-                        >
-                          {s.name}
-                          {isCurrent && (
-                            <span className="ml-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                              CURRENT
-                            </span>
-                          )}
+                semesters.map((s) => (
+                  <tr
+                    key={s.id}
+                    className={`border-t border-slate-800/50 ${
+                      s.status === "ACTIVE" && !s.archived
+                        ? "bg-emerald-500/5"
+                        : ""
+                    }`}
+                  >
+                    <td className="p-3 text-white">{s.name}</td>
+                    <td className="p-3 text-slate-400">
+                      {formatDate(s.startDate)}
+                    </td>
+                    <td className="p-3 text-slate-400">
+                      {formatDate(s.endDate)}
+                    </td>
+                    <td className="p-3">
+                      {s.status === "ACTIVE" && !s.archived ? (
+                        <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          CURRENT
                         </span>
-                      </td>
-                      <td className="p-4 text-slate-300">
-                        {formatDate(s.startDate)}
-                      </td>
-                      <td className="p-4 text-slate-300">
-                        {formatDate(s.endDate)}
-                      </td>
-                      <td className="p-4">
-                        <span
-                          className={`text-[10px] font-bold px-2 py-1 rounded-full ${
-                            isCurrent
-                              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                              : "bg-slate-500/10 text-slate-400 border border-slate-500/20"
-                          }`}
-                        >
-                          {isCurrent ? "ACTIVE" : "INACTIVE"}
+                      ) : (
+                        <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-slate-500/10 text-slate-400 border border-slate-500/20">
+                          ARCHIVED
                         </span>
-                      </td>
-                      <td className="p-4 space-x-2">
-                        <button
-                          onClick={() => openEditSemester(s)}
-                          className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => deleteSemester(s.id)}
-                          className="text-xs px-3 py-1.5 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition"
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
+                      )}
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
@@ -468,7 +397,7 @@ const AcademicCalendar = () => {
 
       {/* Archived Years Modal */}
       {showArchived && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4">
           <div className="bg-[#131c31] border border-slate-700 rounded-2xl p-6 w-full max-w-3xl max-h-[80vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -551,29 +480,27 @@ const AcademicCalendar = () => {
         </div>
       )}
 
-      {/* Semester Modal */}
+      {/* Semester Modal — Set Current / Start New */}
       {showSemesterModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-[#131c31] border border-slate-700 rounded-2xl p-8 w-full max-w-md shadow-2xl shadow-black/30">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4">
+          <div className="bg-[#131c31] border border-slate-700 rounded-2xl p-8 w-full max-w-md shadow-2xl">
             <div className="text-center mb-6">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center text-3xl mx-auto mb-3 border border-emerald-500/30">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center text-3xl mx-auto mb-3 border border-emerald-500/30">
                 📚
               </div>
-                <h3 className="text-2xl font-bold text-white">
-                {editingSemester
-                  ? `Edit ${terms.timeUnit}`
-                  : `Add ${terms.timeUnit}`}
+              <h3 className="text-2xl font-bold text-white">
+                {currentSemester
+                  ? `End & Start New ${terms.timeUnit}`
+                  : `Set Current ${terms.timeUnit}`}
               </h3>
               <p className="text-sm text-slate-500 mt-1">
-                 {editingSemester
-                  ? `Update ${terms.timeUnit.toLowerCase()} dates`
-                  : `Create a new ${terms.timeUnit.toLowerCase()}`}
+                {currentSemester
+                  ? `The current ${terms.timeUnit.toLowerCase()} will be archived.`
+                  : `Create the first ${terms.timeUnit.toLowerCase()} of the year.`}
               </p>
               {activeYear && (
                 <p className="text-xs text-cyan-400 mt-2">
-                  Academic Year: {activeYear.name} (
-                  {formatDate(activeYear.startDate)} —{" "}
-                  {formatDate(activeYear.endDate)})
+                  Must fall within {activeYear.name} ({formatDate(activeYear.startDate)} — {formatDate(activeYear.endDate)})
                 </p>
               )}
             </div>
@@ -581,7 +508,7 @@ const AcademicCalendar = () => {
             <form onSubmit={handleSemesterSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-400 mb-1.5">
-                {terms.timeUnit} Name
+                  {terms.timeUnit} Name
                 </label>
                 <input
                   type="text"
@@ -590,7 +517,7 @@ const AcademicCalendar = () => {
                     setSemesterForm({ ...semesterForm, name: e.target.value })
                   }
                   className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 transition"
-                    placeholder={`e.g., ${terms.timeUnit} 1`}
+                  placeholder={`e.g., ${terms.timeUnit} 1`}
                   required
                 />
               </div>
@@ -634,7 +561,7 @@ const AcademicCalendar = () => {
 
               <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
                 <p className="text-xs text-amber-400">
-                  ⚠️ {terms.timeUnit} dates must be within the academic year range
+                  ⚠️ Starting a new {terms.timeUnit.toLowerCase()} archives the current one. All dashboards will reset to the new period.
                 </p>
               </div>
 
@@ -642,13 +569,13 @@ const AcademicCalendar = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 transition text-sm font-medium text-white shadow-lg shadow-emerald-500/20 disabled:opacity-50"
+                  className="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 transition text-sm font-medium text-white disabled:opacity-50"
                 >
                   {loading
                     ? "Saving..."
-                    : editingSemester
-                      ? `Update ${terms.timeUnit}`
-                      : `Create ${terms.timeUnit}`}
+                    : currentSemester
+                      ? `Start New ${terms.timeUnit}`
+                      : `Set Current`}
                 </button>
                 <button
                   type="button"
@@ -665,8 +592,8 @@ const AcademicCalendar = () => {
 
       {/* Update Year Modal */}
       {showUpdateModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-[#131c31] border border-slate-700 rounded-2xl p-8 w-full max-w-md shadow-2xl shadow-black/30">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4">
+          <div className="bg-[#131c31] border border-slate-700 rounded-2xl p-8 w-full max-w-md shadow-2xl">
             <div className="text-center mb-6">
               <div className="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center text-3xl mx-auto mb-3 border border-cyan-500/30">
                 📅
@@ -764,8 +691,8 @@ const AcademicCalendar = () => {
 
       {/* Confirm Update Modal */}
       {showConfirmModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-[#131c31] border border-amber-500/30 rounded-2xl p-8 w-full max-w-md shadow-2xl shadow-amber-500/5">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4">
+          <div className="bg-[#131c31] border border-amber-500/30 rounded-2xl p-8 w-full max-w-md shadow-2xl">
             <div className="text-center mb-6">
               <div className="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center text-3xl mx-auto mb-3 border border-amber-500/30">
                 ⚠️
@@ -854,7 +781,7 @@ const AcademicCalendar = () => {
 
       {/* Attendance Data Modal */}
       {showAttendanceModal && attendanceData && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4">
           <div className="bg-[#131c31] border border-slate-700 rounded-2xl p-6 w-full max-w-4xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <div>

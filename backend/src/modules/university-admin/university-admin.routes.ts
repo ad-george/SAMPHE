@@ -62,8 +62,10 @@ import {
   requestNewLicense,
   activateLicense,
   getSemesters,
-  createSemester,
-  updateSemester,
+  getCurrentSemester,
+  getSemesterHistory,
+  startNewSemester,
+  updateCurrentSemester,
   deleteSemester,
 } from "./university-admin.controller";
 import { authenticate } from "../../middleware/auth.middleware";
@@ -93,10 +95,12 @@ router.get("/faculties/stats", adminGuard, getFacultyStats);
 router.put("/faculties/:id", adminGuard, updateFaculty);
 router.delete("/faculties/:id", adminGuard, deleteFaculty);
 
-// Semesters
+// Semesters — single-current model
 router.get("/semesters", adminGuard, getSemesters);
-router.post("/semesters", adminGuard, createSemester);
-router.put("/semesters/:id", adminGuard, updateSemester);
+router.get("/semesters/current", adminGuard, getCurrentSemester);
+router.get("/semesters/history", adminGuard, getSemesterHistory);
+router.post("/semesters/start", adminGuard, startNewSemester);
+router.put("/semesters/current", adminGuard, updateCurrentSemester);
 router.delete("/semesters/:id", adminGuard, deleteSemester);
 
 // Integration routes

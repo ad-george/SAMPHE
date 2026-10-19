@@ -409,25 +409,16 @@ export class AuthService {
         });
       }
 
-      // 3. Study years + semesters/terms
+      // 3. Study years only. Semesters are created later from
+      //    the Academic Calendar page.
       for (let i = 1; i <= structure.years; i++) {
-        const year = await tx.studyYear.create({
+        await tx.studyYear.create({
           data: {
             name: `Year ${i}`,
             description: `Year ${i} of study`,
             universityId: university.id,
           },
         });
-
-        for (const unitName of structure.timeUnits) {
-          await tx.semester.create({
-            data: {
-              name: unitName,
-              universityId: university.id,
-              studyYearId: year.id,
-            },
-          });
-        }
       }
 
       // 4. Create UniversityAdmin (ACTIVE)

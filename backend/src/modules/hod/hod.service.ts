@@ -1361,21 +1361,12 @@ export class HodService {
   }
 
   // --- Semesters ---
+  // HODs consume the current semester; the institution owns the lifecycle.
   async getSemesters(universityId: string) {
     return prisma.semester.findMany({
       where: { universityId },
-      include: { studyYear: true },
-      orderBy: { name: "asc" },
+      orderBy: [{ archived: "asc" }, { startDate: "desc" }],
     });
-  }
-  async createSemester(data: any) {
-    return prisma.semester.create({ data });
-  }
-  async updateSemester(id: string, data: any) {
-    return prisma.semester.update({ where: { id }, data });
-  }
-  async deleteSemester(id: string) {
-    return prisma.semester.delete({ where: { id } });
   }
 
   // --- Lecturer Tracking ---
@@ -1525,19 +1516,24 @@ export class HodService {
     // ============================================================
     // SEMESTER RESOLUTION
     // ============================================================
-    const activeYear = await prisma.academicYear.findFirst({
-      where: { status: "ACTIVE", archived: false },
-    });
-    const currentSemester = universityId
-      ? await prisma.semester.findFirst({
-          where: {
-            universityId,
-            startDate: { lte: new Date() },
-            endDate: { gte: new Date() },
-          },
-          orderBy: { startDate: "desc" },
-        })
-      : null;
+const activeYear = await prisma.academicYear.findFirst({
+  where: {
+    universityId,
+    status: "ACTIVE",
+    archived: false,
+  },
+  orderBy: { createdAt: "desc" },
+});
+  const currentSemester = universityId
+  ? await prisma.semester.findFirst({
+      where: {
+        universityId,
+        status: "ACTIVE",
+        archived: false,
+      },
+      orderBy: { createdAt: "desc" },
+    })
+  : null;
     const semesterStart = currentSemester?.startDate
       ? new Date(currentSemester.startDate)
       : activeYear?.startDate
@@ -1640,18 +1636,22 @@ export class HodService {
     // ============================================================
     // 1. SEMESTER / ACADEMIC YEAR RESOLUTION
     // ============================================================
-    const activeYear = await prisma.academicYear.findFirst({
-      where: { status: "ACTIVE", archived: false },
-    });
-
-    const currentSemester = await prisma.semester.findFirst({
-      where: {
-        universityId: hod.universityId,
-        startDate: { lte: new Date() },
-        endDate: { gte: new Date() },
-      },
-      orderBy: { startDate: "desc" },
-    });
+const activeYear = await prisma.academicYear.findFirst({
+  where: {
+    status: "ACTIVE",
+    archived: false,
+    universityId: hod.universityId,
+  },
+  orderBy: { createdAt: "desc" },
+});
+const currentSemester = await prisma.semester.findFirst({
+  where: {
+    universityId: hod.universityId,
+    status: "ACTIVE",
+    archived: false,
+  },
+  orderBy: { createdAt: "desc" },
+});
 
     const semesterStart = currentSemester?.startDate
       ? new Date(currentSemester.startDate)
@@ -1956,17 +1956,22 @@ export class HodService {
     // ============================================================
     // SEMESTER RESOLUTION
     // ============================================================
-    const activeYear = await prisma.academicYear.findFirst({
-      where: { status: "ACTIVE", archived: false },
-    });
-    const currentSemester = await prisma.semester.findFirst({
-      where: {
-        universityId: hod.universityId,
-        startDate: { lte: new Date() },
-        endDate: { gte: new Date() },
-      },
-      orderBy: { startDate: "desc" },
-    });
+ const activeYear = await prisma.academicYear.findFirst({
+  where: {
+    status: "ACTIVE",
+    archived: false,
+    universityId: hod.universityId,
+  },
+  orderBy: { createdAt: "desc" },
+});
+ const currentSemester = await prisma.semester.findFirst({
+  where: {
+    universityId: hod.universityId,
+    status: "ACTIVE",
+    archived: false,
+  },
+  orderBy: { createdAt: "desc" },
+});
     const semesterStart = currentSemester?.startDate
       ? new Date(currentSemester.startDate)
       : activeYear?.startDate
@@ -2206,17 +2211,22 @@ export class HodService {
     // ============================================================
     // SEMESTER RESOLUTION
     // ============================================================
-    const activeYear = await prisma.academicYear.findFirst({
-      where: { status: "ACTIVE", archived: false },
-    });
-    const currentSemester = await prisma.semester.findFirst({
-      where: {
-        universityId: hod.universityId,
-        startDate: { lte: new Date() },
-        endDate: { gte: new Date() },
-      },
-      orderBy: { startDate: "desc" },
-    });
+  const activeYear = await prisma.academicYear.findFirst({
+  where: {
+    status: "ACTIVE",
+    archived: false,
+    universityId: hod.universityId,
+  },
+  orderBy: { createdAt: "desc" },
+});
+ const currentSemester = await prisma.semester.findFirst({
+  where: {
+    universityId: hod.universityId,
+    status: "ACTIVE",
+    archived: false,
+  },
+  orderBy: { createdAt: "desc" },
+});
     const semesterStart = currentSemester?.startDate
       ? new Date(currentSemester.startDate)
       : activeYear?.startDate
@@ -2409,21 +2419,22 @@ export class HodService {
     // ============================================================
     // SEMESTER RESOLUTION
     // ============================================================
-    const activeYear = await prisma.academicYear.findFirst({
-      where: {
-        universityId: student.universityId,
-        status: "ACTIVE",
-        archived: false,
-      },
-    });
-    const currentSemester = await prisma.semester.findFirst({
-      where: {
-        universityId: student.universityId,
-        startDate: { lte: new Date() },
-        endDate: { gte: new Date() },
-      },
-      orderBy: { startDate: "desc" },
-    });
+const activeYear = await prisma.academicYear.findFirst({
+  where: {
+    status: "ACTIVE",
+    archived: false,
+    universityId: student.universityId,
+  },
+  orderBy: { createdAt: "desc" },
+});
+const currentSemester = await prisma.semester.findFirst({
+  where: {
+    universityId: student.universityId,
+    status: "ACTIVE",
+    archived: false,
+  },
+  orderBy: { createdAt: "desc" },
+});
     const semesterStart = currentSemester?.startDate
       ? new Date(currentSemester.startDate)
       : activeYear?.startDate

@@ -92,27 +92,17 @@ const Dashboard = () => {
   const [filters, setFilters] = useState({
     academicYear: "",
     studyYear: "",
-    semester: "",
   });
 
   const terms = useTerminology();
   const [years, setYears] = useState<any[]>([]);
   const [studyYears, setStudyYears] = useState<any[]>([]);
-  const [semesters] = useState([
-    `${terms.timeUnit} 1`,
-    `${terms.timeUnit} 2`,
-    `${terms.timeUnit} 3`,
-  ]);
+  const [currentSemester, setCurrentSemester] = useState<any>(null);
+
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const navigate = useNavigate();
   
-  useEffect(() => {
-    // Check if banner was dismissed in this session
-    const dismissed = sessionStorage.getItem("licenseBannerDismissed");
-    if (dismissed === "true") {
-      setBannerDismissed(true);
-    }
-
+  const refreshAcademicData = () => {
     api.get("/university-admin/stats").then((r) => setStats(r.data.data));
     api
       .get("/university-admin/compliance")
@@ -120,17 +110,42 @@ const Dashboard = () => {
     api
       .get("/university-admin/license/status")
       .then((r) => setLicenseStatus(r.data.data));
-    api
-      .get("/university-admin/academic-years")
-      .then((r) =>
-        setYears(
-          Array.isArray(r.data.data)
-            ? r.data.data.filter((y: any) => !y.archived)
-            : [],
-        ),
-      );
+    api.get("/university-admin/academic-years").then((r) => {
+      // Handle both { data: { years, activeYear } } and { data: [...] }
+      const payload = r.data.data;
+      const list = Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload?.years)
+          ? payload.years
+          : [];
+      setYears(list.filter((y: any) => !y.archived));
+    });
     api.get("/study-years").then((r) => setStudyYears(r.data.data || []));
+    api
+      .get("/university-admin/semesters/current")
+      .then((r) => setCurrentSemester(r.data.data || null))
+      .catch(() => setCurrentSemester(null));
     fetchSessionStats();
+  };
+
+  useEffect(() => {
+    const dismissed = sessionStorage.getItem("licenseBannerDismissed");
+    if (dismissed === "true") {
+      setBannerDismissed(true);
+    }
+
+    refreshAcademicData();
+
+    const onFocus = () => refreshAcademicData();
+    const onUpdate = () => refreshAcademicData();
+
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("academic-calendar-updated", onUpdate);
+
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("academic-calendar-updated", onUpdate);
+    };
   }, []);
 
   useEffect(() => {
@@ -142,7 +157,6 @@ const Dashboard = () => {
     if (filters.academicYear)
       params.append("academicYear", filters.academicYear);
     if (filters.studyYear) params.append("studyYearId", filters.studyYear);
-    if (filters.semester) params.append("semesterId", filters.semester);
     api
       .get(`/university-admin/session-stats?${params}`)
       .then((r) => setSessionData(r.data.data));
@@ -293,16 +307,28 @@ const Dashboard = () => {
             Real-time insights across all departments
           </p>
         </div>
-        {compliance?.activeAcademicYear && (
-          <div className="px-4 py-2 bg-cyan-500/10 border border-cyan-500/20 rounded-xl">
-            <p className="text-xs text-cyan-400 uppercase tracking-wider">
-              Active Academic Year
-            </p>
-            <p className="text-lg font-bold text-cyan-300">
-              {compliance.activeAcademicYear}
-            </p>
-          </div>
-        )}
+        <div className="flex items-center gap-3 flex-wrap">
+          {compliance?.activeAcademicYear && (
+            <div className="px-4 py-2 bg-cyan-500/10 border border-cyan-500/20 rounded-xl">
+              <p className="text-xs text-cyan-400 uppercase tracking-wider">
+                Active Academic Year
+              </p>
+              <p className="text-lg font-bold text-cyan-300">
+                {compliance.activeAcademicYear}
+              </p>
+            </div>
+          )}
+          {currentSemester && (
+            <div className="px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+              <p className="text-xs text-emerald-400 uppercase tracking-wider">
+                Current {terms.timeUnit}
+              </p>
+              <p className="text-lg font-bold text-emerald-300">
+                {currentSemester.name}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* LICENSE EXPIRY WARNING BANNER - with X close button */}
@@ -457,20 +483,7 @@ const Dashboard = () => {
                 </option>
               ))}
             </select>
-            <select
-              value={filters.semester}
-              onChange={(e) =>
-                setFilters({ ...filters, semester: e.target.value })
-              }
-              className="bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
-            >
-              <option value="">All {pluralize(terms.timeUnit)}</option>
-               {semesters.map((s, i) => (
-                <option key={i} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
+
           </div>
         </div>
 
@@ -518,13 +531,11 @@ const Dashboard = () => {
                 <DeviationBadge
                   value={highest.deviation || "+0"}
                   filterType={
-                    filters.semester
-                      ? "semester"
-                      : filters.academicYear
-                        ? "academicYear"
-                        : filters.studyYear
-                          ? "studyYear"
-                          : "default"
+                    filters.academicYear
+                      ? "academicYear"
+                      : filters.studyYear
+                        ? "studyYear"
+                        : "default"
                   }
                 />
               </div>
@@ -554,13 +565,11 @@ const Dashboard = () => {
                 <DeviationBadge
                   value={lowest.deviation || "0"}
                   filterType={
-                    filters.semester
-                      ? "semester"
-                      : filters.academicYear
-                        ? "academicYear"
-                        : filters.studyYear
-                          ? "studyYear"
-                          : "default"
+                    filters.academicYear
+                      ? "academicYear"
+                      : filters.studyYear
+                        ? "studyYear"
+                        : "default"
                   }
                 />
               </div>

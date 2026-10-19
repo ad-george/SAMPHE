@@ -609,9 +609,13 @@ export class UniversityAdminService {
     });
   }
 
-  async getAcademicYearProgress() {
+  async getAcademicYearProgress(universityId?: string) {
+    const where: any = { status: "ACTIVE", archived: false };
+    if (universityId) where.universityId = universityId;
+
     const activeYear = await prisma.academicYear.findFirst({
-      where: { status: "ACTIVE", archived: false },
+      where,
+      orderBy: { createdAt: "desc" },
     });
 
     if (!activeYear || !activeYear.startDate || !activeYear.endDate) {
@@ -1314,97 +1318,183 @@ export class UniversityAdminService {
     }
   }
 
-  // --- Semesters ---
+
+  // --- Semesters (Single-Current Model) ---
+
+  async getCurrentSemester(universityId: string) {
+    return prisma.semester.findFirst({
+      where: {
+        universityId,
+        status: "ACTIVE",
+        archived: false,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  }
 
   async getSemesters(universityId: string) {
     return prisma.semester.findMany({
       where: { universityId },
-      include: {
-        studyYear: true,
-      },
-      orderBy: { startDate: "asc" },
+      orderBy: [{ archived: "asc" }, { startDate: "desc" }],
     });
   }
 
-  async createSemester(data: {
-    name: string;
-    startDate: Date;
-    endDate: Date;
-    studyYearId: string;
-    universityId: string;
-  }) {
-    // Validate dates are within academic year
-    const activeYear = await prisma.academicYear.findFirst({
-      where: { status: "ACTIVE", archived: false },
-    });
+  async getSemesterHistory(universityId: string) {
+    const [years, semesters] = await Promise.all([
+      prisma.academicYear.findMany({
+        where: { universityId },
+        orderBy: { startDate: "desc" },
+      }),
+      prisma.semester.findMany({
+        where: { universityId },
+        orderBy: { startDate: "desc" },
+      }),
+    ]);
 
-    if (activeYear) {
-      const yearStart = new Date(activeYear.startDate!);
-      const yearEnd = new Date(activeYear.endDate!);
-      const semStart = new Date(data.startDate);
-      const semEnd = new Date(data.endDate);
+    return { years, semesters };
+  }
 
-      if (semStart < yearStart || semEnd > yearEnd) {
-        throw new Error("Semester dates must be within the academic year");
-      }
+  // Starts a new semester and archives the current one.
+  // Only ONE semester can be active at any time.
+  async startNewSemester(
+    universityId: string,
+    data: { name: string; startDate: Date; endDate: Date },
+  ) {
+    if (!data.name || !data.startDate || !data.endDate) {
+      throw new Error("Name, start date and end date are all required");
+    }
+    if (new Date(data.startDate) >= new Date(data.endDate)) {
+      throw new Error("Start date must be before end date");
     }
 
-    return prisma.semester.create({
-      data: {
-        name: data.name,
-        startDate: data.startDate,
-        endDate: data.endDate,
-        studyYearId: data.studyYearId,
-        universityId: data.universityId,
+    const activeYear = await prisma.academicYear.findFirst({
+      where: {
+        universityId,
+        status: "ACTIVE",
+        archived: false,
       },
-      include: {
-        studyYear: true,
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (!activeYear?.startDate || !activeYear?.endDate) {
+      throw new Error(
+        "Set an active academic year with dates before starting a semester",
+      );
+    }
+
+    const yStart = new Date(new Date(activeYear.startDate).toDateString());
+    const yEnd = new Date(new Date(activeYear.endDate).toDateString());
+    const sStart = new Date(new Date(data.startDate).toDateString());
+    const sEnd = new Date(new Date(data.endDate).toDateString());
+
+    if (sStart < yStart || sEnd > yEnd) {
+      throw new Error(
+        `Semester dates must fall between ${yStart.toLocaleDateString()} and ${yEnd.toLocaleDateString()}`,
+      );
+    }
+
+    // Prevent duplicate name inside this academic year
+    const duplicate = await prisma.semester.findFirst({
+      where: {
+        universityId,
+        name: { equals: data.name.trim(), mode: "insensitive" },
+        archived: false,
       },
+    });
+    if (duplicate) {
+      throw new Error(`A semester named "${data.name}" is already active`);
+    }
+
+    return prisma.$transaction(async (tx) => {
+      // Archive the currently active semester
+      await tx.semester.updateMany({
+        where: {
+          universityId,
+          status: "ACTIVE",
+          archived: false,
+        },
+        data: {
+          status: "INACTIVE",
+          archived: true,
+          archivedAt: new Date(),
+        },
+      });
+
+      // Create the new active semester
+      const newSemester = await tx.semester.create({
+        data: {
+          universityId,
+          name: data.name.trim(),
+          startDate: data.startDate,
+          endDate: data.endDate,
+          status: "ACTIVE",
+          archived: false,
+        },
+      });
+
+      // Point the university at it
+      await tx.university.update({
+        where: { id: universityId },
+        data: { currentSemesterId: newSemester.id },
+      });
+
+      return newSemester;
     });
   }
 
-  async updateSemester(
-    id: string,
-    data: {
-      name?: string;
-      startDate?: Date;
-      endDate?: Date;
-    },
+  async updateCurrentSemester(
+    universityId: string,
+    data: { name?: string; startDate?: Date; endDate?: Date },
   ) {
-    // Validate dates are within academic year if being updated
-    if (data.startDate || data.endDate) {
-      const activeYear = await prisma.academicYear.findFirst({
-        where: { status: "ACTIVE", archived: false },
-      });
+    const current = await prisma.semester.findFirst({
+      where: { universityId, status: "ACTIVE", archived: false },
+    });
+    if (!current) throw new Error("No active semester to update");
 
-      if (activeYear) {
-        const semester = await prisma.semester.findUnique({ where: { id } });
-        const yearStart = new Date(activeYear.startDate!);
-        const yearEnd = new Date(activeYear.endDate!);
-        const semStart = data.startDate
-          ? new Date(data.startDate)
-          : new Date(semester!.startDate!);
-        const semEnd = data.endDate
-          ? new Date(data.endDate)
-          : new Date(semester!.endDate!);
+    const activeYear = await prisma.academicYear.findFirst({
+      where: { universityId, status: "ACTIVE", archived: false },
+    });
 
-        if (semStart < yearStart || semEnd > yearEnd) {
-          throw new Error("Semester dates must be within the academic year");
-        }
+    const finalStart = data.startDate ?? current.startDate ?? null;
+    const finalEnd = data.endDate ?? current.endDate ?? null;
+
+    if (finalStart && finalEnd && new Date(finalStart) >= new Date(finalEnd)) {
+      throw new Error("Start date must be before end date");
+    }
+
+    if (
+      activeYear?.startDate &&
+      activeYear?.endDate &&
+      finalStart &&
+      finalEnd
+    ) {
+      const yStart = new Date(new Date(activeYear.startDate).toDateString());
+      const yEnd = new Date(new Date(activeYear.endDate).toDateString());
+      const sStart = new Date(new Date(finalStart).toDateString());
+      const sEnd = new Date(new Date(finalEnd).toDateString());
+      if (sStart < yStart || sEnd > yEnd) {
+        throw new Error(
+          `Semester dates must fall between ${yStart.toLocaleDateString()} and ${yEnd.toLocaleDateString()}`,
+        );
       }
     }
 
     return prisma.semester.update({
-      where: { id },
-      data,
-      include: {
-        studyYear: true,
+      where: { id: current.id },
+      data: {
+        name: data.name ?? undefined,
+        startDate: data.startDate ?? undefined,
+        endDate: data.endDate ?? undefined,
       },
     });
   }
 
-  async deleteSemester(id: string) {
-    return prisma.semester.delete({ where: { id } });
+  // No hard delete; use startNewSemester to move forward.
+  // Remove this method entirely if nothing else references it.
+  async deleteSemester(_id: string) {
+    throw new Error(
+      "Semesters cannot be deleted. Start a new semester to archive the current one.",
+    );
   }
 
   async syncData(universityId: string) {
@@ -1692,7 +1782,12 @@ export class UniversityAdminService {
   // --- Compliance ---
   async getCompliance(universityId: string) {
     const activeYear = await prisma.academicYear.findFirst({
-      where: { status: "ACTIVE", archived: false },
+      where: {
+        status: "ACTIVE",
+        archived: false,
+        universityId,
+      },
+      orderBy: { createdAt: "desc" },
     });
     const depts = await prisma.department.findMany({
       where: { universityId },

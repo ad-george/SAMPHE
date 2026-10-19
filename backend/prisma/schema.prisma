@@ -3,16 +3,16 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
 model University {
-  id                    String  @id @default(uuid())
+  id                    String              @id @default(uuid())
   name                  String
   logo                  String?
-  category              String  @default("UNIVERSITY")
+  category              String              @default("UNIVERSITY")
   address               String?
   phone                 String?
   email                 String?
@@ -20,75 +20,74 @@ model University {
   integrationWebhookUrl String?
   integrationApiKey     String?
   sisIntegrationUrl     String?
-  status                String  @default("ACTIVE")
-
-  suspendedAt     DateTime?
-  accessRevokedAt DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  faculties     Faculty[]
-  departments   Department[]
-  programmes    Programme[]
-  reportSettings        Json? 
-  students      Student[]
-  lecturers     Lecturer[]
-  hods          Hod[]
-  sessions      AttendanceSession[]
-  licenseType   String?
-  auditLogs     AuditLog[]
-  licenses      License[]
-  integrationMode   String   @default("STANDALONE") // STANDALONE | INTEGRATED
-  integrationConfig Json?    // { endpoint, apiKey, syncData, syncSchedule }
-  lastSyncAt        DateTime?
-  billingEvents BillingEvent[]
-  units         Unit[]
-  admins        UniversityAdmin[]
-   licenseRevoked     Boolean @default(false)
+  status                String              @default("ACTIVE")
+  suspendedAt           DateTime?
+  accessRevokedAt       DateTime?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  reportSettings        Json?
+  licenseType           String?
+  integrationMode       String              @default("STANDALONE")
+  integrationConfig     Json?
+  lastSyncAt            DateTime?
+  licenseRevoked        Boolean             @default(false)
+  currentSemesterId     String?
+  sessions              AttendanceSession[]
+  auditLogs             AuditLog[]
+  billingEvents         BillingEvent[]
+  departments           Department[]
+  faculties             Faculty[]
+  hods                  Hod[]
+  lecturers             Lecturer[]
+  licenses              License[]
+  programmes            Programme[]
+  semesters             Semester[]
+  students              Student[]
+  units                 Unit[]
+  admins                UniversityAdmin[]
 }
 
 model BillingEvent {
   id           String     @id @default(uuid())
   licenseId    String
-  license      License    @relation(fields: [licenseId], references: [id])
   universityId String
-  university   University @relation(fields: [universityId], references: [id])
-  eventType    String // RENEWAL, UPGRADE, ACTIVATION
+  eventType    String
   amount       Float
   currency     String     @default("USD")
   description  String
-  status       String     @default("COMPLETED") // COMPLETED, PENDING, FAILED
+  status       String     @default("COMPLETED")
   createdAt    DateTime   @default(now())
+  license      License    @relation(fields: [licenseId], references: [id])
+  university   University @relation(fields: [universityId], references: [id])
 }
 
 model Faculty {
   id           String       @id @default(uuid())
   name         String
   universityId String
-  university   University   @relation(fields: [universityId], references: [id])
-  departments  Department[]
   deanId       String?      @unique
-  dean         Lecturer?    @relation(fields: [deanId], references: [id])
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
+  departments  Department[]
+  dean         Lecturer?    @relation(fields: [deanId], references: [id])
+  university   University   @relation(fields: [universityId], references: [id])
 }
 
 model Department {
   id           String           @id @default(uuid())
   name         String
   facultyId    String
-  faculty      Faculty          @relation(fields: [facultyId], references: [id])
   universityId String
-  university   University       @relation(fields: [universityId], references: [id])
-  programmes   Programme[]
-  lecturers    Lecturer[]
-  issues       TechnicalIssue[]
-  hods         Hod[]
-  units        Unit[]
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
+  faculty      Faculty          @relation(fields: [facultyId], references: [id])
+  university   University       @relation(fields: [universityId], references: [id])
+  hods         Hod[]
+  lecturers    Lecturer[]
+  programmes   Programme[]
   Student      Student[]
+  issues       TechnicalIssue[]
+  units        Unit[]
 }
 
 model Programme {
@@ -98,150 +97,146 @@ model Programme {
   level        Int?
   duration     Int
   departmentId String
-  department   Department @relation(fields: [departmentId], references: [id])
   universityId String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  department   Department @relation(fields: [departmentId], references: [id])
   university   University @relation(fields: [universityId], references: [id])
   students     Student[]
   units        Unit[]
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
 }
 
 model StudyYear {
-  id           String     @id @default(uuid())
+  id           String    @id @default(uuid())
   name         String
   description  String?
+  universityId String?
+  createdAt    DateTime  @default(now())
   students     Student[]
   units        Unit[]
-  universityId String?
-  createdAt    DateTime   @default(now())
-  Semester     Semester[]
 }
 
 model Semester {
-  id           String    @id @default(uuid())
+  id           String     @id @default(uuid())
   name         String
-  studyYearId  String
-  studyYear    StudyYear @relation(fields: [studyYearId], references: [id])
   startDate    DateTime?
   endDate      DateTime?
-  students     Student[]
+  status       String     @default("INACTIVE")
+  archived     Boolean    @default(false)
+  archivedAt   DateTime?
   universityId String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  university   University @relation(fields: [universityId], references: [id])
+  students     Student[]
   units        Unit[]
-  createdAt    DateTime  @default(now())
+
+  @@index([universityId, status, archived])
 }
 
 model Unit {
-  id           String     @id @default(uuid())
-  name         String
-  code         String
-  programId    String
-  program      Programme  @relation(fields: [programId], references: [id])
-  studyYearId  String
-  studyYear    StudyYear  @relation(fields: [studyYearId], references: [id])
-  semesterId   String
-  semester     Semester   @relation(fields: [semesterId], references: [id])
-  departmentId String
-  department   Department @relation(fields: [departmentId], references: [id])
-  universityId String
-  createdAt    DateTime   @default(now())
-
+  id                     String                   @id @default(uuid())
+  name                   String
+  code                   String
+  programId              String
+  studyYearId            String
+  semesterId             String
+  departmentId           String
+  universityId           String
+  createdAt              DateTime                 @default(now())
   sessions               AttendanceSession[]
+  LecturerUnitAssignment LecturerUnitAssignment[]
+  department             Department               @relation(fields: [departmentId], references: [id])
+  program                Programme                @relation(fields: [programId], references: [id])
+  semester               Semester                 @relation(fields: [semesterId], references: [id])
+  studyYear              StudyYear                @relation(fields: [studyYearId], references: [id])
+  University             University               @relation(fields: [universityId], references: [id])
   lecturers              Lecturer[]               @relation("LecturerUnits")
   students               Student[]                @relation("StudentUnits")
-  University             University               @relation(fields: [universityId], references: [id])
-  LecturerUnitAssignment LecturerUnitAssignment[]
 }
 
 model LecturerUnitAssignment {
   id         String   @id @default(uuid())
   lecturerId String
-  lecturer   Lecturer @relation(fields: [lecturerId], references: [id])
   unitId     String
-  unit       Unit     @relation(fields: [unitId], references: [id])
   assignedAt DateTime @default(now())
+  lecturer   Lecturer @relation(fields: [lecturerId], references: [id])
+  unit       Unit     @relation(fields: [unitId], references: [id])
 
   @@unique([lecturerId, unitId])
 }
 
 model Student {
-  id            String     @id @default(uuid())
-  regNo         String     @unique
-  fullName      String
-  phone         String?
-  email         String?
-  programId     String
-  password      String
-  program       Programme  @relation(fields: [programId], references: [id])
-  studyYearId   String
-  studyYear     StudyYear  @relation(fields: [studyYearId], references: [id])
-  semesterId    String
-  admissionYear String
-  semester      Semester   @relation(fields: [semesterId], references: [id])
-  departmentId  String
-  department    Department @relation(fields: [departmentId], references: [id])
-  universityId  String
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt 
-  archived      Boolean    @default(false)
-  archivedAt    DateTime?
-  archiveUntil  DateTime?
-
+  id              String             @id @default(uuid())
+  regNo           String             @unique
+  fullName        String
+  phone           String?
+  email           String?
+  programId       String
+  password        String
+  studyYearId     String
+  semesterId      String
+  admissionYear   String
+  departmentId    String
+  universityId    String
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  archived        Boolean            @default(false)
+  archivedAt      DateTime?
+  archiveUntil    DateTime?
   records         AttendanceRecord[]
-  registeredUnits Unit[]             @relation("StudentUnits")
+  department      Department         @relation(fields: [departmentId], references: [id])
+  program         Programme          @relation(fields: [programId], references: [id])
+  semester        Semester           @relation(fields: [semesterId], references: [id])
+  studyYear       StudyYear          @relation(fields: [studyYearId], references: [id])
   University      University         @relation(fields: [universityId], references: [id])
+  registeredUnits Unit[]             @relation("StudentUnits")
 }
 
 model Lecturer {
-  id           String                   @id @default(uuid())
-  staffNumber  String                   @unique
-  fullName     String
-  email        String                   @unique
-  phone        String?
-  password     String
-  departmentId String
-  department   Department               @relation(fields: [departmentId], references: [id])
-  universityId String
-  university   University               @relation(fields: [universityId], references: [id])
-  assignments  LecturerUnitAssignment[]
-  corrections  AttendanceCorrection[]
-  status       String                   @default("ACTIVE")
-  sessions     AttendanceSession[]
-  units        Unit[]                   @relation("LecturerUnits")
-  lastLogin    DateTime?
-  deanOfFaculty  Faculty? 
-  createdAt    DateTime                 @default(now())
-  updatedAt    DateTime                 @updatedAt
-  resetToken        String?
-  resetTokenExpiry  DateTime?
+  id               String                   @id @default(uuid())
+  staffNumber      String                   @unique
+  fullName         String
+  email            String                   @unique
+  phone            String?
+  password         String
+  departmentId     String
+  universityId     String
+  status           String                   @default("ACTIVE")
+  lastLogin        DateTime?
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  corrections      AttendanceCorrection[]
+  sessions         AttendanceSession[]
+  deanOfFaculty    Faculty?
+  department       Department               @relation(fields: [departmentId], references: [id])
+  university       University               @relation(fields: [universityId], references: [id])
+  assignments      LecturerUnitAssignment[]
+  units            Unit[]                   @relation("LecturerUnits")
 }
 
 model Hod {
-  id           String     @id @default(uuid())
-  staffNumber  String     // Removed global @unique
-  fullName     String
-  email        String     @unique // Removed global @unique
-  phone        String?
-  password     String?    // Changed to optional to support future University SSO integration
-  status       String     @default("ACTIVE") // ACTIVE, INACTIVE, SUSPENDED
-  lastLogin    DateTime?
+  id            String     @id @default(uuid())
+  staffNumber   String
+  fullName      String
+  email         String     @unique
+  phone         String?
+  password      String?
+  status        String     @default("ACTIVE")
+  lastLogin     DateTime?
   plainPassword String?
-  
-  // Relations
-  departmentId String
-  department   Department @relation(fields: [departmentId], references: [id])
-  universityId String
-  university   University @relation(fields: [universityId], references: [id])
-  
-  // System Metadata
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  departmentId  String
+  universityId  String
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  department    Department @relation(fields: [departmentId], references: [id])
+  university    University @relation(fields: [universityId], references: [id])
 
-  // Multi-Tenant Uniqueness Rules
-  @@unique([universityId, staffNumber]) // Staff numbers only need to be unique inside the same university
-  @@unique([universityId, email])       // Emails only need to be unique inside the same university
+  @@unique([universityId, staffNumber])
+  @@unique([universityId, email])
 }
-
 
 model PlatformAdmin {
   id        String    @id @default(uuid())
@@ -258,54 +253,52 @@ model AttendanceSession {
   id                  String             @id @default(uuid())
   sessionDate         DateTime           @default(now())
   lecturerId          String
-  lecturer            Lecturer           @relation(fields: [lecturerId], references: [id])
   unitId              String
-  unit                Unit               @relation(fields: [unitId], references: [id])
-  records             AttendanceRecord[]
   archived            Boolean            @default(false)
-  duration            Int                @default(15) 
-  endTime             DateTime?          // Keeps track of when session expires
+  duration            Int                @default(15)
+  endTime             DateTime?
   universityId        String
-  university          University         @relation(fields: [universityId], references: [id])
   departmentId        String
-  radius              Int                @default(75) 
-  lecturerLatitude    Float?             // Needed for distance verification
-  lecturerLongitude   Float?             // Needed for distance verification
-  lecturerGpsAccuracy Float?             
-  gpsLocation         String?            
-  token               String             @unique @default(uuid()) 
-  totalStudents       Int? 
-  status              String             @default("ACTIVE") 
+  radius              Int                @default(75)
+  lecturerLatitude    Float?
+  lecturerLongitude   Float?
+  lecturerGpsAccuracy Float?
+  gpsLocation         String?
+  token               String             @unique @default(uuid())
+  totalStudents       Int?
+  status              String             @default("ACTIVE")
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
+  records             AttendanceRecord[]
+  lecturer            Lecturer           @relation(fields: [lecturerId], references: [id])
+  unit                Unit               @relation(fields: [unitId], references: [id])
+  university          University         @relation(fields: [universityId], references: [id])
 }
-
-
 
 model AttendanceCorrection {
   id             String           @id @default(uuid())
   recordId       String
-  record         AttendanceRecord @relation(fields: [recordId], references: [id])
   lecturerId     String
-  lecturer       Lecturer         @relation(fields: [lecturerId], references: [id])
   reason         String
   previousStatus String
   newStatus      String
   correctedAt    DateTime         @default(now())
+  lecturer       Lecturer         @relation(fields: [lecturerId], references: [id])
+  record         AttendanceRecord @relation(fields: [recordId], references: [id])
 }
 
 model AttendanceRecord {
-  id                  String   @id @default(uuid())
-  sessionId           String
-  session             AttendanceSession @relation(fields: [sessionId], references: [id])
-  studentId           String
-  student             Student  @relation(fields: [studentId], references: [id])
-  status              String   // PRESENT, ABSENT, OUTSIDE_RADIUS
-  browserFingerprint  String?
-  googleAccountId     String?
-  distance            Float?
-  createdAt           DateTime @default(now())
-  corrections         AttendanceCorrection[]
+  id                 String                 @id @default(uuid())
+  sessionId          String
+  studentId          String
+  status             String
+  browserFingerprint String?
+  googleAccountId    String?
+  distance           Float?
+  createdAt          DateTime               @default(now())
+  corrections        AttendanceCorrection[]
+  session            AttendanceSession      @relation(fields: [sessionId], references: [id])
+  student            Student                @relation(fields: [studentId], references: [id])
 }
 
 model AuditLog {
@@ -323,60 +316,59 @@ model AuditLog {
 }
 
 model AcademicYear {
-  id          String   @id @default(uuid())
-  name        String   // e.g., "2025/2026"
-  startDate   DateTime?
-  endDate     DateTime?
-  universityId String  
-  status      String   @default("INACTIVE") // ACTIVE | INACTIVE
-  archived    Boolean  @default(false)
-  archivedAt  DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String    @id @default(uuid())
+  name         String
+  startDate    DateTime?
+  endDate      DateTime?
+  universityId String
+  status       String    @default("INACTIVE")
+  archived     Boolean   @default(false)
+  archivedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
 
 model License {
   id                String         @id @default(uuid())
   code              String         @unique
   universityId      String?
-  university        University?    @relation(fields: [universityId], references: [id])
-  type              String         @default("SUBSCRIPTION") // SUBSCRIPTION, PERPETUAL, TRIAL
-  status            String         @default("UNUSED") // UNUSED, ACTIVE, EXPIRED, REVOKED, SUSPENDED
+  type              String         @default("SUBSCRIPTION")
+  status            String         @default("UNUSED")
   previousStatus    String?
   usedBy            String?
   startDate         DateTime?
   expiryDate        DateTime?
   isTrial           Boolean        @default(false)
-  trialEndsAt       DateTime?      // When trial expires
+  trialEndsAt       DateTime?
   revokedAt         DateTime?
-  pdfPassword String?
-  gracePeriodEndsAt DateTime?      // e.g., 14 days after revocation
+  pdfPassword       String?
+  gracePeriodEndsAt DateTime?
   accessBlocked     Boolean        @default(false)
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
   billingHistory    BillingEvent[]
+  university        University?    @relation(fields: [universityId], references: [id])
 }
 
-
 model UniversityAdmin {
-  id           String     @id @default(uuid())
-  staffNumber  String?    @unique
-  fullName     String
-  email        String     @unique
-  phone        String?
-  password     String
-  avatar       String?
-  category     String     @default("UNIVERSITY") // UNIVERSITY, POLYTECHNIC, COLLEGE, TVET, INSTITUTE
-  licenseType  String     @default("SUBSCRIPTION") // SUBSCRIPTION, PERPETUAL, TRIAL
-  role         String     @default("UNIVERSITY_ADMIN")
-  universityId String
-  university   University @relation(fields: [universityId], references: [id])
-  status       String     @default("ACTIVE")
-  lastLogin    DateTime?
-  licenseRevoked  Boolean  @default(false)
+  id              String     @id @default(uuid())
+  staffNumber     String?    @unique
+  fullName        String
+  email           String     @unique
+  phone           String?
+  password        String
+  avatar          String?
+  category        String     @default("UNIVERSITY")
+  licenseType     String     @default("SUBSCRIPTION")
+  role            String     @default("UNIVERSITY_ADMIN")
+  universityId    String
+  status          String     @default("ACTIVE")
+  lastLogin       DateTime?
+  licenseRevoked  Boolean    @default(false)
   accessBlockedAt DateTime?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  university      University @relation(fields: [universityId], references: [id])
 }
 
 model Notification {
@@ -395,7 +387,6 @@ model TechnicalIssue {
   id           String      @id @default(uuid())
   universityId String
   departmentId String?
-  department   Department? @relation(fields: [departmentId], references: [id])
   title        String
   description  String
   severity     String      @default("MEDIUM")
@@ -403,6 +394,7 @@ model TechnicalIssue {
   reportedBy   String?
   createdAt    DateTime    @default(now())
   resolvedAt   DateTime?
+  department   Department? @relation(fields: [departmentId], references: [id])
 }
 
 model IntegrationSetting {

@@ -57,17 +57,22 @@ export class LecturerService {
     const assignedUnitIds = lecturer.assignments.map((a) => a.unitId);
 
     // SEMESTER RESOLUTION
-    const activeYear = await prisma.academicYear.findFirst({
-      where: { status: "ACTIVE", archived: false },
-    });
-    const currentSemester = await prisma.semester.findFirst({
-      where: {
-        universityId: lecturer.universityId,
-        startDate: { lte: new Date() },
-        endDate: { gte: new Date() },
-      },
-      orderBy: { startDate: "desc" },
-    });
+  const activeYear = await prisma.academicYear.findFirst({
+  where: {
+    status: "ACTIVE",
+    archived: false,
+    universityId: lecturer.universityId,
+  },
+  orderBy: { createdAt: "desc" },
+});
+const currentSemester = await prisma.semester.findFirst({
+  where: {
+    universityId: lecturer.universityId,
+    status: "ACTIVE",
+    archived: false,
+  },
+  orderBy: { createdAt: "desc" },
+});
     const semesterStart = currentSemester?.startDate
       ? new Date(currentSemester.startDate)
       : activeYear?.startDate
@@ -186,17 +191,22 @@ export class LecturerService {
     });
     if (!lecturer) return [];
 
-    const activeYear = await prisma.academicYear.findFirst({
-      where: { status: "ACTIVE", archived: false },
-    });
-    const currentSemester = await prisma.semester.findFirst({
-      where: {
-        universityId: lecturer.universityId,
-        startDate: { lte: new Date() },
-        endDate: { gte: new Date() },
-      },
-      orderBy: { startDate: "desc" },
-    });
+   const activeYear = await prisma.academicYear.findFirst({
+  where: {
+    status: "ACTIVE",
+    archived: false,
+    universityId: lecturer.universityId,
+  },
+  orderBy: { createdAt: "desc" },
+});
+const currentSemester = await prisma.semester.findFirst({
+  where: {
+    universityId: lecturer.universityId,
+    status: "ACTIVE",
+    archived: false,
+  },
+  orderBy: { createdAt: "desc" },
+});
     const semesterStart = currentSemester?.startDate
       ? new Date(currentSemester.startDate)
       : activeYear?.startDate
@@ -872,17 +882,22 @@ export class LecturerService {
     const unitById = new Map(assignedUnits.map((u) => [u.id, u]));
 
     // SEMESTER RESOLUTION
-    const activeYear = await prisma.academicYear.findFirst({
-      where: { status: "ACTIVE", archived: false },
-    });
-    const currentSemester = await prisma.semester.findFirst({
-      where: {
-        universityId: lecturer.universityId,
-        startDate: { lte: new Date() },
-        endDate: { gte: new Date() },
-      },
-      orderBy: { startDate: "desc" },
-    });
+  const activeYear = await prisma.academicYear.findFirst({
+  where: {
+    status: "ACTIVE",
+    archived: false,
+    universityId: lecturer.universityId,
+  },
+  orderBy: { createdAt: "desc" },
+});
+const currentSemester = await prisma.semester.findFirst({
+  where: {
+    universityId: lecturer.universityId,
+    status: "ACTIVE",
+    archived: false,
+  },
+  orderBy: { createdAt: "desc" },
+});
     const semesterStart = currentSemester?.startDate
       ? new Date(currentSemester.startDate)
       : activeYear?.startDate
@@ -1116,17 +1131,22 @@ export class LecturerService {
     const totalUnits = assignedUnits.length;
 
     // SEMESTER RESOLUTION
-    const activeYear = await prisma.academicYear.findFirst({
-      where: { status: "ACTIVE", archived: false },
-    });
-    const currentSemester = await prisma.semester.findFirst({
-      where: {
-        universityId: lecturer.universityId,
-        startDate: { lte: new Date() },
-        endDate: { gte: new Date() },
-      },
-      orderBy: { startDate: "desc" },
-    });
+ const activeYear = await prisma.academicYear.findFirst({
+  where: {
+    status: "ACTIVE",
+    archived: false,
+    universityId: lecturer.universityId,
+  },
+  orderBy: { createdAt: "desc" },
+});
+const currentSemester = await prisma.semester.findFirst({
+  where: {
+    universityId: lecturer.universityId,
+    status: "ACTIVE",
+    archived: false,
+  },
+  orderBy: { createdAt: "desc" },
+});
     const semesterStart = currentSemester?.startDate
       ? new Date(currentSemester.startDate)
       : activeYear?.startDate

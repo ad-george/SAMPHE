@@ -27,9 +27,6 @@ import {
   updateStudyYear,
   deleteStudyYear,
   getSemesters,
-  createSemester,
-  updateSemester,
-  deleteSemester,
   getLecturerTracking,
   getStudentTracking,
   getClassRecords,
@@ -239,9 +236,7 @@ router.delete(
 
 // Semesters
 router.get("/semesters", authenticate, authorize("HOD"), getSemesters);
-router.post("/semesters", authenticate, authorize("HOD"), createSemester);
-router.put("/semesters/:id", authenticate, authorize("HOD"), updateSemester);
-router.delete("/semesters/:id", authenticate, authorize("HOD"), deleteSemester);
+router.post("/semesters", authenticate, authorize("HOD"), );
 
 // Tracking & Records
 router.get(
