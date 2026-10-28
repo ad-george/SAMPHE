@@ -25,6 +25,7 @@ const AcademicCalendar = () => {
     startDate: "",
     endDate: "",
   });
+  const [editingSemester, setEditingSemester] = useState<any>(null);
   const terms = useTerminology();
 
   const fetchData = async () => {
@@ -160,28 +161,56 @@ const AcademicCalendar = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await api.post("/university-admin/semesters/start", {
-        name: semesterForm.name,
-        startDate: semesterForm.startDate,
-        endDate: semesterForm.endDate,
-      });
-      toast.success(
-        `${terms.timeUnit} started. All users will now operate in this period.`,
-      );
+      if (editingSemester) {
+        // UPDATE the current semester
+        await api.put("/university-admin/semesters/current", {
+          name: semesterForm.name,
+          startDate: semesterForm.startDate,
+          endDate: semesterForm.endDate,
+        });
+        toast.success(`${terms.timeUnit} updated successfully.`);
+      } else {
+        // START a new semester
+        await api.post("/university-admin/semesters/start", {
+          name: semesterForm.name,
+          startDate: semesterForm.startDate,
+          endDate: semesterForm.endDate,
+        });
+        toast.success(
+          `${terms.timeUnit} started. All users will now operate in this period.`,
+        );
+      }
       setShowSemesterModal(false);
+      setEditingSemester(null);
       setSemesterForm({ name: "", startDate: "", endDate: "" });
       fetchSemesters();
       fetchCurrentSemester();
       window.dispatchEvent(new Event("academic-calendar-updated"));
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to start semester");
+      toast.error(err.response?.data?.message || "Failed to save semester");
     } finally {
       setLoading(false);
     }
   };
 
   const openAddSemester = () => {
+    setEditingSemester(null);
     setSemesterForm({ name: "", startDate: "", endDate: "" });
+    setShowSemesterModal(true);
+  };
+
+  const openEditSemester = () => {
+    if (!currentSemester) return;
+    setEditingSemester(currentSemester);
+    setSemesterForm({
+      name: currentSemester.name || "",
+      startDate: currentSemester.startDate
+        ? new Date(currentSemester.startDate).toISOString().split("T")[0]
+        : "",
+      endDate: currentSemester.endDate
+        ? new Date(currentSemester.endDate).toISOString().split("T")[0]
+        : "",
+    });
     setShowSemesterModal(true);
   };
 
@@ -287,12 +316,22 @@ const AcademicCalendar = () => {
               </p>
             )}
           </div>
-          <button
-            onClick={openAddSemester}
-            className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-sm font-medium text-white"
-          >
-            {currentSemester ? "End & Start New" : "Set Current"}
-          </button>
+          <div className="flex items-center gap-2">
+            {currentSemester && (
+              <button
+                onClick={openEditSemester}
+                className="px-4 py-2.5 bg-blue-500/10 border border-blue-500/30 hover:bg-blue-500/20 rounded-xl text-sm font-medium text-blue-300"
+              >
+                ✎ Edit Current
+              </button>
+            )}
+            <button
+              onClick={openAddSemester}
+              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-sm font-medium text-white"
+            >
+              {currentSemester ? "End & Start New" : "Set Current"}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -489,14 +528,18 @@ const AcademicCalendar = () => {
                 📚
               </div>
               <h3 className="text-2xl font-bold text-white">
-                {currentSemester
-                  ? `End & Start New ${terms.timeUnit}`
-                  : `Set Current ${terms.timeUnit}`}
+                {editingSemester
+                  ? `Edit ${terms.timeUnit}`
+                  : currentSemester
+                    ? `End & Start New ${terms.timeUnit}`
+                    : `Set Current ${terms.timeUnit}`}
               </h3>
               <p className="text-sm text-slate-500 mt-1">
-                {currentSemester
-                  ? `The current ${terms.timeUnit.toLowerCase()} will be archived.`
-                  : `Create the first ${terms.timeUnit.toLowerCase()} of the year.`}
+                {editingSemester
+                  ? `Update the name or dates of the current ${terms.timeUnit.toLowerCase()}.`
+                  : currentSemester
+                    ? `The current ${terms.timeUnit.toLowerCase()} will be archived.`
+                    : `Create the first ${terms.timeUnit.toLowerCase()} of the year.`}
               </p>
               {activeYear && (
                 <p className="text-xs text-cyan-400 mt-2">
@@ -573,13 +616,19 @@ const AcademicCalendar = () => {
                 >
                   {loading
                     ? "Saving..."
-                    : currentSemester
-                      ? `Start New ${terms.timeUnit}`
-                      : `Set Current`}
+                    : editingSemester
+                      ? `Save Changes`
+                      : currentSemester
+                        ? `Start New ${terms.timeUnit}`
+                        : `Set Current`}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowSemesterModal(false)}
+                  onClick={() => {
+                    setShowSemesterModal(false);
+                    setEditingSemester(null);
+                    setSemesterForm({ name: "", startDate: "", endDate: "" });
+                  }}
                   className="px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 transition text-sm text-slate-400 hover:text-slate-300"
                 >
                   Cancel
