@@ -122,32 +122,74 @@ const StudentAttendance = () => {
       console.log("Could not get Google account info");
     }
 
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          await api.post(`/public/attend/${token}`, {
-            regNo: regNo.trim(),
-            studentLat: pos.coords.latitude,
-            studentLng: pos.coords.longitude,
-            studentAccuracy: pos.coords.accuracy,
-            googleAccountId: googleAccountId,
-          });
-          localStorage.setItem(`attendance_submitted_${token}`, "true");
-          setSubmitted(true);
-          toast.success("Attendance submitted successfully!");
-        } catch (err: any) {
-          if (err.response?.status === 404) {
-            setExpired(true);
-            setSession(null);
-          } else {
-            setSubmitError(err.response?.data?.message || "Submission failed");
-          }
-        } finally {
-          setLoading(false);
+    // Track the best position we get
+    let bestPosition: GeolocationPosition | null = null;
+    let watchId: number | null = null;
+    let attempts = 0;
+    let finished = false;
+
+    const finish = async (pos: GeolocationPosition) => {
+      if (finished) return;
+      finished = true;
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+      try {
+        await api.post(`/public/attend/${token}`, {
+          regNo: regNo.trim(),
+          studentLat: pos.coords.latitude,
+          studentLng: pos.coords.longitude,
+          studentAccuracy: pos.coords.accuracy,
+          googleAccountId: googleAccountId,
+        });
+        localStorage.setItem(`attendance_submitted_${token}`, "true");
+        setSubmitted(true);
+        toast.success("Attendance submitted successfully!");
+      } catch (err: any) {
+        if (err.response?.status === 404) {
+          setExpired(true);
+          setSession(null);
+        } else {
+          setSubmitError(err.response?.data?.message || "Submission failed");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const fail = () => {
+      if (finished) return;
+      finished = true;
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+      setSubmitError("Could not get an accurate location. Please move to an open area and try again.");
+      setLoading(false);
+    };
+
+    watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        attempts++;
+
+        // Keep the most accurate reading (smallest accuracy value)
+        if (!bestPosition || pos.coords.accuracy < bestPosition.coords.accuracy) {
+          bestPosition = pos;
+        }
+
+        // Good enough (≤ 50m) → submit now
+        if (pos.coords.accuracy <= 50) {
+          finish(bestPosition);
+          return;
+        }
+
+        // After 6 attempts, submit with the best we have
+        if (attempts >= 6 && bestPosition) {
+          finish(bestPosition);
         }
       },
       () => {
         setSubmitError("Location permission is required");
+        if (watchId !== null) navigator.geolocation.clearWatch(watchId);
         setLoading(false);
       },
       {
@@ -156,6 +198,16 @@ const StudentAttendance = () => {
         maximumAge: 0,
       },
     );
+
+    // Safety timeout: after 12 seconds, submit with whatever we have
+    setTimeout(() => {
+      if (finished) return;
+      if (bestPosition) {
+        finish(bestPosition);
+      } else {
+        fail();
+      }
+    }, 12000);
   };
 
   const formatCountdown = (s: number) => {
